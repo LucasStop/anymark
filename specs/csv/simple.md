@@ -1,0 +1,5 @@
+| nome | cidade | obs |
+| --- | --- | --- |
+| Ana | São Paulo | diz "oi", ok |
+| Bruno | Curitiba | a\|b |
+| Carla | Recife |  |
