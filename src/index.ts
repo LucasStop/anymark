@@ -1,1 +1,18 @@
-export {};
+export type {
+  Backend,
+  BackendContext,
+  BackendRunner,
+  Capability,
+  ConversionResult,
+  ConversionWarning,
+  ConvertOptions,
+  Converter,
+  ConverterContext,
+  ConverterEntry,
+  Input,
+  Locality,
+  Metadata,
+  Plugin,
+  PluginHost,
+  Source,
+} from './core/types.js';
