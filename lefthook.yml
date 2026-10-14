@@ -1,0 +1,10 @@
+# Guarda local antes do commit. Depois de clonar: lefthook install
+# Pular uma vez: LEFTHOOK=0 git commit
+pre-commit:
+  parallel: true
+  commands:
+    segredo:
+      run: gitleaks git --staged --redact --no-banner
+    formato:
+      glob: '*.{js,ts,json}'
+      run: npx prettier --check {staged_files}
