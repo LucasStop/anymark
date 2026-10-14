@@ -8,4 +8,10 @@ export const builtInEntries: readonly ConverterEntry[] = [
     extensions: ['.txt'],
     load: async () => new (await import('./TxtConverter.js')).TxtConverter(),
   },
+  {
+    name: 'csv',
+    mimes: ['text/csv'],
+    extensions: ['.csv'],
+    load: async () => new (await import('./CsvConverter.js')).CsvConverter(),
+  },
 ];
