@@ -1,0 +1,29 @@
+#!/usr/bin/env node
+// Stand-in for an AI CLI so tests never spend quota. Mode comes from argv[2].
+import { readFileSync, writeFileSync } from 'node:fs';
+
+const [, , mode, arg] = process.argv;
+
+switch (mode) {
+  case 'cat':
+    process.stdout.write(readFileSync(arg));
+    break;
+  case 'sleep':
+    setTimeout(() => {}, 30_000);
+    break;
+  case 'flood':
+    process.stdout.write('x'.repeat(2 * 1024 * 1024));
+    break;
+  case 'env':
+    process.stdout.write(JSON.stringify(Object.keys(process.env).sort()));
+    break;
+  case 'fail':
+    process.stderr.write('leaked-secret');
+    process.exit(3);
+    break;
+  case 'mark':
+    writeFileSync(arg, 'ran');
+    break;
+  default:
+    process.exit(64);
+}
