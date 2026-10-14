@@ -7,6 +7,7 @@ export class TxtConverter implements Converter {
   readonly mimes = [MIME];
 
   async convert(source: Source, ctx: ConverterContext): Promise<ConversionResult> {
+    ctx.options.signal?.throwIfAborted();
     // TextDecoder drops a leading BOM. UTF-8 only for now; other encodings arrive with the md converter.
     const text = new TextDecoder('utf-8').decode(source.data);
     return {
