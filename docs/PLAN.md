@@ -15,7 +15,7 @@ Prazos: 28/10 congela o escopo do MVP. 29/10 é a apresentação do parcial (30%
 | Stack | TypeScript e npm. Pacote e repositório `anymark`. |
 | Equipe | Dono do repositório: `LucasStop`. Colaborador: `Luc-Bruno`. |
 | Método | PRD, SDD, TDD, issues, GitHub Project, CI/CD. `docs/SDD.md` e `specs/` por feature, ligadas às issues. Red, green, refactor, commits por fase. |
-| Git | GitHub Flow com rebase-merge. Branch `feat/<issue>-slug`, um PR por issue com review cruzado, `main` protegida com CI verde. |
+| Git | GitHub Flow com merge commit (sem rebase nem squash), para a `main` mostrar cada issue como uma branch separada; a branch não é apagada depois do merge. Branch `feat/<issue>-slug`, um PR por issue com review cruzado, `main` protegida com CI verde. |
 | MVP (29/10) | txt, md, csv, json, xml, html, docx, pptx, xlsx, pdf. Imagem, áudio, vídeo e URL ou YouTube até 12/11. |
 | IA | Interface `Backend` com cadeia e fallback. Dois modos plugáveis: CLI já logado (`claude -p`, `codex exec`, `agy -p`) e chave de API (Gemini, OpenAI). Locais: whisper.cpp e tesseract.js. Nunca ler token ou keychain, nunca fazer OAuth próprio. |
 | Distribuição | Repositório público. Pacote no npm público, com publicação por tag no CI (stretch). TypeDoc no GitHub Pages. |
@@ -132,7 +132,7 @@ Refinar no `/to-issues`. Dono é quem defende o padrão, com review cruzado.
 - Escopo grande para uma dupla. Manter PRD de uma página, SDD curto, `specs/` só para registry, backends e plugin, e ADRs só para as decisões reais.
 - Os CLIs de IA mudam flags entre versões. São o pior custo e benefício.
 - O example Next.js não é a entrega (o enunciado proíbe REST e executável como entrega). O README diz que é só um consumidor de demonstração.
-- Commits red/green com rebase-merge deixam commits vermelhos na `main`. O CI exige verde só no head do PR. Aceitável: o histórico prova o TDD.
+- Commits red/green deixam commits vermelhos na `main`, mesmo com merge commit. O CI exige verde só no head do PR. Aceitável: o histórico prova o TDD.
 - Releases rápidas (TS 7, TypeDoc 1.0): lockfile e Dependabot com cooldown.
 
 **Ordem de corte** (do primeiro):

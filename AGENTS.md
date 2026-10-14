@@ -55,7 +55,7 @@ Regras de design:
 ## Convenções
 
 - Idioma: README, docs e vídeo em português brasileiro. Identificadores, commits e PRs em inglês.
-- Git: GitHub Flow com rebase-merge. Branch `feat/<issue>-slug` ou `fix/<issue>-slug`, um PR por issue, review do outro, `main` protegida com CI verde. Commits por fase (`test:`, `feat:`, `refactor:`), com a mensagem explicando o porquê. Commit e push só quando a pessoa dona da sessão pedir.
+- Git: GitHub Flow com merge commit (sem rebase nem squash), para a `main` mostrar cada issue como uma branch separada; a branch não é apagada depois do merge. Branch `feat/<issue>-slug` ou `fix/<issue>-slug`, um PR por issue, review do outro, `main` protegida com CI verde. Commits por fase (`test:`, `feat:`, `refactor:`), com a mensagem explicando o porquê. Commit e push só quando a pessoa dona da sessão pedir.
 - TDD: red, green, refactor, um teste por vez, pela interface pública, sem refatorar em vermelho. Parsing e regra de negócio levam teste primeiro, com os casos definidos por uma pessoa (golden files em `specs/`).
 - Estilo: editar o que existe antes de criar arquivo novo. Comentário só para o porquê não óbvio. Dependência nova só depois de conferir versão, licença e CVE (`npm view`, `npm audit`); evitar AGPL.
 - Nada é dado como pronto sem verificação independente: rodar teste, typecheck e lint e ler a saída, não alegar.
