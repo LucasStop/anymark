@@ -1,3 +1,5 @@
+export { Anymark, createAnymark } from './Anymark.js';
+export { ConverterRegistry } from './core/ConverterRegistry.js';
 export type {
   Backend,
   BackendContext,
