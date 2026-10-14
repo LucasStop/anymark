@@ -43,7 +43,7 @@ Vocabulário: módulo profundo = muito comportamento atrás de interface pequena
 
 ## Contratos congelados cedo
 
-`Input`, `ConvertOptions` (`signal`, `allowCli`, `allowNetwork`, `backends`, `lang`), `Source`, `Metadata` (`schemaVersion: 1`, `sourceId`), `ConversionResult`, `Converter`, `ConverterEntry`, `Backend`, `Plugin`. Mudança só com aval dos dois. Decisão de forma: [ADR 0003](adr/0003-chain-handlers-decidem.md).
+`Input`, `ConvertOptions` (`signal`, `allowCli`, `allowNetwork`, `backends`, `lang`), `Source`, `Metadata` (`schemaVersion: 1`, `sourceId`), `ConversionResult`, `Converter`, `ConverterEntry`, `Backend`, `Plugin`. Surgiram ao escrever o código, porque os contratos acima não fechavam sem eles: `ConversionWarning`, `ConverterContext` (traz `sourceId`, `options` e o `BackendRunner`), `BackendRunner`, `BackendContext`, `Capability`, `Locality` e `PluginHost`. `ConverterEntry` ganhou `extensions` para o detector mapear `.srt` para um mime sem editar a lib. Código em `src/core/types.ts`. Mudança só com aval dos dois. Decisão de forma: [ADR 0003](adr/0003-chain-handlers-decidem.md).
 
 ## Testes
 
