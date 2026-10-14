@@ -18,6 +18,10 @@ const noBackends: BackendRunner = {
 
 const toSource = (input: Input): Source => (input instanceof Uint8Array ? { data: input } : input);
 
+/** Last segment of a POSIX or Windows path, or undefined when nothing is left. */
+const baseName = (name: string | undefined): string | undefined =>
+  name?.split(/[\\/]/).pop() || undefined;
+
 /** Facade: detects the format, resolves the converter and runs it. */
 export class Anymark {
   readonly registry: ConverterRegistry;
@@ -27,18 +31,27 @@ export class Anymark {
   }
 
   async convert(input: Input, options: ConvertOptions = {}): Promise<ConversionResult> {
-    const source = toSource(input);
+    options.signal?.throwIfAborted();
+    const { data, ...hints } = toSource(input);
+    // A directory in the name would leak a local path into every output.
+    const name = baseName(hints.name);
     // Tracer: mime hint, then extension. FormatDetectorChain replaces this.
     const mime =
-      source.mime ??
-      (source.name === undefined
-        ? undefined
-        : this.registry.mimeForExtension(extname(source.name)));
+      hints.mime ??
+      (name === undefined ? undefined : this.registry.mimeForExtension(extname(name)));
     const converter = mime === undefined ? undefined : await this.registry.resolve(mime);
     if (mime === undefined || converter === undefined) throw new UnsupportedFormatError();
 
-    const sourceId = createHash('sha256').update(source.data).digest('hex');
-    return converter.convert({ ...source, mime }, { sourceId, options, backends: noBackends });
+    const sourceId = createHash('sha256').update(data).digest('hex');
+    const source: Source = name === undefined ? { data, mime } : { data, mime, name };
+    options.signal?.throwIfAborted();
+    const result = await converter.convert(source, { sourceId, options, backends: noBackends });
+    // The facade owns identity: a plugin cannot spoof the hash or smuggle a path in the name.
+    const { name: _ignored, ...metadata } = result.metadata;
+    return {
+      ...result,
+      metadata: name === undefined ? { ...metadata, sourceId } : { ...metadata, sourceId, name },
+    };
   }
 }
 
