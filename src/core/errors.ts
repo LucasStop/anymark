@@ -17,3 +17,25 @@ export class UnsupportedFormatError extends Error {
     this.name = 'UnsupportedFormatError';
   }
 }
+
+/** A backend needs a flag the caller did not set. Names the flag, nothing about the input. */
+export class OptInRequiredError extends Error {
+  readonly code = 'OPT_IN_REQUIRED';
+
+  constructor(flag: 'allowCli' | 'allowNetwork') {
+    super(`${flag} is required`);
+    this.name = 'OptInRequiredError';
+  }
+}
+
+export type SpawnFailure = 'timeout' | 'aborted' | 'output-too-large' | 'failed';
+
+/** A child process did not finish. The message never carries the command, paths or stderr. */
+export class SpawnError extends Error {
+  readonly code = 'SPAWN_FAILED';
+
+  constructor(readonly reason: SpawnFailure) {
+    super(`Child process failed: ${reason}`);
+    this.name = 'SpawnError';
+  }
+}
