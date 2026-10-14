@@ -26,6 +26,7 @@ export class CsvConverter implements Converter {
   readonly mimes = [MIME];
 
   async convert(source: Source, ctx: ConverterContext): Promise<ConversionResult> {
+    ctx.options.signal?.throwIfAborted();
     // TextDecoder drops a leading BOM, which Excel adds to UTF-8 CSV.
     const text = new TextDecoder('utf-8').decode(source.data);
     let rows: string[][];
