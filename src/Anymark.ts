@@ -1,5 +1,4 @@
 import { createHash } from 'node:crypto';
-import { extname } from 'node:path';
 import { builtInEntries } from './converters/index.js';
 import { ConverterRegistry } from './core/ConverterRegistry.js';
 import { UnsupportedFormatError } from './core/errors.js';
@@ -10,6 +9,8 @@ import type {
   Input,
   Source,
 } from './core/types.js';
+import { createDefaultDetector } from './detection/index.js';
+import type { FormatDetectorChain } from './detection/FormatDetectorChain.js';
 
 // No backend chain yet: any capability request fails until one is wired in.
 const noBackends: BackendRunner = {
@@ -25,9 +26,14 @@ const baseName = (name: string | undefined): string | undefined =>
 /** Facade: detects the format, resolves the converter and runs it. */
 export class Anymark {
   readonly registry: ConverterRegistry;
+  readonly #detector: FormatDetectorChain;
 
-  constructor(registry: ConverterRegistry = new ConverterRegistry()) {
+  constructor(
+    registry: ConverterRegistry = new ConverterRegistry(),
+    detector: FormatDetectorChain = createDefaultDetector(registry),
+  ) {
     this.registry = registry;
+    this.#detector = detector;
   }
 
   async convert(input: Input, options: ConvertOptions = {}): Promise<ConversionResult> {
@@ -35,10 +41,7 @@ export class Anymark {
     const { data, ...hints } = toSource(input);
     // A directory in the name would leak a local path into every output.
     const name = baseName(hints.name);
-    // Tracer: mime hint, then extension. FormatDetectorChain replaces this.
-    const mime =
-      hints.mime ??
-      (name === undefined ? undefined : this.registry.mimeForExtension(extname(name)));
+    const mime = this.#detector.detect({ data, ...hints, ...(name === undefined ? {} : { name }) });
     const converter = mime === undefined ? undefined : await this.registry.resolve(mime);
     if (mime === undefined || converter === undefined) throw new UnsupportedFormatError();
 

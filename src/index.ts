@@ -21,3 +21,14 @@ export type {
   PluginHost,
   Source,
 } from './core/types.js';
+export { FormatDetectorChain } from './detection/FormatDetectorChain.js';
+export type { DetectionInput, FormatHandler } from './detection/FormatDetectorChain.js';
+export {
+  ExtensionHandler,
+  HintHandler,
+  PlainTextHandler,
+  SignatureHandler,
+  StructuredTextHandler,
+  ZipHandler,
+} from './detection/handlers.js';
+export { createDefaultDetector } from './detection/index.js';

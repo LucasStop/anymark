@@ -11,7 +11,7 @@ Vocabulário: módulo profundo = muito comportamento atrás de interface pequena
 | `Anymark` | `convert(input, options)`, `use(plugin)`, `addSink(sink)`. Criado por `createAnymark()` | detecção, resolução do converter, decorators, backends, sinks, hash do conteúdo | Facade |
 | `ConverterRegistry` | `register(entry)`, `resolve(format)` | carga lazy (`load()`), conflito de mime, ordem de registro | Registry/Plugin |
 | `Converter` | `convert(input, ctx)` devolve `ConversionResult`; declara nome e mimes | parser e dependência do formato | Strategy |
-| `FormatDetectorChain` | `detect(bytes, hint)` devolve formato | assinatura, ZIP/OOXML, sniff de texto, extensão | Chain |
+| `FormatDetectorChain` | `detect({ data, name?, mime? })` devolve o mime ou `undefined` | assinatura, ZIP/OOXML, sniff de texto, extensão | Chain |
 | `MarkdownBuilder` | `heading`, `list`, `table`, `code`, `build` | escape de pipe, aninhamento, linhas em branco | Builder |
 | `Backend<In, Out>` | `capability`, `locality`, `isAvailable()`, `run(input, ctx)` | CLI, API ou WASM por trás | Adapter |
 | `BackendChain` | `run(capability, input, options)` | ordem, pulo de indisponível, opt-in, fallback, `NoBackendError` | Chain |
@@ -62,6 +62,5 @@ Seams de teste confirmados em 14/10: `convert()` ponta a ponta, kit de contrato 
 
 ## Aberto
 
-- Forma exata da `FormatDetectorChain` (handlers como objetos com `next` ou como funções compostas). Decidir com `council` só se a dupla divergir.
 - Quantos decorators entram de fato. Meta: front matter e chunking no mínimo.
 - Segundo adapter de `ResultSink` para sustentar o Observer.
