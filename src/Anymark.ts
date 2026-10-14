@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { extname } from 'node:path';
 import { builtInEntries } from './converters/index.js';
 import { ConverterRegistry } from './core/ConverterRegistry.js';
+import { UnsupportedFormatError } from './core/errors.js';
 import type {
   BackendRunner,
   ConversionResult,
@@ -34,7 +35,7 @@ export class Anymark {
         ? undefined
         : this.registry.mimeForExtension(extname(source.name)));
     const converter = mime === undefined ? undefined : await this.registry.resolve(mime);
-    if (mime === undefined || converter === undefined) throw new Error('Unsupported format');
+    if (mime === undefined || converter === undefined) throw new UnsupportedFormatError();
 
     const sourceId = createHash('sha256').update(source.data).digest('hex');
     return converter.convert({ ...source, mime }, { sourceId, options, backends: noBackends });
