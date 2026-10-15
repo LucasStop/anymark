@@ -1,0 +1,88 @@
+import { readFileSync } from 'node:fs';
+import { describe, expect, it } from 'vitest';
+import { ConversionError, createAnymark } from '../src/index.js';
+import { assertConverterContract } from '../src/testing/index.js';
+import { HtmlConverter } from '../src/converters/HtmlConverter.js';
+
+const html = (value: string) => ({ data: new TextEncoder().encode(value), name: 'a.html' });
+
+describe('html converter', () => {
+  it('converts title, list, table and link to GFM', async () => {
+    const result = await createAnymark().convert({
+      data: new Uint8Array(readFileSync(new URL('../specs/html/simple.html', import.meta.url))),
+      name: 'simple.html',
+    });
+
+    expect(result.markdown).toBe(
+      [
+        '# Título',
+        '',
+        'Texto com **negrito** e um [link](https://example.com/a).',
+        '',
+        '- um',
+        '- dois',
+        '',
+        '| Nome | Idade |',
+        '| --- | --- |',
+        '| Ana | 30 |',
+        '| Bruno | 28 |',
+        '',
+      ].join('\n'),
+    );
+    expect(result.metadata.mime).toBe('text/html');
+  });
+
+  it('keeps script, style and head out of the output', async () => {
+    const { markdown } = await createAnymark().convert(
+      html(
+        '<html><head><title>T</title><style>p{}</style></head><body><p>ok</p><script>evil()</script><noscript>nojs</noscript><style>.a{}</style></body></html>',
+      ),
+    );
+
+    expect(markdown).toBe('ok\n');
+  });
+
+  it('does not run or fetch anything from the document', async () => {
+    const { markdown } = await createAnymark().convert(
+      html('<p onclick="x()">a</p><iframe src="http://t/x"></iframe><img src="http://t/p.png">'),
+    );
+
+    expect(markdown).not.toMatch(/onclick|iframe|<script/);
+  });
+
+  it('drops text a reader never sees, which could carry hidden instructions', async () => {
+    const { markdown } = await createAnymark().convert(
+      html(
+        '<p>shown</p><p hidden>H1</p><p aria-hidden="true">H2</p><p style="display: none">H3</p><p style="visibility:hidden">H4</p><textarea>H5</textarea><object>H6</object><iframe>H7</iframe>',
+      ),
+    );
+
+    expect(markdown).toBe('shown\n');
+  });
+
+  it('keeps the text of a link but not a javascript: or data: target', async () => {
+    const { markdown } = await createAnymark().convert(
+      html(
+        '<a href="javascript:alert(1)">one</a> <a href=" JavaScript:x">two</a> <a href="data:text/html,x">three</a><img src="data:image/png;base64,AAAA" alt="pic"> <a href="https://ok.example/">ok</a>',
+      ),
+    );
+
+    expect(markdown).toBe('one two three [ok](https://ok.example/)\n');
+  });
+
+  it('fails with a ConversionError, not a stack overflow, on absurd nesting', async () => {
+    const deep = `${'<div>'.repeat(5000)}x${'</div>'.repeat(5000)}`;
+
+    await expect(createAnymark().convert(html(deep))).rejects.toBeInstanceOf(ConversionError);
+  });
+
+  it('returns empty Markdown for an empty document', async () => {
+    const { markdown } = await createAnymark().convert(html(''));
+
+    expect(markdown).toBe('');
+  });
+
+  it('passes the converter contract', async () => {
+    await assertConverterContract(new HtmlConverter(), html('<h1>a</h1>'));
+  });
+});
