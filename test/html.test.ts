@@ -63,7 +63,7 @@ describe('html converter', () => {
   it('keeps the text of a link but not a javascript: or data: target', async () => {
     const { markdown } = await createAnymark().convert(
       html(
-        '<a href="javascript:alert(1)">one</a> <a href=" JavaScript:x">two</a> <a href="data:text/html,x">three</a> <img src="data:image/png;base64,AAAA" alt="pic"> <a href="https://ok.example/">ok</a>',
+        '<a href="javascript:alert(1)">one</a> <a href=" JavaScript:x">two</a> <a href="data:text/html,x">three</a><img src="data:image/png;base64,AAAA" alt="pic"> <a href="https://ok.example/">ok</a>',
       ),
     );
 
