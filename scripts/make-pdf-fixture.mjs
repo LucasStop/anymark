@@ -1,5 +1,6 @@
 // Writes specs/pdf/simple.pdf: two pages, one line of Helvetica text each. Run: node scripts/make-pdf-fixture.mjs
 import { writeFileSync } from 'node:fs';
+import { URL } from 'node:url';
 
 const pages = ['Hello page one', 'Second page text'];
 const objects = ['<< /Type /Catalog /Pages 2 0 R >>'];
