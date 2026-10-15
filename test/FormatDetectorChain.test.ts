@@ -193,6 +193,7 @@ describe('default detection in createAnymark', () => {
   it('lets content beat the extension for a renamed binary', async () => {
     const renamed = { ...bytes(...ascii('%PDF-1.4')), name: 'notes.txt' };
 
-    await expect(createAnymark().convert(renamed)).rejects.toThrow('Unsupported format');
+    // Reached the pdf converter (which rejects these bytes), not the txt one the name asks for.
+    await expect(createAnymark().convert(renamed)).rejects.toThrow('Could not convert pdf content');
   });
 });

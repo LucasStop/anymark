@@ -38,4 +38,10 @@ export const builtInEntries: readonly ConverterEntry[] = [
     extensions: ['.html', '.htm'],
     load: async () => new (await import('./HtmlConverter.js')).HtmlConverter(),
   },
+  {
+    name: 'pdf',
+    mimes: ['application/pdf'],
+    extensions: ['.pdf'],
+    load: async () => new (await import('./PdfConverter.js')).PdfConverter(),
+  },
 ];
