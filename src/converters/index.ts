@@ -56,4 +56,10 @@ export const builtInEntries: readonly ConverterEntry[] = [
     extensions: ['.pptx'],
     load: async () => new (await import('./PptxConverter.js')).PptxConverter(),
   },
+  {
+    name: 'docx',
+    mimes: ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+    extensions: ['.docx'],
+    load: async () => new (await import('./DocxConverter.js')).DocxConverter(),
+  },
 ];
