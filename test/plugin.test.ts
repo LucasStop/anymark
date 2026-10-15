@@ -80,7 +80,47 @@ describe('the .srt example plugin', () => {
   });
 });
 
+describe('the .srt plugin on untrusted cue text', () => {
+  const convert = (srt: string) =>
+    createAnymark()
+      .use(srtPlugin)
+      .convert({ data: new TextEncoder().encode(srt), name: 'x.srt' });
+
+  it('neutralises raw HTML and links instead of passing them through', async () => {
+    const { markdown } = await convert(
+      '1\n00:00:01,000 --> 00:00:02,000\n<i>hi</i> <img src=x onerror=alert(1)> ![t](http://t/x.png) [a](javascript:1)\n',
+    );
+
+    expect(markdown).not.toMatch(/<|!\[|(?<!\\)\[/);
+    expect(markdown).toContain('hi');
+  });
+
+  it('warns about a cue that has a time but no text', async () => {
+    const { warnings } = await convert('1\n00:00:01,000 --> 00:00:02,000\n\n');
+
+    expect(warnings).toEqual([{ code: 'SRT_CUE_SKIPPED', message: 'Skipped 1 cue without text' }]);
+  });
+});
+
 describe('lazy load()', () => {
+  it('lets a later conversion retry after load() rejected', async () => {
+    let attempts = 0;
+    const anymark = createAnymark().use(
+      pluginOf({
+        ...labelled('a', 'x/a'),
+        load: async () => {
+          attempts += 1;
+          if (attempts === 1) throw new Error('import failed');
+          return labelled('a', 'x/a').load();
+        },
+      }),
+    );
+    const file = { data: new Uint8Array([1]), name: 'f.lbl' };
+
+    await expect(anymark.convert(file)).rejects.toThrow();
+    await expect(anymark.convert(file)).resolves.toMatchObject({ markdown: 'a\n' });
+  });
+
   const file = { data: new Uint8Array([1]), name: 'f.lbl' };
 
   it('does not run until the first conversion of that format', () => {
