@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { createAnymark } from '../src/index.js';
+import { ConversionError, createAnymark } from '../src/index.js';
 import { assertConverterContract } from '../src/testing/index.js';
 import { HtmlConverter } from '../src/converters/HtmlConverter.js';
 
@@ -48,6 +48,32 @@ describe('html converter', () => {
     );
 
     expect(markdown).not.toMatch(/onclick|iframe|<script/);
+  });
+
+  it('drops text a reader never sees, which could carry hidden instructions', async () => {
+    const { markdown } = await createAnymark().convert(
+      html(
+        '<p>shown</p><p hidden>H1</p><p aria-hidden="true">H2</p><p style="display: none">H3</p><p style="visibility:hidden">H4</p><textarea>H5</textarea><object>H6</object><iframe>H7</iframe>',
+      ),
+    );
+
+    expect(markdown).toBe('shown\n');
+  });
+
+  it('keeps the text of a link but not a javascript: or data: target', async () => {
+    const { markdown } = await createAnymark().convert(
+      html(
+        '<a href="javascript:alert(1)">one</a> <a href=" JavaScript:x">two</a> <a href="data:text/html,x">three</a> <img src="data:image/png;base64,AAAA" alt="pic"> <a href="https://ok.example/">ok</a>',
+      ),
+    );
+
+    expect(markdown).toBe('one two three [ok](https://ok.example/)\n');
+  });
+
+  it('fails with a ConversionError, not a stack overflow, on absurd nesting', async () => {
+    const deep = `${'<div>'.repeat(20000)}x${'</div>'.repeat(20000)}`;
+
+    await expect(createAnymark().convert(html(deep))).rejects.toBeInstanceOf(ConversionError);
   });
 
   it('returns empty Markdown for an empty document', async () => {
