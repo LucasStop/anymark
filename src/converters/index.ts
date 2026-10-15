@@ -56,4 +56,16 @@ export const builtInEntries: readonly ConverterEntry[] = [
     extensions: ['.png', '.jpg', '.jpeg', '.gif', '.webp'],
     load: async () => new (await import('./ImageConverter.js')).ImageConverter(),
   },
+  {
+    name: 'pptx',
+    mimes: ['application/vnd.openxmlformats-officedocument.presentationml.presentation'],
+    extensions: ['.pptx'],
+    load: async () => new (await import('./PptxConverter.js')).PptxConverter(),
+  },
+  {
+    name: 'docx',
+    mimes: ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+    extensions: ['.docx'],
+    load: async () => new (await import('./DocxConverter.js')).DocxConverter(),
+  },
 ];
