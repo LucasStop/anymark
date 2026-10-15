@@ -5,6 +5,9 @@ import type { Converter, ConverterContext, Plugin, Source } from '../../../src/i
 const MIME = 'application/x-subrip';
 const CUE_TIME = /^(\d{2}:\d{2}:\d{2})[,.]\d{3}\s*-->/;
 
+// Cue text is untrusted: drop tags (<i>, <font>, raw HTML) and defuse link and image syntax.
+const plain = (text: string) => text.replace(/<[^>]*>/g, '').replace(/[[\]!\\]/g, '\\$&');
+
 /** Subtitles to Markdown: one paragraph per cue, led by its start time. */
 class SrtConverter implements Converter {
   readonly name = 'srt';
@@ -14,18 +17,23 @@ class SrtConverter implements Converter {
     ctx.options.signal?.throwIfAborted();
     const text = new TextDecoder('utf-8').decode(source.data).replace(/\r\n?/g, '\n');
     const builder = new MarkdownBuilder();
+    let skipped = 0;
     for (const block of text.split(/\n{2,}/)) {
       const lines = block.split('\n').filter((line) => line.trim() !== '');
       const timeAt = lines.findIndex((line) => CUE_TIME.test(line));
       const start = CUE_TIME.exec(lines[timeAt] ?? '')?.[1];
       if (start === undefined) continue;
-      const words = lines.slice(timeAt + 1).join(' ');
-      if (words !== '') builder.paragraph(`**${start}** ${words}`);
+      const words = plain(lines.slice(timeAt + 1).join(' ')).trim();
+      if (words === '') skipped += 1;
+      else builder.paragraph(`**${start}** ${words}`);
     }
     return {
       markdown: builder.build(),
       metadata: { schemaVersion: 1 as const, sourceId: ctx.sourceId, mime: MIME },
-      warnings: [],
+      warnings:
+        skipped === 0
+          ? []
+          : [{ code: 'SRT_CUE_SKIPPED', message: `Skipped ${skipped} cue without text` }],
     };
   }
 }

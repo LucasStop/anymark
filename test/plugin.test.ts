@@ -50,7 +50,7 @@ describe('use(plugin)', () => {
 });
 
 describe('the .srt example plugin', () => {
-  it('converts a subtitle file to the golden Markdown, with no change to src/', async () => {
+  it('converts a subtitle file to the golden Markdown', async () => {
     const result = await createAnymark()
       .use(srtPlugin)
       .convert({ data: new Uint8Array(spec('srt/simple.srt')), name: 'simple.srt' });
