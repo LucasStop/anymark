@@ -32,4 +32,10 @@ export const builtInEntries: readonly ConverterEntry[] = [
     extensions: ['.xml'],
     load: async () => new (await import('./XmlConverter.js')).XmlConverter(),
   },
+  {
+    name: 'pdf',
+    mimes: ['application/pdf'],
+    extensions: ['.pdf'],
+    load: async () => new (await import('./PdfConverter.js')).PdfConverter(),
+  },
 ];
