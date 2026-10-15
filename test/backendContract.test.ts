@@ -53,6 +53,15 @@ describe('assertBackendContract', () => {
     await expect(assertBackendContract(absent as Backend, 'sample')).resolves.toBeUndefined();
   });
 
+  it('reports a failing run as a rule, never with the backend error text', async () => {
+    const leaky = good({ run: () => Promise.reject(new Error('key sk-SECRET at /Users/x')) });
+    const error = await violation(leaky);
+
+    expect(error).toBeInstanceOf(ContractError);
+    expect((error as Error).message).toMatch(/run/);
+    expect((error as Error).message).not.toMatch(/sk-SECRET|\/Users/);
+  });
+
   it('never echoes the sample in the message', async () => {
     const error = await assertBackendContract(
       good({ name: '' }) as Backend,
