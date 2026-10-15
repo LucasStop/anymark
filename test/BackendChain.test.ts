@@ -93,8 +93,13 @@ describe('BackendChain', () => {
         'remote:x',
       );
       expect(cli.calls).toBe(0);
-      await expect(chain([remote, cli], { allowCli: true }).run('ocr', 'x')).resolves.toBe('cli:x');
-      expect(remote.calls).toBe(0);
+
+      const otherCli = fake('cli', { locality: 'cli' });
+      const otherRemote = fake('remote', { locality: 'remote' });
+      await expect(
+        chain([otherRemote, otherCli], { allowCli: true }).run('ocr', 'x'),
+      ).resolves.toBe('cli:x');
+      expect(otherRemote.calls).toBe(0);
     });
 
     it('does not even ask a backend without opt-in whether it is available', async () => {
