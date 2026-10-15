@@ -33,6 +33,7 @@
     "@eslint/js": "^10.0.1",
     "@types/node": "^22.20.5",
     "eslint": "^10.12.0",
+    "fflate": "^0.8.3",
     "prettier": "^3.9.10",
     "typescript": "~6.0",
     "typescript-eslint": "^8.71.2",
@@ -41,6 +42,7 @@
   "dependencies": {
     "chardet": "^2.2.0",
     "csv-parse": "^7.0.3",
-    "fast-xml-parser": "^5.11.2"
+    "fast-xml-parser": "^5.11.2",
+    "read-excel-file": "^9.3.12"
   }
 }
