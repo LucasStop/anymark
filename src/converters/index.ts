@@ -32,4 +32,10 @@ export const builtInEntries: readonly ConverterEntry[] = [
     extensions: ['.xml'],
     load: async () => new (await import('./XmlConverter.js')).XmlConverter(),
   },
+  {
+    name: 'xlsx',
+    mimes: ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+    extensions: ['.xlsx'],
+    load: async () => new (await import('./XlsxConverter.js')).XlsxConverter(),
+  },
 ];
