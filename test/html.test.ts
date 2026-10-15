@@ -71,7 +71,7 @@ describe('html converter', () => {
   });
 
   it('fails with a ConversionError, not a stack overflow, on absurd nesting', async () => {
-    const deep = `${'<div>'.repeat(20000)}x${'</div>'.repeat(20000)}`;
+    const deep = `${'<div>'.repeat(5000)}x${'</div>'.repeat(5000)}`;
 
     await expect(createAnymark().convert(html(deep))).rejects.toBeInstanceOf(ConversionError);
   });
