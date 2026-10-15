@@ -1,21 +1,11 @@
 import { createHash } from 'node:crypto';
+import { BackendChain } from './backends/BackendChain.js';
 import { builtInEntries } from './converters/index.js';
 import { ConverterRegistry } from './core/ConverterRegistry.js';
 import { UnsupportedFormatError } from './core/errors.js';
-import type {
-  BackendRunner,
-  ConversionResult,
-  ConvertOptions,
-  Input,
-  Source,
-} from './core/types.js';
+import type { Backend, ConversionResult, ConvertOptions, Input, Source } from './core/types.js';
 import { createDefaultDetector } from './detection/index.js';
 import type { FormatDetectorChain } from './detection/FormatDetectorChain.js';
-
-// No backend chain yet: any capability request fails until one is wired in.
-const noBackends: BackendRunner = {
-  run: () => Promise.reject(new Error('No backend configured')),
-};
 
 const toSource = (input: Input): Source => (input instanceof Uint8Array ? { data: input } : input);
 
@@ -27,13 +17,16 @@ const baseName = (name: string | undefined): string | undefined =>
 export class Anymark {
   readonly registry: ConverterRegistry;
   readonly #detector: FormatDetectorChain;
+  readonly #backends: readonly Backend[];
 
   constructor(
     registry: ConverterRegistry = new ConverterRegistry(),
     detector: FormatDetectorChain = createDefaultDetector(registry),
+    backends: readonly Backend[] = [],
   ) {
     this.registry = registry;
     this.#detector = detector;
+    this.#backends = backends;
   }
 
   async convert(input: Input, options: ConvertOptions = {}): Promise<ConversionResult> {
@@ -48,11 +41,14 @@ export class Anymark {
     const sourceId = createHash('sha256').update(data).digest('hex');
     const source: Source = name === undefined ? { data, mime } : { data, mime, name };
     options.signal?.throwIfAborted();
-    const result = await converter.convert(source, { sourceId, options, backends: noBackends });
+    // One chain per call: it carries this call's opt-in flags, signal and absorbed failures.
+    const backends = new BackendChain(options.backends ?? this.#backends, options);
+    const result = await converter.convert(source, { sourceId, options, backends });
     // The facade owns identity: a plugin cannot spoof the hash or smuggle a path in the name.
     const { name: _ignored, ...metadata } = result.metadata;
     return {
       ...result,
+      warnings: [...result.warnings, ...backends.warnings],
       metadata: name === undefined ? { ...metadata, sourceId } : { ...metadata, sourceId, name },
     };
   }
