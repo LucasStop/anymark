@@ -50,4 +50,10 @@ export const builtInEntries: readonly ConverterEntry[] = [
     extensions: ['.pdf'],
     load: async () => new (await import('./PdfConverter.js')).PdfConverter(),
   },
+  {
+    name: 'image',
+    mimes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
+    extensions: ['.png', '.jpg', '.jpeg', '.gif', '.webp'],
+    load: async () => new (await import('./ImageConverter.js')).ImageConverter(),
+  },
 ];
