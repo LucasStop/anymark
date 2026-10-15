@@ -39,3 +39,13 @@ export class SpawnError extends Error {
     this.name = 'SpawnError';
   }
 }
+
+/** No backend could serve a capability. Names the capability only, never an input or a failure cause. */
+export class NoBackendError extends Error {
+  readonly code = 'NO_BACKEND';
+
+  constructor(capability: string) {
+    super(`No backend available for ${capability}`);
+    this.name = 'NoBackendError';
+  }
+}
