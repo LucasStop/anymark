@@ -24,7 +24,7 @@ Prazos: 28/10 congela o escopo do MVP. 29/10 é a apresentação do parcial (30%
 | Template | Repositório `LucasStop/project-template`, extraído do anymark no fim (stretch). |
 | Idioma | PT-BR em README, docs e vídeo. Identificadores, commits e PRs em inglês. |
 | Padrões | Stopinski: Adapter e Chain of Responsibility. Bruno: Strategy/Registry e Builder. Extras no código: Decorator, Observer, Facade. |
-| RAG | Opcional, fora do core, segunda entrega: vincular os `.md` dos repositórios que usam a lib. |
+| RAG | Opcional, fora do core, segunda entrega: vincular em lote os `.md` dos repositórios que usam a lib. |
 | Fine-tuning | Não usar. Modelo ajustado de terceiro entra como `Backend`. |
 
 ## Stack verificada em 14/10/2026
@@ -77,15 +77,15 @@ Reconferir com `npm view` ao instalar. Versões conferidas em 14/10/2026: read-e
 
 ## Backends de IA
 
-- `claude` 2.1.296: existem `--safe-mode` (desliga CLAUDE.md, hooks, MCP e plugins do ambiente de quem roda), `--restricted`, `--tools`, `--permission-prompts none`, `--no-session-persistence` e `--output-format`. **`--max-turns` não aparece no `--help`: não usar.** Proposta a validar no spike: `claude -p --safe-mode --tools Read --permission-prompts none --no-session-persistence --output-format json`, com cwd em tmp isolado, a imagem como arquivo e leitura do campo `result`. `--bare` não serve (pula o keychain). Se `--safe-mode` e `--restricted` mantêm o login de assinatura: a testar.
-- `codex-cli` 0.162.1: existem `-i`, `-s`, `-C`, `--skip-git-repo-check`, `--ephemeral`, `--ignore-user-config` e `-o`. Comportamento real não testado.
-- `agy` 1.3.5: existem `-p`, `--output-format json`, `--json-schema`, `--add-dir`, `--mode` e `--sandbox`. **Sem flag de imagem ou áudio no `--help`.** Não se sabe se aceita áudio por caminho. Spike antes de entrar na cadeia; se falhar, sai da cadeia.
+- `claude` 2.1.296: existem `--safe-mode` (desliga CLAUDE.md, hooks, MCP e plugins do ambiente de quem roda), `--restricted`, `--tools`, `--permission-prompts none`, `--no-session-persistence` e `--output-format`. **`--max-turns` não aparece no `--help`: não usar.** **Validado no spike de 14/10/2026:** `claude -p --safe-mode --tools Read --permission-prompts none --no-session-persistence --output-format json "<prompt>"`, com cwd em tmp isolado e a imagem como arquivo, leu o texto da imagem certo no campo `result`, manteve o login de assinatura e custou cerca de US$ 0,01 (2,6 s). `--restricted` não foi testado. `--bare` não serve (pula o keychain).
+- `codex-cli` 0.162.1: existem `-i`, `-s`, `-C`, `--skip-git-repo-check`, `--ephemeral`, `--ignore-user-config` e `-o`. **Validado no spike de 14/10/2026:** `codex exec --skip-git-repo-check --ephemeral --ignore-user-config -s read-only -C <tmp> -i img.png -o out.txt "<prompt>"` leu o texto da imagem certo e manteve o login (cerca de 8 mil tokens). A resposta final fica no arquivo de `-o`.
+- `agy` 1.3.5: existem `-p`, `--output-format json`, `--json-schema`, `--add-dir`, `--mode` e `--sandbox`. **Sem flag de imagem ou áudio no `--help`.** **Validado no spike de 14/10/2026:** aceita áudio por caminho dentro de `--add-dir`. `agy --output-format json --add-dir <tmp> -p="<prompt>"` transcreveu um WAV de 16 kHz mono ("purple giraffe orchestra, nine eight three" voltou como `purple giraffe orchestra 983`, em 12,6 s e cerca de 40 mil tokens). O prompt tem de vir colado na flag (`-p="..."`): com `-p "..."` e `--output-format` depois, o `-p` engole a flag como prompt. A resposta vem em `response`. Números falados viram dígitos. É lento (12 s a 190 s) e gasta de 40 mil a 200 mil tokens por chamada, então fica no fim da cadeia de áudio. Imagem não foi testada.
 - Ordem padrão: imagem = tesseract.js, Gemini, `claude -p`, `codex exec -i`. Áudio = whisper-cli, Gemini, OpenAI, `agy -p`. Claude e Codex não recebem áudio.
 - Whisper: converter antes com `ffmpeg -y -i in -ar 16000 -ac 1 -c:a pcm_s16le out.wav`; modelo por `ANYMARK_WHISPER_MODEL`, sem caminho fixo. OpenAI aceita 25 MB por arquivo (comprimir e segmentar); Gemini aceita cerca de 20 MB inline.
 - `spawn.ts` único: `execFile` com array (sem shell), entrada copiada para `mkdtemp` com nome fixo, `timeout`, `signal`, `maxBuffer`, env em allowlist e `rm` no `finally`.
 - `BackendChain`: ordem configurável; `isAvailable` falso pula; `cli` exige `allowCli`; `remote` exige `allowNetwork`; erro de backend vira warning sem chave nem caminho; todos falhando lança `NoBackendError`. O modo conta ativa vale só para uso pessoal local e fica desligado por padrão. Saída de CLI de IA nunca vai para shell.
 - Testes não gastam quota: CLI falso em `fixtures/bin/` e teste real atrás de `ANYMARK_LIVE=1`. Nunca definir `OPENAI_API_KEY` nem `CODEX_API_KEY` no nível do job.
-- O spike faz uma chamada real por CLI e consome quota: combinar antes.
+- O spike de 14/10/2026 fez uma chamada real por CLI (o `agy` foram três, com o áudio). Chamada real nos testes só atrás de `ANYMARK_LIVE=1`.
 
 ## TDD, CI/CD, template e RAG
 
@@ -151,13 +151,13 @@ README e vídeo de defesa não se cortam.
 
 ## Pendências
 
-1. Convite ao `Luc-Bruno` enviado em 14/10 (permissão `write`); falta ele aceitar.
+1. ~~Convite ao `Luc-Bruno`~~ aceito (permissão `write`).
 2. Disponibilidade semanal de cada um.
 3. Duração máxima do vídeo, que define 4 ou 6 padrões defendidos (default: 4, citando as reservas).
-4. O professor aceita Chain, Registry e Facade? Qual o mínimo de padrões para dupla?
+4. ~~O professor aceita Chain, Registry e Facade?~~ Aceita (confirmado por Lucas Stopinski em 14/10/2026). Falta saber o mínimo de padrões para dupla.
 5. Node 22 na máquina de cada um (`nvm install 22`).
-6. Conta npm com 2FA e primeiro publish manual, ou pular a publicação (`npm pack` basta para o parcial).
-7. Spike dos CLIs de IA, uma chamada por CLI, combinando a quota antes.
-8. Significado de "vincular" no RAG (sugerir wikilinks, `related:` no front matter, backlinks) e se é plugin de exemplo ou pacote próprio.
+6. ~~Publicar no npm?~~ Decidido em 14/10/2026: `0.1.0` depois do parcial de 29/10 e `1.0.0` na entrega final. O login com 2FA é do Lucas. Roteiro na task do ClickUp "Publicar anymark 0.1.0 no npm" (30/10).
+7. ~~Spike dos CLIs de IA~~ feito em 14/10/2026, ver "Backends de IA".
+8. ~~Significado de "vincular" no RAG~~: agir sobre um lote de documentos (decidido em 14/10/2026). Falta escolher a forma do vínculo (wikilinks, `related:` no front matter ou backlinks) e se é plugin de exemplo ou pacote próprio, antes de começar a #27.
 9. Prettier e ESLint ou Biome (default: Prettier e ESLint). Licença (default: MIT).
 10. Se cada aluno entrega o link no Canvas.
