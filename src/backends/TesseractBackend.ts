@@ -26,6 +26,16 @@ function languageOf(hint: string | undefined): string {
   return lang !== undefined && CODE.test(lang) ? lang : 'eng';
 }
 
+// ponytail: no timeout of its own; callers pass a signal. Add one if hostile images matter.
+const MAX_BYTES = 25 * 1024 * 1024;
+
+class OcrError extends Error {
+  constructor() {
+    super('Tesseract OCR failed');
+    this.name = 'OcrError';
+  }
+}
+
 /** Adapter: tesseract.js (WASM, local) behind the OCR backend contract. */
 export class TesseractBackend implements Backend<Uint8Array, string> {
   readonly name = 'tesseract';
@@ -35,34 +45,54 @@ export class TesseractBackend implements Backend<Uint8Array, string> {
   constructor(private readonly options: TesseractOptions = {}) {}
 
   async isAvailable(): Promise<boolean> {
+    return this.#hasLanguage('eng');
+  }
+
+  /** The data for `lang` is local, or the caller allowed a download. */
+  async #hasLanguage(lang: string): Promise<boolean> {
     const { langPath, allowDownload } = this.options;
-    if (langPath === undefined) return allowDownload === true;
+    if (allowDownload === true) return true;
+    if (langPath === undefined) return false;
     try {
-      await access(join(langPath, 'eng.traineddata.gz'));
+      await access(join(langPath, `${lang}.traineddata.gz`));
       return true;
     } catch {
-      return allowDownload === true;
+      return false;
     }
   }
 
   async run(input: Uint8Array, ctx: BackendContext): Promise<string> {
     ctx.signal?.throwIfAborted();
+    const lang = languageOf(ctx.lang);
+    // run() is a door of its own: isAvailable() guards the chain, not a direct caller.
+    if (input.length > MAX_BYTES || !(await this.#hasLanguage(lang))) throw new OcrError();
     const { createWorker } = await import('tesseract.js');
     const { langPath, cachePath, allowDownload } = this.options;
-    const worker = await createWorker(languageOf(ctx.lang), 1, {
-      // langPath wins over the CDN: with it set, nothing is downloaded.
-      ...(langPath === undefined ? {} : { langPath }),
-      ...(allowDownload === true && cachePath !== undefined
-        ? { cachePath }
-        : { cacheMethod: 'none' }),
-      logger: () => {},
-    });
+    let worker: Awaited<ReturnType<typeof createWorker>>;
+    try {
+      worker = await createWorker(lang, 1, {
+        // langPath wins over the CDN: with it set, nothing is downloaded.
+        ...(langPath === undefined ? {} : { langPath }),
+        ...(allowDownload === true && cachePath !== undefined
+          ? { cachePath }
+          : { cacheMethod: 'none' }),
+        logger: () => {},
+      });
+    } catch {
+      throw new OcrError();
+    }
     const stop = () => void worker.terminate();
     ctx.signal?.addEventListener('abort', stop, { once: true });
     try {
+      // Aborted while the worker was starting: the listener was not there yet.
+      ctx.signal?.throwIfAborted();
       const { data } = await worker.recognize(Buffer.from(input));
       ctx.signal?.throwIfAborted();
       return data.text;
+    } catch (error) {
+      if (ctx.signal?.aborted === true) throw error;
+      // tesseract.js messages can carry local paths; the chain drops them, a direct caller must not see them.
+      throw new OcrError();
     } finally {
       ctx.signal?.removeEventListener('abort', stop);
       await worker.terminate();
