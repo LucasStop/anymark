@@ -17,6 +17,12 @@ describe('MarkdownBuilder', () => {
   });
 
   describe('table', () => {
+    it('writes a table of a few hundred thousand rows without overflowing the stack', () => {
+      const rows = Array.from({ length: 300_000 }, () => ['x']);
+
+      expect(() => new MarkdownBuilder().table(['h'], rows).build()).not.toThrow();
+    });
+
     it('writes a GFM table', () => {
       const md = new MarkdownBuilder()
         .table(

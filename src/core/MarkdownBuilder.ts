@@ -42,7 +42,9 @@ export class MarkdownBuilder {
   }
 
   table(header: readonly string[], rows: readonly (readonly string[])[]): this {
-    const width = Math.max(header.length, ...rows.map((row) => row.length));
+    // A loop, not Math.max(...rows): spreading a tall table overflows the call stack.
+    let width = header.length;
+    for (const row of rows) width = Math.max(width, row.length);
     const line = (cells: readonly string[]) =>
       `| ${Array.from({ length: width }, (_, i) => cell(cells[i] ?? '')).join(' | ')} |`;
     this.#blocks.push(
