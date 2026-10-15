@@ -20,7 +20,8 @@ function isFlatRows(value: unknown): value is Row[] {
         typeof row === 'object' &&
         row !== null &&
         !Array.isArray(row) &&
-        Object.values(row).every(isScalar),
+        Object.values(row).every(isScalar) &&
+        Object.keys(row).length > 0,
     )
   );
 }
@@ -43,7 +44,7 @@ export class JsonConverter implements Converter {
       const header = [...new Set(value.flatMap((row) => Object.keys(row)))];
       builder.table(
         header,
-        value.map((row) => header.map((key) => (key in row ? String(row[key]) : ''))),
+        value.map((row) => header.map((key) => (Object.hasOwn(row, key) ? String(row[key]) : ''))),
       );
     } else {
       builder.code(JSON.stringify(value, null, 2), 'json');
