@@ -39,6 +39,8 @@
     "vitest": "^5.0.4"
   },
   "dependencies": {
-    "csv-parse": "^7.0.3"
+    "chardet": "^2.2.0",
+    "csv-parse": "^7.0.3",
+    "fast-xml-parser": "^5.11.2"
   }
 }
