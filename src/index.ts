@@ -1,9 +1,11 @@
 export { Anymark, createAnymark } from './Anymark.js';
+export { BackendChain } from './backends/BackendChain.js';
 export { ConverterRegistry } from './core/ConverterRegistry.js';
 export { MarkdownBuilder } from './core/MarkdownBuilder.js';
 export type { ListItem } from './core/MarkdownBuilder.js';
 export {
   ConversionError,
+  NoBackendError,
   OptInRequiredError,
   SpawnError,
   UnsupportedFormatError,
