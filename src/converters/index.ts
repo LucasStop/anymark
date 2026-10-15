@@ -14,4 +14,22 @@ export const builtInEntries: readonly ConverterEntry[] = [
     extensions: ['.csv'],
     load: async () => new (await import('./CsvConverter.js')).CsvConverter(),
   },
+  {
+    name: 'md',
+    mimes: ['text/markdown'],
+    extensions: ['.md', '.markdown'],
+    load: async () => new (await import('./MdConverter.js')).MdConverter(),
+  },
+  {
+    name: 'json',
+    mimes: ['application/json'],
+    extensions: ['.json'],
+    load: async () => new (await import('./JsonConverter.js')).JsonConverter(),
+  },
+  {
+    name: 'xml',
+    mimes: ['application/xml'],
+    extensions: ['.xml'],
+    load: async () => new (await import('./XmlConverter.js')).XmlConverter(),
+  },
 ];
