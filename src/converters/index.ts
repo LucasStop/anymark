@@ -32,4 +32,10 @@ export const builtInEntries: readonly ConverterEntry[] = [
     extensions: ['.xml'],
     load: async () => new (await import('./XmlConverter.js')).XmlConverter(),
   },
+  {
+    name: 'html',
+    mimes: ['text/html'],
+    extensions: ['.html', '.htm'],
+    load: async () => new (await import('./HtmlConverter.js')).HtmlConverter(),
+  },
 ];
