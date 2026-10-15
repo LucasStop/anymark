@@ -53,6 +53,19 @@ describe('json converter', () => {
     expect(result.markdown.startsWith('```json\n')).toBe(true);
   });
 
+  it('does not read inherited properties as cells', async () => {
+    const { markdown } = await inline('[{"a":1},{"toString":2}]', 'x.json');
+
+    expect(markdown).not.toContain('native code');
+    expect(markdown).toBe('| a | toString |\n| --- | --- |\n| 1 |  |\n|  | 2 |\n');
+  });
+
+  it('sends rows without keys to a code block, not an empty table', async () => {
+    const { markdown } = await inline('[{},{}]', 'x.json');
+
+    expect(markdown.startsWith('```json\n')).toBe(true);
+  });
+
   it('rejects invalid JSON without echoing its content', async () => {
     const attempt = inline('{"token": "secret-token",', 'bad.json');
 
