@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 import { describe, expect, it } from 'vitest';
 import { DocxConverter } from '../src/converters/DocxConverter.js';
 import { ConversionError, createAnymark } from '../src/index.js';
@@ -40,5 +41,41 @@ describe('docx converter', () => {
 
     await expect(attempt).rejects.toBeInstanceOf(ConversionError);
     await expect(attempt).rejects.not.toThrow(/secret-token/);
+  });
+});
+
+/** The fixture with its document.xml rewritten by the caller. */
+const withBody = (edit: (xml: string) => string) => {
+  const files = unzipSync(new Uint8Array(spec('docx/simple.docx')));
+  files['word/document.xml'] = strToU8(edit(strFromU8(files['word/document.xml'] as Uint8Array)));
+  return zipSync(files);
+};
+
+describe('docx converter on hostile files', () => {
+  it('drops hidden text, which could carry instructions nobody sees', async () => {
+    const data = withBody((xml) =>
+      xml.replace(
+        '</w:body>',
+        '<w:p><w:r><w:rPr><w:vanish/></w:rPr><w:t>SECRET-INSTRUCTION</w:t></w:r><w:r><w:rPr><w:vanish w:val="0"/></w:rPr><w:t>shown</w:t></w:r></w:p></w:body>',
+      ),
+    );
+    const { markdown } = await createAnymark().convert({ data, name: 'h.docx' });
+
+    expect(markdown).not.toContain('SECRET-INSTRUCTION');
+    expect(markdown).toContain('shown');
+  });
+
+  it('refuses a document that inflates past the size limit', async () => {
+    const data = withBody((xml) =>
+      xml.replace(
+        '</w:body>',
+        `<w:p><w:r><w:t>${'x'.repeat(120 * 1024 * 1024)}</w:t></w:r></w:p></w:body>`,
+      ),
+    );
+
+    expect(data.length).toBeLessThan(1024 * 1024);
+    await expect(createAnymark().convert({ data, name: 'bomb.docx' })).rejects.toBeInstanceOf(
+      ConversionError,
+    );
   });
 });
