@@ -17,7 +17,13 @@ const CHROME = new Set(['sldImg', 'sldNum', 'ftr', 'dt', 'hdr']);
 /** fast-xml-parser with preserveOrder: [{ tag: children, ':@': attributes }, ...] */
 type XNode = Record<string, unknown>;
 
-const parser = new XMLParser({ preserveOrder: true, ignoreAttributes: false, trimValues: false });
+// parseTagValue off: text like 007 or 1.50 must not be rewritten as a number.
+const parser = new XMLParser({
+  preserveOrder: true,
+  ignoreAttributes: false,
+  trimValues: false,
+  parseTagValue: false,
+});
 const parse = (bytes: Uint8Array): XNode[] =>
   parser.parse(new TextDecoder().decode(bytes)) as XNode[];
 
@@ -101,7 +107,10 @@ function relationships(
     const id = attr(rel, 'Id');
     const target = attr(rel, 'Target');
     if (id !== undefined && target !== undefined) {
-      rels.set(id, { type: attr(rel, 'Type') ?? '', path: posix.join(base, target) });
+      rels.set(id, {
+        type: attr(rel, 'Type') ?? '',
+        path: target.startsWith('/') ? target.slice(1) : posix.join(base, target),
+      });
     }
   }
   return rels;
@@ -135,8 +144,8 @@ export class PptxConverter implements Converter {
         const part = parts[path];
         if (part === undefined) return;
         const blocks = blocksOf(parse(part));
-        const title = blocks.find((block) => block.kind === 'title');
-        builder.heading(2, title?.kind === 'title' ? title.text : `Slide ${index + 1}`);
+        const title = blocks.flatMap((block) => (block.kind === 'title' ? [block.text] : []));
+        builder.heading(2, title.length > 0 ? title.join(' ') : `Slide ${index + 1}`);
         for (const block of blocks) {
           if (block.kind === 'text') builder.paragraph(block.text);
           if (block.kind === 'table') {
