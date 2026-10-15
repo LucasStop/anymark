@@ -67,6 +67,19 @@ describe('BackendChain', () => {
     await expect(chain([broken, fake('ok')]).run('ocr', 'x')).resolves.toBe('ok:x');
   });
 
+  it('treats an isAvailable that throws synchronously as unavailable', async () => {
+    const broken: Fake = {
+      ...fake('broken'),
+      isAvailable: () => {
+        throw new Error('/Users/someone/key');
+      },
+    };
+    const backends = chain([broken, fake('ok')]);
+
+    await expect(backends.run('ocr', 'x')).resolves.toBe('ok:x');
+    expect(backends.warnings).toEqual([]);
+  });
+
   it('skips backends of another capability', async () => {
     const speech = fake('speech', { capability: 'transcription' });
     const ocr = fake('ocr');
@@ -162,6 +175,37 @@ describe('BackendChain', () => {
 
       await expect(run).rejects.toThrow();
       expect(backend.calls).toBe(0);
+    });
+
+    it('stops when the signal aborts while availability is being checked', async () => {
+      const controller = new AbortController();
+      const slow: Fake = {
+        ...fake('slow'),
+        isAvailable: async () => {
+          controller.abort();
+          return false;
+        },
+      };
+      const next = fake('next');
+
+      await expect(
+        chain([slow, next], { signal: controller.signal }).run('ocr', 'x'),
+      ).rejects.toThrow(/abort/i);
+      expect(next.calls).toBe(0);
+    });
+
+    it('does not return a result that arrives after the signal aborted', async () => {
+      const controller = new AbortController();
+      const stubborn = fake('stubborn', {
+        run: async (input) => {
+          controller.abort();
+          return input;
+        },
+      });
+
+      await expect(
+        chain([stubborn], { signal: controller.signal }).run('ocr', 'x'),
+      ).rejects.toThrow(/abort/i);
     });
 
     it('stops instead of falling through when the signal aborts mid-run', async () => {
