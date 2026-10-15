@@ -1,0 +1,4 @@
+```xml
+<?xml version="1.0"?>
+<root><item id="1">one</item><item id="2">two</item></root>
+```
