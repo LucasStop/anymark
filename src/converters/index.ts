@@ -38,4 +38,10 @@ export const builtInEntries: readonly ConverterEntry[] = [
     extensions: ['.xlsx'],
     load: async () => new (await import('./XlsxConverter.js')).XlsxConverter(),
   },
+  {
+    name: 'pdf',
+    mimes: ['application/pdf'],
+    extensions: ['.pdf'],
+    load: async () => new (await import('./PdfConverter.js')).PdfConverter(),
+  },
 ];

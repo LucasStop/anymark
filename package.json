@@ -43,6 +43,7 @@
     "chardet": "^2.2.0",
     "csv-parse": "^7.0.3",
     "fast-xml-parser": "^5.11.2",
-    "read-excel-file": "^9.3.12"
+    "read-excel-file": "^9.3.12",
+    "unpdf": "^1.9.0"
   }
 }
