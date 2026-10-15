@@ -50,4 +50,10 @@ export const builtInEntries: readonly ConverterEntry[] = [
     extensions: ['.pdf'],
     load: async () => new (await import('./PdfConverter.js')).PdfConverter(),
   },
+  {
+    name: 'pptx',
+    mimes: ['application/vnd.openxmlformats-officedocument.presentationml.presentation'],
+    extensions: ['.pptx'],
+    load: async () => new (await import('./PptxConverter.js')).PptxConverter(),
+  },
 ];
