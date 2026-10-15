@@ -9,9 +9,14 @@ import type {
 } from '../core/types.js';
 import { isOptedIn } from '../security/optIn.js';
 
-/** An unreachable backend is a fallback case, not a failure. */
-const isAvailable = (backend: Backend): Promise<boolean> =>
-  backend.isAvailable().catch(() => false);
+/** An unreachable backend is a fallback case, not a failure, even if it throws before returning a promise. */
+async function isAvailable(backend: Backend): Promise<boolean> {
+  try {
+    return (await backend.isAvailable()) === true;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * One link of the chain. It decides alone: serve the request, or pass it on.
@@ -31,14 +36,20 @@ class BackendHandler {
   ): Promise<Out> {
     const { backend, options } = this;
     if (backend.capability !== capability || !isOptedIn(backend.locality, options)) return next();
-    if (!(await isAvailable(backend))) return next();
+    const available = await isAvailable(backend);
+    // An abort during the check must stop the walk, not read as "unavailable".
+    options.signal?.throwIfAborted();
+    if (!available) return next();
 
     const ctx: BackendContext = {
       ...(options.signal === undefined ? {} : { signal: options.signal }),
       ...(options.lang === undefined ? {} : { lang: options.lang }),
     };
     try {
-      return (await backend.run(input, ctx)) as Out;
+      const result = (await backend.run(input, ctx)) as Out;
+      // A backend that ignores the signal must not have its late answer accepted.
+      options.signal?.throwIfAborted();
+      return result;
     } catch {
       // An abort is the caller's decision, not this backend's failure: do not fall through.
       options.signal?.throwIfAborted();

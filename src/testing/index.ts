@@ -82,7 +82,8 @@ const LOCALITIES: readonly Locality[] = ['local', 'cli', 'remote'];
 /**
  * Throws a `ContractError` on the first rule a backend breaks. `sample` is whatever
  * input the backend takes (an image, an audio file). A backend that is not available
- * on this machine is checked on its static shape only: the kit never forces a real call.
+ * on this machine is checked on its static shape only. An available backend is really
+ * called, so hand a CLI or remote adapter its fake (`fixtures/bin/`) to keep tests free.
  */
 export async function assertBackendContract(backend: Backend, sample: unknown): Promise<void> {
   const fail = (rule: string): never => {
@@ -102,7 +103,10 @@ export async function assertBackendContract(backend: Backend, sample: unknown): 
   if (typeof available !== 'boolean') fail('isAvailable must resolve to a boolean');
   if (available === false) return;
 
-  const result: unknown = await backend.run(sample, {});
+  // The backend's own error can quote the sample or a key: report the rule, not the cause.
+  const result: unknown = await backend
+    .run(sample, {})
+    .catch(() => fail('run must resolve for the sample'));
   if (result === undefined) fail('run must resolve to a result');
 
   const controller = new AbortController();
