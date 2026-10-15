@@ -24,7 +24,7 @@ export class PdfConverter implements Converter {
       throw new ConversionError('pdf');
     } finally {
       // pdf.js keeps the parsed document and fonts until destroyed.
-      await pdf?.destroy();
+      await pdf?.loadingTask.destroy();
     }
     const builder = new MarkdownBuilder();
     pages.forEach((text, i) => {
