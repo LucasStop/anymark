@@ -57,6 +57,45 @@ describe('TesseractBackend', () => {
     SLOW,
   );
 
+  describe('direct run()', () => {
+    it('refuses to download without the opt-in, even when called directly', async () => {
+      await expect(new TesseractBackend().run(png(), {})).rejects.toThrow(/Tesseract OCR failed/);
+    });
+
+    it('fails fast when the requested language is not in langPath', async () => {
+      await expect(new TesseractBackend({ langPath }).run(png(), { lang: 'por' })).rejects.toThrow(
+        /Tesseract OCR failed/,
+      );
+    });
+
+    it('does not leak a local path in its error', async () => {
+      const dir = mkdtempSync(join(tmpdir(), 'tess-'));
+      const error = await new TesseractBackend({ langPath: dir })
+        .run(png(), {})
+        .catch((e: unknown) => e);
+
+      expect((error as Error).message).not.toContain(dir);
+    });
+
+    it('rejects an input past the size limit before starting a worker', async () => {
+      await expect(
+        new TesseractBackend({ langPath }).run(new Uint8Array(26 * 1024 * 1024), {}),
+      ).rejects.toThrow(/Tesseract OCR failed/);
+    });
+
+    it(
+      'stops when the signal aborts while the worker is starting',
+      async () => {
+        const controller = new AbortController();
+        const run = new TesseractBackend({ langPath }).run(png(), { signal: controller.signal });
+        setTimeout(() => controller.abort(), 20);
+
+        await expect(run).rejects.toThrow();
+      },
+      SLOW,
+    );
+  });
+
   describe('language data', () => {
     it('is unavailable, and silent on the network, without a local copy or an opt-in', async () => {
       const fetched = vi.fn();
