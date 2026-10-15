@@ -3,7 +3,14 @@ import { BackendChain } from './backends/BackendChain.js';
 import { builtInEntries } from './converters/index.js';
 import { ConverterRegistry } from './core/ConverterRegistry.js';
 import { UnsupportedFormatError } from './core/errors.js';
-import type { Backend, ConversionResult, ConvertOptions, Input, Source } from './core/types.js';
+import type {
+  Backend,
+  ConversionResult,
+  ConvertOptions,
+  Input,
+  Plugin,
+  Source,
+} from './core/types.js';
 import { createDefaultDetector } from './detection/index.js';
 import type { FormatDetectorChain } from './detection/FormatDetectorChain.js';
 
@@ -27,6 +34,12 @@ export class Anymark {
     this.registry = registry;
     this.#detector = detector;
     this.#backends = backends;
+  }
+
+  /** Installs a plugin on this instance only. Returns the instance so installs can chain. */
+  use(plugin: Plugin): this {
+    plugin.install({ register: (entry) => this.registry.register(entry) });
+    return this;
   }
 
   async convert(input: Input, options: ConvertOptions = {}): Promise<ConversionResult> {

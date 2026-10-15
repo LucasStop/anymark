@@ -24,6 +24,8 @@ export class ConverterRegistry {
     if (converter === undefined) {
       converter = entry.load();
       this.#loaded.set(entry, converter);
+      // A failed load must not poison the instance: the next conversion retries.
+      converter.catch(() => this.#loaded.delete(entry));
     }
     return converter;
   }
