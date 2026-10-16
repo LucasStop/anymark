@@ -8,11 +8,11 @@ O formato `.srt` não existe na lib: entra por `createAnymark().use(srtPlugin)` 
 
 ```sh
 npm install
-npm run setup   # npm pack na raiz e instala o tarball aqui, como um consumidor faria
+npm run setup   # sempre por último: um `npm install` depois remove a lib instalada sem `--save`
 npm run dev     # ou: npm run build && npm start
 ```
 
-Abra http://localhost:3000, envie um docx, pdf, xlsx, srt etc. Limite de 10 MB por arquivo.
+Abra http://localhost:3000, envie um docx, pdf, xlsx, srt etc. Limite de 10 MB por arquivo e 30 s por conversão. É uma demo local: não tem limite de taxa nem proteção para uso público.
 
 ## Por que assim
 
