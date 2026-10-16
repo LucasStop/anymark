@@ -3,6 +3,25 @@
   "version": "0.0.0",
   "description": "Convert any file to Markdown. Pluggable converters and AI backends with fallback.",
   "license": "MIT",
+  "author": "Lucas Stopinski da Silva; Lucas Bruno e Silva",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LucasStop/anymark.git"
+  },
+  "bugs": {
+    "url": "https://github.com/LucasStop/anymark/issues"
+  },
+  "homepage": "https://github.com/LucasStop/anymark#readme",
+  "keywords": [
+    "markdown",
+    "converter",
+    "docx",
+    "pdf",
+    "xlsx",
+    "pptx",
+    "ocr",
+    "rag"
+  ],
   "type": "module",
   "engines": {
     "node": ">=22"
