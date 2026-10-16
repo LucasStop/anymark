@@ -1,0 +1,4 @@
+.next/
+node_modules/
+.tarball/
+next-env.d.ts
