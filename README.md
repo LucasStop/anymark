@@ -40,7 +40,13 @@ Formato não reconhecido lança `UnsupportedFormatError`; arquivo ilegível lan�
 
 ### Imagem (OCR)
 
-O OCR usa tesseract.js, local, e precisa dos dados de idioma. Hoje o backend é explícito: `createAnymark().convert(imagem)` sem `backends` lança `NoBackendError`. O OCR como padrão está na issue #46. Sem rede por padrão:
+`createAnymark()` já traz OCR local (tesseract.js, inglês, dados embutidos), sem rede:
+
+```ts
+const { markdown } = await createAnymark().convert({ data: pngBytes, name: 'pagina.png' });
+```
+
+Para outro idioma ou outro backend, passe `backends` na chamada (substitui o padrão). `langPath` aponta para uma pasta com `<idioma>.traineddata.gz`; baixar os dados exige `allowDownload: true` no `TesseractBackend` (opt-in explícito):
 
 ```ts
 import { createAnymark, TesseractBackend } from 'anymark';
@@ -51,7 +57,7 @@ const result = await createAnymark().convert(
 );
 ```
 
-`langPath` aponta para uma pasta com `eng.traineddata.gz`. Para baixar os dados, passe `allowDownload: true` ao `TesseractBackend` (opt-in explícito).
+Decisão registrada em [ADR 0007](docs/adr/0007-ocr-padrao-no-createanymark.md).
 
 ### Cancelamento
 
