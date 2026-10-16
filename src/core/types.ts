@@ -29,6 +29,8 @@ export interface ConvertOptions {
   readonly backends?: readonly Backend<unknown, unknown>[];
   /** Language hint, e.g. `pt`. */
   readonly lang?: string;
+  /** xlsx only. Off by default: hidden and veryHidden sheets are skipped, with a warning. */
+  readonly includeHiddenSheets?: boolean;
 }
 
 /** A non-fatal problem. Never carries keys, absolute paths or user data. */
