@@ -3,7 +3,10 @@
   "version": "0.0.0",
   "description": "Convert any file to Markdown. Pluggable converters and AI backends with fallback.",
   "license": "MIT",
-  "author": "Lucas Stopinski da Silva; Lucas Bruno e Silva",
+  "author": "Lucas Stopinski da Silva",
+  "contributors": [
+    "Lucas Bruno e Silva"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/LucasStop/anymark.git"

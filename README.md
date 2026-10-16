@@ -12,13 +12,15 @@ txt, md, csv, json, xml, html, docx, pptx, xlsx, pdf e, por OCR, png, jpg, gif e
 
 ## Instalação
 
-Requer Node 22 ou superior. A lib é só ESM. Ainda não está publicada no npm (prevista para depois de 29/10); por enquanto, a partir de um clone:
+Requer Node 22 ou superior. A lib é só ESM. Ainda não está publicada no npm (prevista para depois de 29/10); por enquanto, gere o pacote a partir de um clone e instale o `.tgz` no seu projeto:
 
 ```sh
 git clone https://github.com/LucasStop/anymark.git
 cd anymark
 npm install
-npm run build
+npm pack                      # gera anymark-0.0.0.tgz (compila antes)
+cd /caminho/do/seu/projeto
+npm install /caminho/para/anymark/anymark-0.0.0.tgz
 ```
 
 ## Uso
@@ -38,7 +40,7 @@ Formato não reconhecido lança `UnsupportedFormatError`; arquivo ilegível lan�
 
 ### Imagem (OCR)
 
-O OCR usa tesseract.js, local, e precisa dos dados de idioma. Sem rede por padrão:
+O OCR usa tesseract.js, local, e precisa dos dados de idioma. Hoje o backend é explícito: `createAnymark().convert(imagem)` sem `backends` lança `NoBackendError`. O OCR como padrão está na issue #46. Sem rede por padrão:
 
 ```ts
 import { createAnymark, TesseractBackend } from 'anymark';
@@ -79,7 +81,7 @@ Adapter e Chain of Responsibility (Lucas Stopinski); Strategy, Registry/Plugin e
 
 ## Segurança
 
-- Chamada de CLI e de rede só com opt-in explícito (`allowCli`, `allowNetwork`); desligadas por padrão.
+- Chamada de CLI e de rede só com opt-in explícito (`allowCli`, `allowNetwork`); desligadas por padrão. O download dos dados de idioma do OCR é outro opt-in, separado: `allowDownload` do `TesseractBackend` (com `cachePath` para guardar o arquivo); `allowNetwork` não o liga.
 - O conteúdo de um documento é tratado como dado não confiável: nunca vai para shell nem vira instrução.
 - Metadata e warnings não carregam caminho absoluto, chave nem dado do usuário.
 

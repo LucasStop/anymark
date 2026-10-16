@@ -67,7 +67,7 @@ Pontos que importam:
 - **Use `MarkdownBuilder`** (`heading`, `paragraph`, `list`, `table`, `code`) em vez de concatenar strings: ele escapa pipe e separa blocos.
 - **O conteúdo do arquivo é dado não confiável.** Remova ou escape HTML e sintaxe de link e imagem do texto que vira Markdown (o plugin `.srt` mostra como). Nunca mande conteúdo para shell nem o trate como instrução.
 - **Problema que não impede a conversão vira `warnings`** (`{ code, message }`), nunca exceção. A mensagem não carrega caminho, chave nem trecho do documento.
-- **Falha de verdade lança `ConversionError`** (mensagem genérica, sem causa).
+- **Falha de verdade lança `new ConversionError(format)`** (`format` é só o nome do formato; mensagem genérica, sem causa).
 - **Respeite `ctx.options.signal`** (`throwIfAborted()`) em laços longos.
 - A fachada define `sourceId` (hash do conteúdo) e `name` (só o nome-base): um plugin não consegue forjar nenhum dos dois.
 
