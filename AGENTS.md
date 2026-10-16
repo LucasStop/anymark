@@ -48,6 +48,10 @@ Regras de design:
 - Todo padrão citado em README, docs ou vídeo precisa de um trecho de código que o prove.
 - Mudou uma decisão de arquitetura: ADR em `docs/adr/`.
 
+## Estender a lib
+
+Formato novo é um `Converter` dentro de um `Plugin` (`createAnymark().use(plugin)`); provedor de IA novo é um `Backend`. Nenhum dos dois edita `src/`. Guia com código, regras de segurança e checklist: [docs/EXTENDING.md](docs/EXTENDING.md); exemplo completo em `examples/plugins/srt/index.ts`. Defesa dos padrões: [docs/PATTERNS.md](docs/PATTERNS.md).
+
 ## Fluxo
 
 `convert(input)` entra em `Anymark` (Facade) e passa pelo `FormatDetectorChain`. O `ConverterRegistry` devolve o `Converter`, carregado sob demanda e envolto em Decorators. Imagem e áudio passam pela `BackendChain`. O resultado vai para os `ResultSink` (Observer). Os contratos ficam em `src/core/types.ts`, congelados cedo e alterados só com aval dos dois.
@@ -83,4 +87,4 @@ O projeto é desenvolvido com apoio de agentes de IA (Claude Code). O README fin
 - [docs/PLAN.md](docs/PLAN.md): decisões, arquitetura, cronograma, riscos e pendências.
 - [docs/ENUNCIADO.md](docs/ENUNCIADO.md): exigências do trabalho e checklist do vídeo.
 - `docs/PRD.md`, `docs/SDD.md`, `docs/adr/`, `specs/`: criados na Fase 1.
-- `docs/PATTERNS.md`, `docs/EXTENDING.md`: crescem durante o desenvolvimento e fecham até 12/11.
+- [docs/PATTERNS.md](docs/PATTERNS.md), [docs/EXTENDING.md](docs/EXTENDING.md), [docs/TESTING.md](docs/TESTING.md): crescem durante o desenvolvimento e fecham até 12/11.
