@@ -4,6 +4,8 @@
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { basename, extname } from 'node:path';
+import { performance } from 'node:perf_hooks';
+import process from 'node:process';
 import { createAnymark, TesseractBackend } from '../dist/index.js';
 
 const args = process.argv.slice(2);
@@ -29,5 +31,5 @@ for (const file of files) {
     result = `ERROR ${e?.code ?? e?.name} ${e?.message}`;
   }
   const ms = Math.round(performance.now() - start);
-  console.log(`${id} ${extname(file).slice(1)} ${data.length}B ${ms}ms ${result}`);
+  process.stdout.write(`${id} ${extname(file).slice(1)} ${data.length}B ${ms}ms ${result}\n`);
 }
