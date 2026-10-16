@@ -1,7 +1,13 @@
 import { extractText, getDocumentProxy } from 'unpdf';
 import { ConversionError } from '../core/errors.js';
 import { MarkdownBuilder } from '../core/MarkdownBuilder.js';
-import type { ConversionResult, Converter, ConverterContext, Source } from '../core/types.js';
+import type {
+  ConversionResult,
+  ConversionWarning,
+  Converter,
+  ConverterContext,
+  Source,
+} from '../core/types.js';
 
 const MIME = 'application/pdf';
 
@@ -31,10 +37,14 @@ export class PdfConverter implements Converter {
       builder.heading(2, `Page ${i + 1}`);
       if (text.trim() !== '') builder.paragraph(text);
     });
+    // A scan has pages but no text layer; the headings alone would look like an empty document.
+    const warnings: ConversionWarning[] = pages.some((text) => text.trim() !== '')
+      ? []
+      : [{ code: 'PDF_NO_TEXT', message: 'No page has a text layer; a scanned PDF needs OCR' }];
     return {
       markdown: builder.build(),
       metadata: { schemaVersion: 1, sourceId: ctx.sourceId, mime: MIME },
-      warnings: [],
+      warnings,
     };
   }
 }
