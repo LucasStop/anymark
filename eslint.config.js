@@ -8,6 +8,7 @@ export default tseslint.config(
       'coverage',
       'graphify-out',
       'examples/**/node_modules',
+      'api-docs',
       'examples/nextjs/.next',
       'examples/nextjs/.tarball',
     ],

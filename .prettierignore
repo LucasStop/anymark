@@ -10,3 +10,4 @@ fixtures
 examples/nextjs/.next
 examples/nextjs/.tarball
 examples/nextjs/next-env.d.ts
+api-docs
