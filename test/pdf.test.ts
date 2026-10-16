@@ -15,6 +15,21 @@ describe('pdf converter', () => {
     expect(result.metadata.mime).toBe('application/pdf');
   });
 
+  it('warns, without naming anything, when no page has a text layer', async () => {
+    const data = new Uint8Array(spec('pdf/no-text.pdf'));
+    const result = await createAnymark().convert({ data, name: 'scan.pdf' });
+
+    expect(result.warnings).toEqual([
+      { code: 'PDF_NO_TEXT', message: 'No page has a text layer; a scanned PDF needs OCR' },
+    ]);
+  });
+
+  it('does not warn when at least one page has text', async () => {
+    const result = await createAnymark().convert(pdf());
+
+    expect(result.warnings).toEqual([]);
+  });
+
   it('passes the converter contract', async () => {
     await assertConverterContract(new PdfConverter(), pdf());
   });
