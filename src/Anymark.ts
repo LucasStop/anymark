@@ -1,5 +1,8 @@
 import { createHash } from 'node:crypto';
+import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
 import { BackendChain } from './backends/BackendChain.js';
+import { TesseractBackend } from './backends/TesseractBackend.js';
 import { builtInEntries } from './converters/index.js';
 import { ConverterRegistry } from './core/ConverterRegistry.js';
 import { UnsupportedFormatError } from './core/errors.js';
@@ -67,9 +70,21 @@ export class Anymark {
   }
 }
 
-/** Each call builds its own registry: no shared state between instances. */
+/** Language data shipped with the package, so the default OCR never needs the network. */
+const bundledLangPath = (): string =>
+  join(
+    dirname(createRequire(import.meta.url).resolve('@tesseract.js-data/eng/package.json')),
+    '4.0.0_best_int',
+  );
+
+/**
+ * Each call builds its own registry: no shared state between instances.
+ * Images go through local tesseract by default; `options.backends` replaces it per call.
+ */
 export function createAnymark(): Anymark {
-  const anymark = new Anymark();
+  const anymark = new Anymark(undefined, undefined, [
+    new TesseractBackend({ langPath: bundledLangPath() }),
+  ]);
   for (const entry of builtInEntries) anymark.registry.register(entry);
   return anymark;
 }
