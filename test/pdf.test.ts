@@ -30,6 +30,14 @@ describe('pdf converter', () => {
     expect(result.warnings).toEqual([]);
   });
 
+  it('does not warn when only some pages are scans', async () => {
+    const data = new Uint8Array(spec('pdf/mixed.pdf'));
+    const result = await createAnymark().convert({ data, name: 'mixed.pdf' });
+
+    expect(result.markdown).toContain('Body text');
+    expect(result.warnings).toEqual([]);
+  });
+
   it('passes the converter contract', async () => {
     await assertConverterContract(new PdfConverter(), pdf());
   });

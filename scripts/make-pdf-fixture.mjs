@@ -1,5 +1,6 @@
 // Writes specs/pdf/simple.pdf (two pages, one line of Helvetica text each) and specs/pdf/no-text.pdf
-// (two pages that only draw a rectangle, like a scan with no text layer). Run: node scripts/make-pdf-fixture.mjs
+// (two pages that only draw a rectangle, like a scan with no text layer) and specs/pdf/mixed.pdf (a
+// scanned cover, then a page with text). Run: node scripts/make-pdf-fixture.mjs
 import { writeFileSync } from 'node:fs';
 import { URL } from 'node:url';
 
@@ -35,4 +36,6 @@ write(
   'simple.pdf',
   build(['Hello page one', 'Second page text'].map((t) => `BT /F1 18 Tf 72 700 Td (${t}) Tj ET`)),
 );
-write('no-text.pdf', build(['0.5 g 72 72 468 648 re f', '0.5 g 72 72 468 648 re f']));
+const scan = '0.5 g 72 72 468 648 re f';
+write('no-text.pdf', build([scan, scan]));
+write('mixed.pdf', build([scan, 'BT /F1 18 Tf 72 700 Td (Body text) Tj ET']));
