@@ -1,0 +1,24 @@
+{
+  "name": "anymark-nextjs-example",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Demo consumer of the anymark tarball. Not a backend, not deployed.",
+  "type": "module",
+  "scripts": {
+    "setup": "node scripts/install-tarball.mjs",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "16.3.8",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "typescript": "~6.0"
+  }
+}
