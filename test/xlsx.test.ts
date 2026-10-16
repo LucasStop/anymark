@@ -139,4 +139,22 @@ describe('xlsx hidden sheets', () => {
 
     expect(result.warnings).toEqual([]);
   });
+
+  it('matches hidden sheets by position, not by a name the two parsers may decode differently', async () => {
+    const odd = sheetsWorkbook([{ name: 'Open' }, { name: 'caf&#xE9; &#x41;', state: 'hidden' }]);
+    const result = await createAnymark().convert({ data: odd, name: 'odd.xlsx' });
+
+    expect(result.markdown).not.toMatch(/caf/);
+    expect(result.warnings).toEqual([
+      { code: 'HIDDEN_SHEETS_SKIPPED', message: '1 hidden sheet skipped' },
+    ]);
+  });
+
+  it('refuses a workbook part far larger than any real sheet list', async () => {
+    const huge = sheetsWorkbook([{ name: 'a'.repeat(6 * 1024 * 1024) }]);
+
+    await expect(createAnymark().convert({ data: huge, name: 'huge.xlsx' })).rejects.toBeInstanceOf(
+      ConversionError,
+    );
+  });
 });
