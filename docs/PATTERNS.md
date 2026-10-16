@@ -15,7 +15,7 @@ Cada padrão abaixo traz o problema que resolve, onde está no código, um trech
 
 ## Adapter (Lucas Stopinski)
 
-**Problema.** Provedores de IA têm interfaces incompatíveis: tesseract.js é WASM com `createWorker`, `claude -p` é um CLI com flags, Gemini é uma API HTTP. O restante da lib não pode saber disso.
+**Problema.** Provedores de IA têm interfaces incompatíveis: tesseract.js é WASM com `createWorker`, `claude -p` é um CLI com flags, Gemini é uma API HTTP. O restante da lib não pode saber disso. Hoje só o adapter do tesseract existe; os de Gemini e `claude -p` são as issues #21 e #22.
 
 **Onde.** `Backend` em `src/core/types.ts` é o contrato; cada provedor é um adapter. O primeiro é o `TesseractBackend` em `src/backends/TesseractBackend.ts`.
 
@@ -70,7 +70,7 @@ export interface FormatHandler {
 }
 ```
 
-**Alternativa descartada.** Um laço `for` sobre um array com `if` dentro. É mais curto, mas a cadeia deixa de ser extensível sem editar o laço, e a decisão de quem trata fica fora de quem conhece o caso.
+**Alternativa descartada.** Um laço `for` sobre um array com `if` dentro, ou a lista clássica de sucessores em que cada elo guarda uma referência ao próximo. O laço é mais curto, mas deixa de ser extensível sem editar o laço, e a decisão de quem trata fica fora de quem conhece o caso. A cadeia aqui nunca inspeciona o elo: cada handler decide e, se não trata, chama `next()`. O encadeamento por closure (`() => from(index + 1)`) é a forma "middleware" do mesmo padrão.
 
 **Por que Chain.** Cada elo conhece só a própria regra (opt-in, disponibilidade, falha) e o próximo. Acrescentar um backend ou um detector é acrescentar um elo.
 
