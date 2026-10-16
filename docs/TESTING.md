@@ -77,7 +77,7 @@ Marcar data, responsável e resultado ao rodar.
 | Z05 | gif e webp com texto (#47) | texto reconhecido | sem arquivo real do Desktop com gif ou webp; usar fixture sintética |
 | Z06 | xlsx com aba oculta e `veryHidden` (#48) | pulada por padrão com warning `HIDDEN_SHEETS_SKIPPED`; incluída com `includeHiddenSheets` | |
 | Z07 | OCR sem traineddata local e sem `allowDownload` | `OcrError` genérico, sem download | |
-| Z08 | OCR por padrão em `createAnymark()` (#46) | converte sem passar `backends` | |
+| Z08 | OCR por padrão em `createAnymark()` (#46) | converte sem passar `backends` | 16/10/2026, Lucas Stopinski: ok, `HELLO HOLE` offline (teste automatizado em `test/tesseract.test.ts`) |
 | Z09 | entrada como `Uint8Array`, como `Source` com `name`, e com `mime` | mesmo Markdown | |
 | Z10 | `signal` abortado antes e durante a conversão | rejeita, não devolve resultado parcial | |
 | Z11 | plugin `.srt` registrado com `createAnymark().use(plugin)` | usa o plugin, sem tocar a lib | |
