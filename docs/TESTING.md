@@ -74,7 +74,7 @@ Marcar data, responsável e resultado ao rodar.
 | Z02 | arquivo corrompido (docx, xlsx, pptx, pdf truncados) | `CONVERSION_FAILED` genérico | |
 | Z03 | extensão trocada (um `.pdf` renomeado para `.docx`) | detecta pela assinatura, não pela extensão | |
 | Z04 | `.ppt` e `.doc` legados não vazios | erro claro de formato não suportado | |
-| Z05 | gif e webp com texto (#47) | texto reconhecido | sem arquivo real do Desktop com gif ou webp; usar fixture sintética |
+| Z05 | gif, webp e jpeg com texto (#47) | texto reconhecido | 16/10/2026, Lucas Stopinski: ok, `HELLO HOLE` nos três (golden files em `specs/image`, gerados por `scripts/make-image-fixture.mjs`; jpeg via `sips`); sem arquivo real do Desktop com gif ou webp |
 | Z06 | xlsx com aba oculta e `veryHidden` (#48) | pulada por padrão com warning `HIDDEN_SHEETS_SKIPPED`; incluída com `includeHiddenSheets` | |
 | Z07 | OCR sem traineddata local e sem `allowDownload` | `OcrError` genérico, sem download | |
 | Z08 | OCR por padrão em `createAnymark()` (#46) | converte sem passar `backends` | 16/10/2026, Lucas Stopinski: ok, `HELLO HOLE` offline (teste automatizado em `test/tesseract.test.ts`) |
