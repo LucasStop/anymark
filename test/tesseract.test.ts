@@ -132,6 +132,23 @@ describe('images through the facade', () => {
     SLOW,
   );
 
+  it.each([
+    ['hello.gif', 'image/gif'],
+    ['hello.webp', 'image/webp'],
+    ['hello.jpg', 'image/jpeg'],
+  ])(
+    'reads the golden %s',
+    async (file, mime) => {
+      const data = new Uint8Array(readFileSync(new URL(`../specs/image/${file}`, import.meta.url)));
+
+      const result = await createAnymark().convert({ data, name: file });
+
+      expect(result.markdown).toBe('HELLO HOLE\n');
+      expect(result.metadata.mime).toBe(mime);
+    },
+    SLOW,
+  );
+
   it(
     'reads an image with no backends configured, offline',
     async () => {
