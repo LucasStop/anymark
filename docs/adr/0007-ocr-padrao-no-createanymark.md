@@ -14,7 +14,7 @@ Na #16 o `createAnymark()` nasceu sem backend: converter uma imagem exigia passa
 
 ## Consequências
 
-- Imagem converte sem configuração, offline. Custo: cerca de 2,8 MB de dados de idioma no `node_modules` de quem instala a lib.
+- Imagem converte sem configuração, offline. Custo: cerca de 14 MB de dados de idioma (pacote `@tesseract.js-data/eng`) no `node_modules` de quem instala a lib.
 - Só inglês vem de fábrica. Outros idiomas pedem `langPath` próprio ou `allowDownload`.
 - Backends de CLI e de rede (#21, #22) entram na cadeia por opt-in, depois do local.
 - `Backend` (Adapter) e `Converter` (Strategy) seguem separados ([ADR 0002](0002-converter-e-backend-separados.md)).
