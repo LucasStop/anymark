@@ -75,7 +75,7 @@ Marcar data, responsável e resultado ao rodar.
 | Z03 | extensão trocada (um `.pdf` renomeado para `.docx`) | detecta pela assinatura, não pela extensão | |
 | Z04 | `.ppt` e `.doc` legados não vazios | erro claro de formato não suportado | |
 | Z05 | gif, webp e jpeg com texto (#47) | texto reconhecido | 16/10/2026, Lucas Stopinski: ok, `HELLO HOLE` nos três (golden files em `specs/image`, gerados por `scripts/make-image-fixture.mjs`; jpeg via `sips`); sem arquivo real do Desktop com gif ou webp |
-| Z06 | xlsx com aba oculta e `veryHidden` (#48) | pulada por padrão com warning `HIDDEN_SHEETS_SKIPPED`; incluída com `includeHiddenSheets` | |
+| Z06 | xlsx com aba oculta e `veryHidden` (#48) | pulada por padrão com warning `HIDDEN_SHEETS_SKIPPED`; incluída com `includeHiddenSheets` | 16/10/2026, Lucas Stopinski: ok, workbook sintético com `hidden` e `veryHidden` (testes em `test/xlsx.test.ts`); sem planilha real com aba oculta |
 | Z07 | OCR sem traineddata local e sem `allowDownload` | `OcrError` genérico, sem download | |
 | Z08 | OCR por padrão em `createAnymark()` (#46) | converte sem passar `backends` | 16/10/2026, Lucas Stopinski: ok, `HELLO HOLE` offline (teste automatizado em `test/tesseract.test.ts`) |
 | Z09 | entrada como `Uint8Array`, como `Source` com `name`, e com `mime` | mesmo Markdown | |
@@ -91,7 +91,7 @@ Marcar data, responsável e resultado ao rodar.
 
 - json: números acima de 2^53 perdem precisão.
 - html: sem tamanho ou tempo máximo; tabelas sem cabeçalho ou aninhadas ficam como HTML cru.
-- xlsx: células de erro saem vazias.
+- xlsx: células de erro saem vazias; abas `hidden` e `veryHidden` ficam fora por padrão (`includeHiddenSheets: true` as inclui), mas linhas e colunas ocultas dentro de uma aba visível seguem no Markdown.
 - docx: células mescladas e tabelas aninhadas ficam como HTML cru; avisos do mammoth não viram warnings; notas de rodapé mantidas.
 - pptx: não lê `mc:AlternateContent`, slides ocultos nem aninhamento de bullets.
 - pdf: sem prazo próprio além do `signal`; PDF escaneado não passa por OCR.
