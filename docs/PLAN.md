@@ -15,7 +15,7 @@ Prazos: 28/10 congela o escopo do MVP. 29/10 é a apresentação do parcial (30%
 | Stack | TypeScript e npm. Pacote e repositório `anymark`. |
 | Equipe | Dono do repositório: `LucasStop`. Colaborador: `Luc-Bruno`. |
 | Método | PRD, SDD, TDD, issues, GitHub Project, CI/CD. `docs/SDD.md` e `specs/` por feature, ligadas às issues. Red, green, refactor, commits por fase. |
-| Git | GitHub Flow com merge commit (sem rebase nem squash), para a `main` mostrar cada issue como uma branch separada; a branch não é apagada depois do merge. Branch `feat/<issue>-slug`, um PR por issue com review cruzado, `main` protegida com CI verde. |
+| Git | GitHub Flow com merge commit (sem rebase nem squash), para a `main` mostrar cada issue como uma branch separada; o merge commit mantém esse grafo mesmo com a branch apagada. Depois do merge o GitHub apaga a branch remota (`delete branch on merge`) e quem fez o PR apaga a local: `git switch main && git pull --ff-only && git branch -d <branch> && git fetch --prune`. Branch `feat/<issue>-slug`, um PR por issue com review cruzado, `main` protegida com CI verde. |
 | MVP (29/10) | txt, md, csv, json, xml, html, docx, pptx, xlsx, pdf. Imagem, áudio, vídeo e URL ou YouTube até 12/11. |
 | IA | Interface `Backend` com cadeia e fallback. Dois modos plugáveis: CLI já logado (`claude -p`, `codex exec`, `agy -p`) e chave de API (Gemini, OpenAI). Locais: whisper.cpp e tesseract.js. Nunca ler token ou keychain, nunca fazer OAuth próprio. |
 | Distribuição | Repositório público. Pacote no npm público, com publicação por tag no CI (stretch). TypeDoc no GitHub Pages. |
@@ -25,6 +25,9 @@ Prazos: 28/10 congela o escopo do MVP. 29/10 é a apresentação do parcial (30%
 | Idioma | PT-BR em README, docs e vídeo. Identificadores, commits e PRs em inglês. |
 | Padrões | Stopinski: Adapter e Chain of Responsibility. Bruno: Strategy/Registry e Builder. Extras no código: Decorator, Observer, Facade. |
 | RAG | Opcional, fora do core, segunda entrega: vincular em lote os `.md` dos repositórios que usam a lib. |
+| Mídia longa | Sem duração máxima fixa para áudio e vídeo. Acima de um limiar configurável (10, 20 ou 30 min) a mídia é dividida em lotes e cada lote é convertido separadamente (decidido em 16/10/2026; vale para #20 e #25). |
+| OCR padrão | `createAnymark()` traz `TesseractBackend` na cadeia, com traineddata local e download só por opt-in (decidido em 16/10/2026, issue #46). |
+| Planilha oculta | Abas ocultas ficam fora do Markdown por padrão, com warning; `includeHiddenSheets: true` as inclui (16/10/2026, issue #48). |
 | Fine-tuning | Não usar. Modelo ajustado de terceiro entra como `Backend`. |
 
 ## Stack verificada em 14/10/2026
@@ -153,11 +156,11 @@ README e vídeo de defesa não se cortam.
 
 1. ~~Convite ao `Luc-Bruno`~~ aceito (permissão `write`).
 2. Disponibilidade semanal de cada um.
-3. Duração máxima do vídeo, que define 4 ou 6 padrões defendidos (default: 4, citando as reservas).
-4. ~~O professor aceita Chain, Registry e Facade?~~ Aceita (confirmado por Lucas Stopinski em 14/10/2026). Falta saber o mínimo de padrões para dupla.
+3. ~~Duração máxima do vídeo~~: sem teto fixo na conversão (lotes, ver Decisões). Vídeo de defesa: duração ainda a definir, define 4 ou 6 padrões defendidos (default: 4, citando as reservas).
+4. ~~O professor aceita Chain, Registry e Facade?~~ Aceita (confirmado por Lucas Stopinski em 14/10/2026). Mínimo de padrões para dupla: 4 (decidido em 16/10/2026), os já distribuídos.
 5. Node 22 na máquina de cada um (`nvm install 22`).
 6. ~~Publicar no npm?~~ Decidido em 14/10/2026: `0.1.0` depois do parcial de 29/10 e `1.0.0` na entrega final. O login com 2FA é do Lucas. Roteiro na task do ClickUp "Publicar anymark 0.1.0 no npm" (30/10).
 7. ~~Spike dos CLIs de IA~~ feito em 14/10/2026, ver "Backends de IA".
-8. ~~Significado de "vincular" no RAG~~: agir sobre um lote de documentos (decidido em 14/10/2026). Falta escolher a forma do vínculo (wikilinks, `related:` no front matter ou backlinks) e se é plugin de exemplo ou pacote próprio, antes de começar a #27.
+8. ~~Significado de "vincular" no RAG~~: agir sobre um lote de documentos (decidido em 14/10/2026). Em 16/10/2026 o RAG ficou como adicional se sobrar tempo. Falta escolher a forma do vínculo (wikilinks, `related:` no front matter ou backlinks) e se é plugin de exemplo ou pacote próprio, antes de começar a #27.
 9. Prettier e ESLint ou Biome (default: Prettier e ESLint). Licença (default: MIT).
 10. Se cada aluno entrega o link no Canvas.
