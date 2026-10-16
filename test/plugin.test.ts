@@ -95,6 +95,16 @@ describe('the .srt plugin on untrusted cue text', () => {
     expect(markdown).toContain('hi');
   });
 
+  it('stays linear on a cue made only of unclosed angle brackets', async () => {
+    const started = performance.now();
+    const { markdown } = await convert(
+      `1\n00:00:01,000 --> 00:00:02,000\n${'<'.repeat(100_000)}\n`,
+    );
+
+    expect(performance.now() - started).toBeLessThan(1000);
+    expect(markdown).not.toMatch(/(?<!\\)</);
+  });
+
   it('warns about a cue that has a time but no text', async () => {
     const { warnings } = await convert('1\n00:00:01,000 --> 00:00:02,000\n\n');
 
