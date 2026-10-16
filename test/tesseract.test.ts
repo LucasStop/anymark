@@ -132,8 +132,32 @@ describe('images through the facade', () => {
     SLOW,
   );
 
-  it('fails with NoBackendError when no OCR backend is configured', async () => {
-    await expect(createAnymark().convert(image())).rejects.toBeInstanceOf(NoBackendError);
+  it(
+    'reads an image with no backends configured, offline',
+    async () => {
+      const fetched = vi.fn();
+      vi.stubGlobal('fetch', fetched);
+
+      const result = await createAnymark().convert(image());
+
+      expect(result.markdown).toBe('HELLO HOLE\n');
+      expect(fetched).not.toHaveBeenCalled();
+    },
+    SLOW,
+  );
+
+  it('lets explicit backends replace the default OCR', async () => {
+    const result = await createAnymark().convert(image(), {
+      backends: [fakeOcr('from the fake') as Backend],
+    });
+
+    expect(result.markdown).toBe('from the fake\n');
+  });
+
+  it('fails with NoBackendError when the explicit backend list is empty', async () => {
+    await expect(createAnymark().convert(image(), { backends: [] })).rejects.toBeInstanceOf(
+      NoBackendError,
+    );
   });
 
   it('proves the seam: the chain falls to a second backend when the first is unavailable', async () => {

@@ -1,6 +1,6 @@
 # anymark
 
-Biblioteca TypeScript que converte qualquer arquivo em Markdown. Cobre texto, dados, Office e PDF; imagem (OCR) passa por backends de IA plugáveis com fallback. A saída serve a três usos: contexto para LLM/RAG, Obsidian e leitura humana.
+Biblioteca TypeScript que converte qualquer arquivo em Markdown. Cobre texto, dados, Office e PDF; imagem (OCR local por padrão) e, depois, áudio e vídeo passam por backends plugáveis com fallback. A saída serve a três usos: contexto para LLM/RAG, Obsidian e leitura humana.
 
 Trabalho final de Design Patterns (PUCPR, 2026/2), feito em dupla por **Lucas Stopinski da Silva** e **Lucas Bruno e Silva**.
 
@@ -40,7 +40,13 @@ Formato não reconhecido lança `UnsupportedFormatError`; arquivo ilegível lan�
 
 ### Imagem (OCR)
 
-O OCR usa tesseract.js, local, e precisa dos dados de idioma. Hoje o backend é explícito: `createAnymark().convert(imagem)` sem `backends` lança `NoBackendError`. O OCR como padrão está na issue #46. Sem rede por padrão:
+`createAnymark()` já traz OCR local (tesseract.js, inglês, dados embutidos), sem rede:
+
+```ts
+const { markdown } = await createAnymark().convert({ data: pngBytes, name: 'pagina.png' });
+```
+
+Para outro idioma ou outro backend, passe `backends` na chamada (substitui o padrão). `langPath` aponta para uma pasta com `<idioma>.traineddata.gz`; baixar os dados exige `allowDownload: true` no `TesseractBackend` (opt-in explícito):
 
 ```ts
 import { createAnymark, TesseractBackend } from 'anymark';
@@ -51,7 +57,7 @@ const result = await createAnymark().convert(
 );
 ```
 
-`langPath` aponta para uma pasta com `eng.traineddata.gz`. Para baixar os dados, passe `allowDownload: true` ao `TesseractBackend` (opt-in explícito).
+Decisão registrada em [ADR 0007](docs/adr/0007-ocr-padrao-no-createanymark.md).
 
 ### Cancelamento
 

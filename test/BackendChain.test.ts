@@ -261,6 +261,6 @@ describe('backends through the facade', () => {
     const anymark = createAnymark();
     anymark.registry.register(entry);
 
-    await expect(anymark.convert(input)).rejects.toBeInstanceOf(NoBackendError);
+    await expect(anymark.convert(input, { backends: [] })).rejects.toBeInstanceOf(NoBackendError);
   });
 });
