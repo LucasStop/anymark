@@ -76,3 +76,85 @@ describe('xlsx converter on hostile files', () => {
     expect(markdown.split('\n')[0]).toBe('## \\# x \\*y\\* \\[l\\](http://e)');
   });
 });
+
+/** A workbook with one single-cell sheet per entry; `state` is the sheet's visibility attribute. */
+const sheetsWorkbook = (sheets: { name: string; state?: string }[]) => {
+  const ns = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+  const rel = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  const files: Record<string, string> = {
+    '[Content_Types].xml': `<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/></Types>`,
+    '_rels/.rels': `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${rel}/officeDocument" Target="xl/workbook.xml"/></Relationships>`,
+    'xl/workbook.xml': `<?xml version="1.0"?><workbook xmlns="${ns}" xmlns:r="${rel}"><sheets>${sheets
+      .map(
+        (s, i) =>
+          `<sheet name="${s.name}" sheetId="${i + 1}"${s.state === undefined ? '' : ` state="${s.state}"`} r:id="rId${i + 1}"/>`,
+      )
+      .join('')}</sheets></workbook>`,
+    'xl/_rels/workbook.xml.rels': `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets
+      .map(
+        (_, i) =>
+          `<Relationship Id="rId${i + 1}" Type="${rel}/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`,
+      )
+      .join('')}</Relationships>`,
+  };
+  sheets.forEach((s, i) => {
+    files[`xl/worksheets/sheet${i + 1}.xml`] =
+      `<?xml version="1.0"?><worksheet xmlns="${ns}"><sheetData><row r="1">${cell('A1', `in ${s.name}`)}</row></sheetData></worksheet>`;
+  });
+  return zipSync(Object.fromEntries(Object.entries(files).map(([k, v]) => [k, strToU8(v)])));
+};
+
+describe('xlsx hidden sheets', () => {
+  const data = sheetsWorkbook([
+    { name: 'Open' },
+    { name: 'Draft', state: 'hidden' },
+    { name: 'Secret', state: 'veryHidden' },
+    { name: 'Closing', state: 'visible' },
+  ]);
+
+  it('skips hidden and veryHidden sheets by default and says how many', async () => {
+    const result = await createAnymark().convert({ data, name: 'book.xlsx' });
+
+    expect(result.markdown).toContain('## Open');
+    expect(result.markdown).toContain('## Closing');
+    expect(result.markdown).not.toMatch(/Draft|Secret/);
+    expect(result.warnings).toEqual([
+      { code: 'HIDDEN_SHEETS_SKIPPED', message: '2 hidden sheets skipped' },
+    ]);
+  });
+
+  it('includes them, in workbook order and without a warning, when asked', async () => {
+    const result = await createAnymark().convert(
+      { data, name: 'book.xlsx' },
+      { includeHiddenSheets: true },
+    );
+
+    const headings = result.markdown.split('\n').filter((line) => line.startsWith('## '));
+    expect(headings).toEqual(['## Open', '## Draft', '## Secret', '## Closing']);
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('stays silent when no sheet is hidden', async () => {
+    const result = await createAnymark().convert(xlsx());
+
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('matches hidden sheets by position, not by a name the two parsers may decode differently', async () => {
+    const odd = sheetsWorkbook([{ name: 'Open' }, { name: 'caf&#xE9; &#x41;', state: 'hidden' }]);
+    const result = await createAnymark().convert({ data: odd, name: 'odd.xlsx' });
+
+    expect(result.markdown).not.toMatch(/caf/);
+    expect(result.warnings).toEqual([
+      { code: 'HIDDEN_SHEETS_SKIPPED', message: '1 hidden sheet skipped' },
+    ]);
+  });
+
+  it('refuses a workbook part far larger than any real sheet list', async () => {
+    const huge = sheetsWorkbook([{ name: 'a'.repeat(6 * 1024 * 1024) }]);
+
+    await expect(createAnymark().convert({ data: huge, name: 'huge.xlsx' })).rejects.toBeInstanceOf(
+      ConversionError,
+    );
+  });
+});

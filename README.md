@@ -59,6 +59,10 @@ const result = await createAnymark().convert(
 
 Decisão registrada em [ADR 0007](docs/adr/0007-ocr-padrao-no-createanymark.md).
 
+### Planilhas com abas ocultas
+
+Abas `hidden` e `veryHidden` do xlsx ficam fora do Markdown e geram o warning `HIDDEN_SHEETS_SKIPPED` com a contagem. Para incluí-las: `convert(input, { includeHiddenSheets: true })`.
+
 ### Cancelamento
 
 ```ts
