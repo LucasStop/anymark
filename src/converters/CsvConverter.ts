@@ -2,6 +2,7 @@ import { parse } from 'csv-parse/sync';
 import { ConversionError } from '../core/errors.js';
 import { MarkdownBuilder } from '../core/MarkdownBuilder.js';
 import type { ConversionResult, Converter, ConverterContext, Source } from '../core/types.js';
+import { decodeText } from './decodeText.js';
 
 const MIME = 'text/csv';
 const CANDIDATES = [',', ';', '\t'];
@@ -27,8 +28,8 @@ export class CsvConverter implements Converter {
 
   async convert(source: Source, ctx: ConverterContext): Promise<ConversionResult> {
     ctx.options.signal?.throwIfAborted();
-    // TextDecoder drops a leading BOM, which Excel adds to UTF-8 CSV.
-    const text = new TextDecoder('utf-8').decode(source.data);
+    // decodeText drops a leading BOM, which Excel adds to UTF-8 CSV.
+    const text = decodeText(source.data);
     let rows: string[][];
     try {
       rows = parse(text, {
