@@ -27,7 +27,7 @@ Prazos: 28/10 congela o escopo do MVP. 29/10 é a apresentação do parcial (30%
 | RAG | Opcional, fora do core, segunda entrega: vincular em lote os `.md` dos repositórios que usam a lib. |
 | Mídia longa | Sem duração máxima fixa para áudio e vídeo. Acima de um limiar configurável (10, 20 ou 30 min) a mídia é dividida em lotes e cada lote é convertido separadamente (decidido em 16/10/2026; vale para #20 e #25). |
 | OCR padrão | `createAnymark()` traz `TesseractBackend` na cadeia, com traineddata local e download só por opt-in (decidido em 16/10/2026, issue #46). |
-| Planilha oculta | Abas ocultas ficam fora do Markdown por padrão, com warning; `includeHiddenSheets: true` as inclui (16/10/2026, issue #48). |
+| Planilha oculta | Abas ocultas ficam fora do Markdown por padrão, com warning; `includeHidden: true` as inclui, e também linhas e colunas ocultas (16/10/2026, issues #48 e #68; [ADR 0008](adr/0008-include-hidden-flag-unico.md)). |
 | Fine-tuning | Não usar. Modelo ajustado de terceiro entra como `Backend`. |
 
 ## Stack verificada em 14/10/2026

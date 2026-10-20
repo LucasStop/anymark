@@ -59,9 +59,9 @@ const result = await createAnymark().convert(
 
 Decisão registrada em [ADR 0007](docs/adr/0007-ocr-padrao-no-createanymark.md).
 
-### Planilhas com abas ocultas
+### Conteúdo oculto
 
-Abas `hidden` e `veryHidden` do xlsx ficam fora do Markdown e geram o warning `HIDDEN_SHEETS_SKIPPED` com a contagem. Para incluí-las: `convert(input, { includeHiddenSheets: true })`.
+No xlsx, abas `hidden` e `veryHidden`, linhas e colunas ocultas ficam fora do Markdown e geram os warnings `HIDDEN_SHEETS_SKIPPED`, `HIDDEN_ROWS_SKIPPED` e `HIDDEN_COLUMNS_SKIPPED` com a contagem. Para incluir tudo: `convert(input, { includeHidden: true })`. Células de erro (`#DIV/0!`, `#N/A`) saem com o texto do erro. Decisão em [ADR 0008](docs/adr/0008-include-hidden-flag-unico.md).
 
 ### PDF escaneado
 

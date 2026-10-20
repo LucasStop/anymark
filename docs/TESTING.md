@@ -10,7 +10,7 @@ ANYMARK_LANG_PATH="$PWD/node_modules/@tesseract.js-data/eng/4.0.0_best_int" \
   node scripts/manual-run.mjs arquivo1.pdf arquivo2.xlsx
 ```
 
-`scripts/manual-run.mjs` converte cada arquivo, grava o Markdown em `manual-out/<id>.md` (ignorado pelo git) e imprime uma linha por arquivo: id, extensão, tamanho, tempo e resultado. `--hidden` liga `includeHiddenSheets` (issue #48). Ler o `.md` gerado faz parte do teste: conferir, não presumir.
+`scripts/manual-run.mjs` converte cada arquivo, grava o Markdown em `manual-out/<id>.md` (ignorado pelo git) e imprime uma linha por arquivo: id, extensão, tamanho, tempo e resultado. `--hidden` liga `includeHidden` (issues #48 e #68). Ler o `.md` gerado faz parte do teste: conferir, não presumir.
 
 ## Rodada 1: 16/10/2026, Lucas Stopinski, arquivos reais do Desktop
 
@@ -75,7 +75,7 @@ Marcar data, responsável e resultado ao rodar.
 | Z03 | extensão trocada (um `.pdf` renomeado para `.docx`) | detecta pela assinatura, não pela extensão | |
 | Z04 | `.ppt`, `.doc` e `.xls` legados não vazios | erro claro de formato não suportado | 20/10/2026: `UnsupportedFormatError` nos três (`test/legacy-office.test.ts`) |
 | Z05 | gif, webp e jpeg com texto (#47) | texto reconhecido | 16/10/2026, Lucas Stopinski: ok, `HELLO HOLE` nos três (golden files em `specs/image`, gerados por `scripts/make-image-fixture.mjs`; jpeg via `sips`); sem arquivo real do Desktop com gif ou webp |
-| Z06 | xlsx com aba oculta e `veryHidden` (#48) | pulada por padrão com warning `HIDDEN_SHEETS_SKIPPED`; incluída com `includeHiddenSheets` | 16/10/2026, Lucas Stopinski: ok, workbook sintético com `hidden` e `veryHidden` (testes em `test/xlsx.test.ts`); sem planilha real com aba oculta |
+| Z06 | xlsx com aba oculta e `veryHidden` (#48) | pulada por padrão com warning `HIDDEN_SHEETS_SKIPPED`; incluída com `includeHidden` | 16/10/2026, Lucas Stopinski: ok, workbook sintético com `hidden` e `veryHidden` (testes em `test/xlsx.test.ts`); sem planilha real com aba oculta |
 | Z07 | OCR sem traineddata local e sem `allowDownload` | `OcrError` genérico, sem download | |
 | Z08 | OCR por padrão em `createAnymark()` (#46) | converte sem passar `backends` | 16/10/2026, Lucas Stopinski: ok, `HELLO HOLE` offline (teste automatizado em `test/tesseract.test.ts`) |
 | Z09 | entrada como `Uint8Array`, como `Source` com `name`, e com `mime` | mesmo Markdown | |
@@ -91,7 +91,7 @@ Marcar data, responsável e resultado ao rodar.
 
 - html: entrada acima de 25 MB lança `ConversionError`; sem tempo máximo; tabelas sem cabeçalho ou aninhadas ficam como HTML cru.
 - json: só inteiros em notação decimal pura ficam exatos; decimais longos, notação científica e `-0` seguem o `Number` do JavaScript.
-- xlsx: células de erro saem vazias; abas `hidden` e `veryHidden` ficam fora por padrão (`includeHiddenSheets: true` as inclui), mas linhas e colunas ocultas dentro de uma aba visível seguem no Markdown.
+- xlsx: abas, linhas e colunas ocultas ficam fora por padrão (`includeHidden: true` inclui), com warning e contagem; células de erro saem com o texto do erro (#68). Só os oito erros do Excel são aceitos, outro valor em `t="e"` é ignorado. Fórmula sem valor em cache continua vazia.
 - docx: células mescladas e tabelas aninhadas ficam como HTML cru; avisos do mammoth não viram warnings; notas de rodapé mantidas.
 - pptx: não lê `mc:AlternateContent`, slides ocultos nem aninhamento de bullets.
 - pdf: sem prazo próprio além do `signal`. PDF escaneado passa por OCR só se a página traz imagem embutida (JPEG, PNG etc.); página vetorial sem imagem fica vazia (renderizar exigiria canvas, dependência nativa) e o limite é 100 páginas, 4 imagens por página e 64 MB por imagem decodificada, com o warning `PDF_OCR_SKIPPED` e a contagem. Sem backend `ocr` utilizável a página fica vazia e o warning é `PDF_NO_TEXT`. Falha do backend no meio mantém o texto já lido e acrescenta `PDF_OCR_FAILED`. O teto de 64 MB é checado depois que o pdf.js decodifica a imagem, então uma imagem gigante em PDF pequeno ainda gasta memória antes de ser pulada; imagem de 1 bit (CCITT, JBIG2) o pdf.js descarta sem contar. O OCR padrão é só em inglês.
