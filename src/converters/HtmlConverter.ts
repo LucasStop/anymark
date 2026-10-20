@@ -5,6 +5,8 @@ import type { ConversionResult, Converter, ConverterContext, Source } from '../c
 import { decodeText } from './decodeText.js';
 
 const MIME = 'text/html';
+// Same cap as the OCR input: turndown builds a DOM and several copies of the text in memory.
+const MAX_BYTES = 25 * 1024 * 1024;
 
 /** Parsed by turndown's DOM (no script execution, no fetching); these never reach the output. */
 const DROPPED = [
@@ -66,6 +68,7 @@ export class HtmlConverter implements Converter {
 
   async convert(source: Source, ctx: ConverterContext): Promise<ConversionResult> {
     ctx.options.signal?.throwIfAborted();
+    if (source.data.byteLength > MAX_BYTES) throw new ConversionError('html');
     const turndown = new TurndownService({
       headingStyle: 'atx',
       bulletListMarker: '-',

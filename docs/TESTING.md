@@ -85,12 +85,12 @@ Marcar data, responsável e resultado ao rodar.
 | Z13 | CLI e rede sem `allowCli` e `allowNetwork` | nunca chamados | |
 | Z14 | texto com Latin-1, UTF-8 com BOM, UTF-16 | Latin-1 e BOM ok; UTF-16 sem BOM não detectado (limite) | |
 | Z15 | html com `javascript:` e `data:` em links e imagens | links removidos | |
-| Z16 | arquivo muito grande (acima de 100 MB) | xlsx e docx recusam por teto; demais sem teto (limite) | |
+| Z16 | arquivo muito grande (acima de 100 MB) | xlsx e docx recusam por teto; html recusa acima de 25 MB (o docx também, se o HTML gerado passar disso); demais sem teto (limite) | |
 
 ## Limites conhecidos
 
 - json: números acima de 2^53 perdem precisão.
-- html: sem tamanho ou tempo máximo; tabelas sem cabeçalho ou aninhadas ficam como HTML cru.
+- html: entrada acima de 25 MB lança `ConversionError`; sem tempo máximo; tabelas sem cabeçalho ou aninhadas ficam como HTML cru.
 - xlsx: células de erro saem vazias; abas `hidden` e `veryHidden` ficam fora por padrão (`includeHiddenSheets: true` as inclui), mas linhas e colunas ocultas dentro de uma aba visível seguem no Markdown.
 - docx: células mescladas e tabelas aninhadas ficam como HTML cru; avisos do mammoth não viram warnings; notas de rodapé mantidas.
 - pptx: não lê `mc:AlternateContent`, slides ocultos nem aninhamento de bullets.

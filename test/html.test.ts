@@ -76,6 +76,25 @@ describe('html converter', () => {
     await expect(createAnymark().convert(html(deep))).rejects.toBeInstanceOf(ConversionError);
   });
 
+  it('refuses an input past 25 MB with a generic ConversionError', async () => {
+    const big = { data: new Uint8Array(25 * 1024 * 1024 + 1).fill(97), name: 'big.html' };
+
+    const error = await createAnymark()
+      .convert(big)
+      .catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ConversionError);
+    expect((error as Error).message).toBe('Could not convert html content');
+  });
+
+  it('still converts an input of exactly 25 MB', async () => {
+    const edge = { data: new Uint8Array(25 * 1024 * 1024).fill(97), name: 'edge.html' };
+
+    const { markdown } = await createAnymark().convert(edge);
+
+    expect(markdown.startsWith('aaaa')).toBe(true);
+  });
+
   it('returns empty Markdown for an empty document', async () => {
     const { markdown } = await createAnymark().convert(html(''));
 
