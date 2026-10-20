@@ -3,7 +3,13 @@ import { XMLParser } from 'fast-xml-parser';
 import { unzipSync } from 'fflate';
 import { ConversionError } from '../core/errors.js';
 import { MarkdownBuilder } from '../core/MarkdownBuilder.js';
-import type { ConversionResult, Converter, ConverterContext, Source } from '../core/types.js';
+import type {
+  ConversionResult,
+  ConversionWarning,
+  Converter,
+  ConverterContext,
+  Source,
+} from '../core/types.js';
 
 const MIME = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
 const MAX_UNPACKED = 100 * 1024 * 1024;
@@ -77,6 +83,11 @@ function blocksOf(root: XNode[]): Block[] {
       switch (tagOf(node)) {
         case 'p:grpSp':
           return walk(kids(node));
+        case 'mc:AlternateContent': {
+          // Choice is for newer Office, Fallback for older: the same content, so read one of them.
+          const choice = walk(kids(first(kids(node), 'mc:Choice') ?? {}));
+          return choice.length > 0 ? choice : walk(kids(first(kids(node), 'mc:Fallback') ?? {}));
+        }
         case 'p:sp': {
           const type = placeholder(node);
           if (type !== undefined && CHROME.has(type)) return [];
@@ -124,6 +135,7 @@ export class PptxConverter implements Converter {
   async convert(source: Source, ctx: ConverterContext): Promise<ConversionResult> {
     ctx.options.signal?.throwIfAborted();
     const builder = new MarkdownBuilder();
+    let hiddenSlides = 0;
     try {
       let unpacked = 0;
       const parts = unzipSync(new Uint8Array(source.data), {
@@ -143,7 +155,16 @@ export class PptxConverter implements Converter {
       slides.forEach((path, index) => {
         const part = parts[path];
         if (part === undefined) return;
-        const blocks = blocksOf(parse(part));
+        const slide = parse(part);
+        const root = slide.find((n) => !tagOf(n).startsWith('?'));
+        if (
+          ctx.options.includeHidden !== true &&
+          ['0', 'false'].includes(attr(root ?? {}, 'show') ?? '')
+        ) {
+          hiddenSlides += 1;
+          return;
+        }
+        const blocks = blocksOf(slide);
         const title = blocks.flatMap((block) => (block.kind === 'title' ? [block.text] : []));
         builder.heading(2, title.length > 0 ? title.join(' ') : `Slide ${index + 1}`);
         for (const block of blocks) {
@@ -172,10 +193,17 @@ export class PptxConverter implements Converter {
       // Part names and parser messages describe the file; only the format is reported.
       throw new ConversionError('pptx');
     }
+    const warnings: ConversionWarning[] = [];
+    if (hiddenSlides > 0) {
+      warnings.push({
+        code: 'HIDDEN_SLIDES_SKIPPED',
+        message: `${hiddenSlides} hidden ${hiddenSlides === 1 ? 'slide' : 'slides'} skipped`,
+      });
+    }
     return {
       markdown: builder.build(),
       metadata: { schemaVersion: 1, sourceId: ctx.sourceId, mime: MIME },
-      warnings: [],
+      warnings,
     };
   }
 }
