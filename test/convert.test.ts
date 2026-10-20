@@ -25,6 +25,44 @@ describe('text encodings without a BOM', () => {
 
     expect(result.markdown).toBe(sample);
   });
+
+  it('decodes UTF-16BE, also through the md converter', async () => {
+    const be = new Uint8Array(Buffer.from(sample, 'utf16le').swap16());
+
+    const result = await createAnymark().convert({ data: be, name: 'a.md' });
+
+    expect(result.markdown).toBe(sample);
+  });
+
+  it('leaves Latin-1, UTF-8 with a BOM and plain UTF-8 as they were', async () => {
+    const latin1 = new Uint8Array(Buffer.from(sample, 'latin1'));
+    const bom = new Uint8Array(Buffer.from(`\ufeff${sample}`, 'utf8'));
+    const plain = new Uint8Array(Buffer.from(sample, 'utf8'));
+
+    for (const data of [latin1, bom, plain]) {
+      const result = await createAnymark().convert({ data, name: 'a.txt' });
+      expect(result.markdown).toBe(sample);
+    }
+  });
+
+  it('does not take a short ASCII file or binary noise for UTF-16', async () => {
+    const short = await createAnymark().convert({
+      data: new Uint8Array([0x68, 0x69]),
+      name: 'a.txt',
+    });
+    const noisy = new Uint8Array(64).map((_, i) => (i % 2 === 0 ? 0x41 : i % 7));
+    const text = await createAnymark().convert({ data: noisy, name: 'a.txt' });
+
+    // 60% of the odd bytes are zero: too few to call it UTF-16, whose letters would turn into U+4241.
+    const mixed = new Uint8Array(80).map((_, i) =>
+      i % 2 === 0 ? 0x41 : (i - 1) / 2 < 24 ? 0 : 0x42,
+    );
+    const ambiguous = await createAnymark().convert({ data: mixed, name: 'a.txt' });
+
+    expect(ambiguous.markdown).not.toContain('\u4241');
+    expect(short.markdown).toBe('hi');
+    expect(text.markdown).not.toContain('\u4141');
+  });
 });
 
 describe('instances and unsupported formats', () => {

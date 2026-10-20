@@ -83,7 +83,7 @@ Marcar data, responsável e resultado ao rodar.
 | Z11 | plugin `.srt` registrado com `createAnymark().use(plugin)` | usa o plugin, sem tocar a lib | |
 | Z12 | `BackendChain` com o primeiro backend falhando | cai no próximo, warning `BACKEND_FAILED` sem chave nem caminho | |
 | Z13 | CLI e rede sem `allowCli` e `allowNetwork` | nunca chamados | |
-| Z14 | texto com Latin-1, UTF-8 com BOM, UTF-16 | Latin-1 e BOM ok; UTF-16 sem BOM não detectado (limite) | |
+| Z14 | texto com Latin-1, UTF-8 com BOM, UTF-16 | Latin-1, BOM e UTF-16 (LE e BE, com ou sem BOM) lidos; UTF-16 sem BOM só com texto latino (detecção pelos bytes zero) | |
 | Z15 | html com `javascript:` e `data:` em links e imagens | links removidos | |
 | Z16 | arquivo muito grande (acima de 100 MB) | xlsx e docx recusam por teto; html recusa acima de 25 MB (o docx também, se o HTML gerado passar disso); demais sem teto (limite) | |
 
@@ -96,4 +96,4 @@ Marcar data, responsável e resultado ao rodar.
 - pptx: não lê `mc:AlternateContent`, slides ocultos nem aninhamento de bullets.
 - pdf: sem prazo próprio além do `signal`; PDF escaneado não passa por OCR (só recebe o warning `PDF_NO_TEXT`).
 - tesseract: sem timeout próprio.
-- Texto UTF-16 sem BOM não é detectado.
+- Texto UTF-16 sem BOM só é detectado quando é majoritariamente latino (um byte zero em quase toda unidade); CJK sem BOM não. Um arquivo sem extensão em UTF-16 sem BOM continua não reconhecido como texto pelo detector.
