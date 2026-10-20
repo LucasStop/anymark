@@ -128,11 +128,8 @@ describe('docx merged cells and nested tables', () => {
       xml.replace('<w:tc>', '<w:tc><w:tcPr><w:gridSpan w:val="1000000000"/></w:tcPr>'),
     );
 
-    const attempt = await createAnymark()
-      .convert({ data, name: 'span.docx' })
-      .catch((e: unknown) => e);
+    const { markdown } = await createAnymark().convert({ data, name: 'span.docx' });
 
-    if (attempt instanceof Error) expect(attempt).toBeInstanceOf(ConversionError);
-    else expect(attempt.markdown.length).toBeLessThan(100_000);
+    expect(markdown.length).toBeLessThan(100_000);
   });
 });
