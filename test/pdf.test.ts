@@ -67,6 +67,17 @@ describe('pdf converter', () => {
     );
   }, 60_000);
 
+  it('finds the upright side of a scan whatever its /Rotate says', async () => {
+    const data = new Uint8Array(spec('pdf/scanned-orientations.pdf'));
+
+    const { markdown } = await createAnymark().convert({ data, name: 'orientations.pdf' });
+
+    // Page 1 turned by /Rotate 270, page 2 sideways with /Rotate 0, page 3 upside down.
+    const pages = markdown.split(/^## Page \d+\n/m).slice(1);
+    expect(pages).toHaveLength(3);
+    for (const page of pages) expect(page.match(/HELLO HOLE/g)).toHaveLength(4);
+  }, 120_000);
+
   it('passes the converter contract', async () => {
     await assertConverterContract(new PdfConverter(), pdf());
   });

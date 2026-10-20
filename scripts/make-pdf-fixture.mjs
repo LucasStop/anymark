@@ -136,3 +136,71 @@ function buildOneBit({ bits, width, height }, pages = 1) {
 write('scanned-1bit.pdf', buildOneBit(oneBitSideways()));
 // The same image object on three pages: pdf.js keeps it in commonObjs, not in the page's objs.
 write('scanned-1bit-shared.pdf', buildOneBit(oneBitSideways(), 3));
+
+/** Four lines of "HELLO HOLE" (a page has many lines; the orientation guess needs more than one), turned clockwise `turns` times. */
+function oneBitPage(turns) {
+  const png = readFileSync(new URL('../specs/image/hello.png', import.meta.url));
+  const w = png.readUInt32BE(16);
+  const h = png.readUInt32BE(20);
+  const idat = [];
+  for (let at = 8; at < png.length;) {
+    const length = png.readUInt32BE(at);
+    if (png.toString('latin1', at + 4, at + 8) === 'IDAT')
+      idat.push(png.subarray(at + 8, at + 8 + length));
+    at += 12 + length;
+  }
+  const raw = inflateSync(Buffer.concat(idat));
+  let width = w;
+  let height = h * 4;
+  let pixels = Array.from({ length: height }, (_, y) =>
+    Array.from({ length: width }, (_, x) => raw[(y % h) * (1 + w) + 1 + x] > 127),
+  );
+  for (let t = 0; t < turns; t += 1) {
+    pixels = Array.from({ length: width }, (_, y) =>
+      Array.from({ length: height }, (_, x) => pixels[height - 1 - x][y]),
+    );
+    [width, height] = [height, width];
+  }
+  const stride = Math.ceil(width / 8);
+  const bits = Buffer.alloc(stride * height);
+  for (let y = 0; y < height; y += 1)
+    for (let x = 0; x < width; x += 1)
+      if (pixels[y][x]) bits[y * stride + (x >> 3)] |= 0x80 >> (x & 7);
+  return { bits: bits.toString('latin1'), width, height };
+}
+
+/** One image object per page; `rotates` is each page's /Rotate, which scanners often leave at 0. */
+function buildPages(images, rotates) {
+  const kids = images.map((_, i) => `${3 + i * 3} 0 R`).join(' ');
+  const objects = [
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    `<< /Type /Pages /Kids [${kids}] /Count ${images.length} >>`,
+  ];
+  images.forEach(({ bits, width, height }, i) => {
+    const draw = `${width} 0 0 ${height} 0 0 cm /Im1 Do`;
+    objects.push(
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${width} ${height}] /Rotate ${rotates[i]} /Contents ${4 + i * 3} 0 R /Resources << /XObject << /Im1 ${5 + i * 3} 0 R >> >> >>`,
+    );
+    objects.push(`<< /Length ${draw.length} >>\nstream\n${draw}\nendstream`);
+    objects.push(
+      `<< /Type /XObject /Subtype /Image /Width ${width} /Height ${height} /ColorSpace /DeviceGray /BitsPerComponent 1 /Length ${bits.length} >>\nstream\n${bits}\nendstream`,
+    );
+  });
+  let pdf = '%PDF-1.4\n';
+  const offsets = [];
+  objects.forEach((body, i) => {
+    offsets.push(pdf.length);
+    pdf += `${i + 1} 0 obj\n${body}\nendobj\n`;
+  });
+  const xref = pdf.length;
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (const offset of offsets) pdf += `${String(offset).padStart(10, '0')} 00000 n \n`;
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+  return pdf;
+}
+
+// Sideways with the right /Rotate, sideways with /Rotate 0 (the book), and upside down with /Rotate 0.
+write(
+  'scanned-orientations.pdf',
+  buildPages([oneBitPage(1), oneBitPage(1), oneBitPage(2)], [270, 0, 0]),
+);
