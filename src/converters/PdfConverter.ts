@@ -111,46 +111,56 @@ interface ScanKind {
 }
 
 function scanKind(declared: ConvertOptions['pdf']): ScanKind {
-  const { layout = 'single', rotation = 'auto', binding = 'left' } = declared ?? {};
-  if (
-    !['single', 'spread'].includes(layout) ||
-    ![0, 90, 180, 270, 'auto'].includes(rotation) ||
-    !['left', 'right'].includes(binding)
-  )
-    throw new ConversionError('pdf');
-  return { layout, rotation, binding };
+  try {
+    if (declared !== undefined && (typeof declared !== 'object' || declared === null))
+      throw new Error('not an object');
+    const { layout = 'single', rotation = 'auto', binding = 'left' } = declared ?? {};
+    if (
+      !['single', 'spread'].includes(layout) ||
+      ![0, 90, 180, 270, 'auto'].includes(rotation) ||
+      !['left', 'right'].includes(binding)
+    )
+      throw new Error('unknown value');
+    return { layout, rotation, binding };
+  } catch {
+    throw new ConversionError('pdf'); // a getter that throws lands here too
+  }
 }
 
+/** A sheet narrower than this is no spread: there is no gutter to find in a sliver. */
+const MIN_SPREAD_WIDTH = 100;
+
 /**
- * OCR one scanned image into one text per printed page (two for a spread, in reading order).
+ * OCR one scanned image into one text per printed page (two for a spread, in reading order), pushed
+ * to `out` as they are read so a failure on the second page keeps the first.
  * A declared rotation is applied as is. With `auto`, the text lines tell which axis is up and /Rotate
- * only orders the two turns on that axis; the second turn runs only when the first one reads like
- * junk, and the better first page wins. A spread is cut after the turn, so the gutter is vertical.
+ * only orders the two turns on that axis; the second turn is read only when the first one reads like
+ * junk, and the better text wins. A spread is judged as a whole (both pages), because the second
+ * turn puts the other printed page first.
  */
 async function readSheet(
   image: Raster,
   rotate: number,
   kind: ScanKind,
   ctx: ConverterContext,
-): Promise<string[]> {
+  out: string[],
+): Promise<void> {
   const ocr = async (page: Raster): Promise<string> => {
     const png = encodePng(page.data, page.width, page.height, page.channels);
     return (await ctx.backends.run<Uint8Array, string>('ocr', png)).trim();
   };
   const pagesTurned = (degrees: number): Raster[] => {
     const turned = rotateClockwise(image, degrees);
-    return kind.layout === 'spread' ? splitSpread(turned, kind.binding) : [turned];
+    return kind.layout === 'spread' && turned.width >= MIN_SPREAD_WIDTH
+      ? splitSpread(turned, kind.binding)
+      : [turned];
   };
-  const readRest = async (pages: Raster[], first: string): Promise<string[]> => {
-    const texts = [first];
-    for (const page of pages.slice(1)) texts.push(await ocr(page));
-    return texts;
+  const readAll = async (pages: Raster[], sink: string[]): Promise<void> => {
+    for (const page of pages) sink.push(await ocr(page));
   };
 
-  if (kind.rotation !== 'auto') {
-    const pages = pagesTurned(kind.rotation);
-    return readRest(pages, await ocr(pages[0]!));
-  }
+  if (kind.rotation !== 'auto') return readAll(pagesTurned(kind.rotation), out);
+
   const turns =
     textRuns(image) === 'horizontal'
       ? rotate === 180
@@ -159,22 +169,28 @@ async function readSheet(
       : rotate === 90
         ? [90, 270]
         : [270, 90];
-  let pages = pagesTurned(turns[0]!);
-  let first = await ocr(pages[0]!);
-  if (first.length >= MIN_CHARS_TO_DOUBT && wordScore(first) < MIN_WORD_SCORE) {
-    try {
-      const otherPages = pagesTurned(turns[1]!);
-      const second = await ocr(otherPages[0]!);
-      if (wordScore(second) > wordScore(first)) {
-        pages = otherPages;
-        first = second;
-      }
-    } catch {
-      // the second look is a bonus: its failure must not cost the text already read
-      ctx.options.signal?.throwIfAborted();
-    }
+  const first: string[] = [];
+  try {
+    await readAll(pagesTurned(turns[0]!), first);
+  } catch (error) {
+    out.push(...first);
+    throw error;
   }
-  return readRest(pages, first);
+  const firstText = first.join('\n');
+  if (firstText.length < MIN_CHARS_TO_DOUBT || wordScore(firstText) >= MIN_WORD_SCORE) {
+    out.push(...first);
+    return;
+  }
+  const second: string[] = [];
+  try {
+    await readAll(pagesTurned(turns[1]!), second);
+  } catch {
+    // the second look is a bonus: its failure must not cost the text already read
+    ctx.options.signal?.throwIfAborted();
+    out.push(...first);
+    return;
+  }
+  out.push(...(wordScore(second.join('\n')) > wordScore(firstText) ? second : first));
 }
 
 /**
@@ -207,17 +223,15 @@ async function ocrScans(
       continue; // an image pdf.js cannot decode: the page stays empty
     }
     const found: string[] = [];
+    let read = 0; // images, not printed pages: a spread gives two texts per image
     for (const image of images) {
-      if (
-        found.length >= MAX_PAGE_IMAGES ||
-        image.width === 0 ||
-        image.data.length > MAX_IMAGE_BYTES
-      ) {
+      if (read >= MAX_PAGE_IMAGES || image.width === 0 || image.data.length > MAX_IMAGE_BYTES) {
         skipped += 1;
         continue;
       }
       try {
-        found.push(...(await readSheet(image, rotate, kind, ctx)));
+        read += 1;
+        await readSheet(image, rotate, kind, ctx, found);
       } catch (error) {
         // An abort is the caller's call. Anything else ends the OCR but keeps what was already read;
         // no backend at all and nothing read is not a failure, PDF_NO_TEXT covers it.

@@ -21,6 +21,15 @@ describe('splitSpread', () => {
     expect(left.width + right.width).toBe(1000);
   });
 
+  it('follows a gutter that is off the center', () => {
+    const image = sheet(1000, 40, (x) => (x < 410 || x > 470 ? x % 3 === 0 : false));
+
+    const [left] = splitSpread(image, 'left');
+
+    expect(left.width).toBeGreaterThan(430);
+    expect(left.width).toBeLessThan(450);
+  });
+
   it('cuts at the middle when no blank valley exists', () => {
     const image = sheet(1000, 40, (x) => x % 2 === 0);
 

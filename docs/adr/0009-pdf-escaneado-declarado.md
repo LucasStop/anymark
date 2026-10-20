@@ -13,7 +13,7 @@ Na conferência do livro escaneado (#89, #92), cada folha trazia duas páginas i
 ## Consequências
 
 - O ajuste fino é opt-in: chamada simples não muda e o que a pessoa sabe do livro vale mais que o palpite da lib.
-- Caso novo (lombada ao centro, limpeza de borda, #95) entra como campo novo de `PdfOptions`, não como heurística escondida.
+- Caso novo (lombada ao centro, limpeza de borda, #96) entra como campo novo de `PdfOptions`, não como heurística escondida.
 - O corte da lombada é o vale de tinta na faixa de 40% a 60% da largura; se não há vale claro, corta no meio. Folha com a lombada fora dessa faixa sai errada: declare `single`.
 - Manuscrito na margem continua virando ruído; nenhuma opção resolve isso.
 
