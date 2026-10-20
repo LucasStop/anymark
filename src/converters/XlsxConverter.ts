@@ -16,49 +16,146 @@ const MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 const MAX_UNPACKED = 100 * 1024 * 1024;
 const MAX_ROWS = 100_000;
 const WORKBOOK = 'xl/workbook.xml';
+const WORKBOOK_RELS = 'xl/_rels/workbook.xml.rels';
 // A real sheet list is a few KB; this only bounds the extra parse.
 const MAX_WORKBOOK = 5 * 1024 * 1024;
+const MAX_COLUMN = 16_384;
+const MAX_CELLS = 10_000_000;
+// The only values a t="e" cell can hold; anything else is not echoed.
+const ERRORS = new Set([
+  '#NULL!',
+  '#DIV/0!',
+  '#VALUE!',
+  '#REF!',
+  '#NAME?',
+  '#NUM!',
+  '#N/A',
+  '#GETTING_DATA',
+]);
+
+/** What the sheet XML says and read-excel-file drops: visibility of rows and columns, error cells. */
+interface SheetInfo {
+  hidden: boolean;
+  hiddenRows: Set<number>;
+  hiddenColumns: [number, number][];
+  errors: { row: number; column: number; text: string }[];
+}
+
+const columnNumber = (letters: string): number =>
+  [...letters].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0);
+const attribute = (tag: string, name: string): string | undefined => {
+  const found = new RegExp(`\\b${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)')`).exec(tag);
+  return found?.[1] ?? found?.[2];
+};
+const flag = (tag: string, name: string): boolean =>
+  ['1', 'true'].includes(attribute(tag, name) ?? '');
+
+/** Reads the sheet XML once, counting rows against the cap on the way. */
+function scanSheet(xml: string): Omit<SheetInfo, 'hidden'> {
+  let count = 0;
+  let last = 0;
+  const hiddenRows = new Set<number>();
+  for (const [tag] of xml.matchAll(/<row\b[^>]*>/g)) {
+    // A row without r is the one after the previous row; hiding it must still work.
+    last = Number(attribute(tag, 'r') ?? last + 1);
+    count += 1;
+    if (count > MAX_ROWS || last > MAX_ROWS) throw new Error('too many rows');
+    if (flag(tag, 'hidden')) hiddenRows.add(last);
+  }
+  const hiddenColumns: [number, number][] = [];
+  for (const [tag] of xml.matchAll(/<col\b[^>]*>/g)) {
+    const min = Number(attribute(tag, 'min'));
+    const max = Number(attribute(tag, 'max'));
+    if (flag(tag, 'hidden') && min >= 1 && max >= min)
+      hiddenColumns.push([min, Math.min(max, MAX_COLUMN)]);
+  }
+  const errors: SheetInfo['errors'] = [];
+  let widest = 0;
+  for (const match of xml.matchAll(/<c\b([^>]*)>/g)) {
+    const tag = match[1] ?? '';
+    const ref = /^([A-Z]{1,3})(\d+)$/.exec(attribute(tag, 'r') ?? '');
+    const column = columnNumber(ref?.[1] ?? '');
+    widest = Math.max(widest, column);
+    if (attribute(tag, 't') !== 'e' || tag.endsWith('/') || ref === null) continue;
+    const start = match.index + match[0].length;
+    const body = xml.slice(start, xml.indexOf('</c>', start));
+    const value = /<v\b[^>]*>([^<]*)<\/v>/.exec(body)?.[1] ?? '';
+    const row = Number(ref[2]);
+    if (ERRORS.has(value) && column <= MAX_COLUMN && row >= 1 && row <= MAX_ROWS)
+      errors.push({ row, column, text: value });
+  }
+  // The library pads to rows x columns; a handful of far-away cells would otherwise cost gigabytes.
+  if (Math.min(widest, MAX_COLUMN) * last > MAX_CELLS) throw new Error('sheet too large');
+  return { hiddenRows, hiddenColumns, errors };
+}
 
 /**
  * read-excel-file pads a sparse sheet into a dense array and does not cap inflation, so a tiny
  * hostile file can exhaust memory. Sizes come from the zip directory, rows from the sheet XML.
- * Returns, per sheet in workbook order, whether it is hidden or veryHidden.
+ * Returns, per sheet in workbook order, what the library does not expose (see SheetInfo).
  */
-function assertWithinLimits(data: Uint8Array): boolean[] {
+function assertWithinLimits(data: Uint8Array): SheetInfo[] {
   let unpacked = 0;
-  const sheets = unzipSync(data, {
+  const parts = unzipSync(data, {
     filter: ({ name, originalSize }) => {
       unpacked += originalSize;
       if (unpacked > MAX_UNPACKED) throw new Error('too large');
-      return name === WORKBOOK || /^xl\/worksheets\/[^/]+\.xml$/.test(name);
+      return name === WORKBOOK || name === WORKBOOK_RELS || /^xl\/worksheets\/.+\.xml$/.test(name);
     },
   });
-  const { [WORKBOOK]: workbook, ...worksheets } = sheets;
-  for (const xml of Object.values(worksheets)) {
-    const rows = new TextDecoder().decode(xml).matchAll(/<row\b[^>]*?\br="(\d+)"/g);
-    let count = 0;
-    for (const [, index] of rows) {
-      count += 1;
-      if (count > MAX_ROWS || Number(index) > MAX_ROWS) throw new Error('too many rows');
-    }
-  }
-  if (workbook !== undefined && workbook.length > MAX_WORKBOOK)
+  const { [WORKBOOK]: workbook, [WORKBOOK_RELS]: rels, ...worksheets } = parts;
+  const scanned = new Map(
+    Object.entries(worksheets).map(([path, xml]) => [
+      path,
+      scanSheet(new TextDecoder().decode(xml)),
+    ]),
+  );
+  if ((workbook?.length ?? 0) > MAX_WORKBOOK || (rels?.length ?? 0) > MAX_WORKBOOK)
     throw new Error('workbook too large');
-  return hiddenSheets(workbook);
+  return sheetEntries(workbook).map(({ hidden, id }) => ({
+    hidden,
+    ...scannedSheet(scanned, worksheetPath(rels, id)),
+  }));
 }
+
+const parser = new XMLParser({ ignoreAttributes: false, removeNSPrefix: true });
+const asList = (value: unknown): Record<string, unknown>[] =>
+  (Array.isArray(value) ? value : value === undefined ? [] : [value]) as Record<string, unknown>[];
 
 /**
  * The visibility lives in the workbook part, which read-excel-file does not expose. Matched by
  * position: the two parsers decode a sheet name differently, and a mismatch would leak the sheet.
  */
-function hiddenSheets(workbook: Uint8Array | undefined): boolean[] {
+function sheetEntries(workbook: Uint8Array | undefined): { hidden: boolean; id: unknown }[] {
   if (workbook === undefined) return [];
-  const parsed = new XMLParser({ ignoreAttributes: false, removeNSPrefix: true }).parse(
-    new TextDecoder().decode(workbook),
-  );
-  const entries: unknown = parsed?.workbook?.sheets?.sheet ?? [];
-  const sheets = (Array.isArray(entries) ? entries : [entries]) as Record<string, unknown>[];
-  return sheets.map((sheet) => sheet['@_state'] === 'hidden' || sheet['@_state'] === 'veryHidden');
+  const parsed = parser.parse(new TextDecoder().decode(workbook));
+  return asList(parsed?.workbook?.sheets?.sheet).map((sheet) => ({
+    hidden: sheet['@_state'] === 'hidden' || sheet['@_state'] === 'veryHidden',
+    id: sheet['@_id'],
+  }));
+}
+
+/** Fail closed: a sheet whose XML cannot be found would be shown with its hidden rows. */
+function scannedSheet<T>(scanned: Map<string, T>, path: string): T {
+  const found = scanned.get(path);
+  if (found === undefined) throw new Error('sheet part not found');
+  return found;
+}
+
+/** Resolves a relationship target against xl/, the way a zip path is read: `/`, `./` and `../`. */
+function worksheetPath(rels: Uint8Array | undefined, id: unknown): string {
+  if (rels === undefined) return '';
+  const parsed = parser.parse(new TextDecoder().decode(rels));
+  const target = asList(parsed?.Relationships?.Relationship).find((r) => r['@_Id'] === id)?.[
+    '@_Target'
+  ];
+  if (typeof target !== 'string') return '';
+  const parts: string[] = [];
+  for (const part of (target.startsWith('/') ? target : `/xl/${target}`).split('/')) {
+    if (part === '..') parts.pop();
+    else if (part !== '' && part !== '.') parts.push(part);
+  }
+  return parts.join('/');
 }
 
 // Markdown in a sheet name would render; the name is only a label.
@@ -79,36 +176,61 @@ export class XlsxConverter implements Converter {
   async convert(source: Source, ctx: ConverterContext): Promise<ConversionResult> {
     ctx.options.signal?.throwIfAborted();
     let sheets: { sheet: string; data: unknown[][] }[];
-    let hidden: boolean[];
+    let info: SheetInfo[];
     try {
       const copy = new Uint8Array(source.data);
-      hidden = assertWithinLimits(copy);
+      info = assertWithinLimits(copy);
       sheets = await readExcelFile(copy.buffer);
       // Fail closed: if the counts disagree the visibility cannot be trusted.
-      if (hidden.length !== sheets.length) throw new Error('sheet count mismatch');
+      if (info.length !== sheets.length) throw new Error('sheet count mismatch');
     } catch {
       // The library's messages describe the file; only the format is reported.
       throw new ConversionError('xlsx');
     }
     const builder = new MarkdownBuilder();
-    const warnings: ConversionWarning[] = [];
-    const include = ctx.options.includeHiddenSheets === true;
-    let skipped = 0;
-    for (const [index, { sheet, data }] of sheets.entries()) {
-      if (!include && hidden[index] === true) {
-        skipped += 1;
+    const include = ctx.options.includeHidden === true;
+    let skippedSheets = 0;
+    let skippedRows = 0;
+    let skippedColumns = 0;
+    for (const [index, { sheet, data: read }] of sheets.entries()) {
+      const { hidden, hiddenRows, hiddenColumns, errors } = info[index] as SheetInfo;
+      if (!include && hidden) {
+        skippedSheets += 1;
         continue;
       }
+      for (const { row, column, text: error } of errors) {
+        const cells = (read[row - 1] ??= []);
+        cells[column - 1] = error;
+      }
+      const columnHidden = (column: number) =>
+        hiddenColumns.some(([min, max]) => column >= min && column <= max);
+      // A row that only held errors may have been missing from the library's output: fill the holes.
+      const data = Array.from(read, (cells) => cells ?? []);
+      const width = data.reduce((most, cells) => Math.max(most, cells.length), 0);
+      const keptColumns = [...Array(width).keys()].filter((c) => include || !columnHidden(c + 1));
+      const keptRows = data.flatMap((cells, r) =>
+        include || !hiddenRows.has(r + 1) ? [cells] : [],
+      );
+      skippedRows += data.length - keptRows.length;
+      skippedColumns += width - keptColumns.length;
       builder.heading(2, label(sheet));
-      const [header = [], ...rows] = data.map((row) => row.map(text));
-      if (data.length > 0) builder.table(header, rows);
+      const [header = [], ...rows] = keptRows.map((cells) =>
+        keptColumns.map((c) => text(cells[c])),
+      );
+      if (data.length > 0 && keptColumns.length > 0 && keptRows.length > 0)
+        builder.table(header, rows);
     }
-    if (skipped > 0) {
-      warnings.push({
-        code: 'HIDDEN_SHEETS_SKIPPED',
-        message: `${skipped} hidden ${skipped === 1 ? 'sheet' : 'sheets'} skipped`,
-      });
-    }
+    const warnings: ConversionWarning[] = [];
+    const skipped = (code: string, count: number, noun: string) => {
+      if (count > 0)
+        warnings.push({
+          code,
+          message: `${count} hidden ${count === 1 ? noun : `${noun}s`} skipped`,
+        });
+    };
+    skipped('HIDDEN_SHEETS_SKIPPED', skippedSheets, 'sheet');
+    skipped('HIDDEN_ROWS_SKIPPED', skippedRows, 'row');
+    skipped('HIDDEN_COLUMNS_SKIPPED', skippedColumns, 'column');
     return {
       markdown: builder.build(),
       metadata: { schemaVersion: 1, sourceId: ctx.sourceId, mime: MIME },
