@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 const destroy = vi.fn(async () => {});
 vi.mock('unpdf', () => ({
+  definePDFJSModule: async () => {},
   getDocumentProxy: async () => ({ loadingTask: { destroy } }),
   extractText: () => Promise.reject(new Error('boom')),
 }));

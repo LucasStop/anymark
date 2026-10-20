@@ -57,3 +57,35 @@ export function encodePng(
   }
   return png;
 }
+
+export interface Raster {
+  readonly data: Uint8ClampedArray;
+  readonly width: number;
+  readonly height: number;
+  readonly channels: 1 | 3 | 4;
+}
+
+/** Turns the pixels clockwise by 90, 180 or 270 degrees, like a PDF page's /Rotate. */
+export function rotateClockwise(image: Raster, degrees: number): Raster {
+  const turns = (((Math.round(degrees / 90) % 4) + 4) % 4) as 0 | 1 | 2 | 3;
+  if (turns === 0) return image;
+  const { data, width, height, channels } = image;
+  const swap = turns !== 2;
+  const outWidth = swap ? height : width;
+  const out = new Uint8ClampedArray(data.length);
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const [nx, ny] =
+        turns === 1
+          ? [height - 1 - y, x]
+          : turns === 2
+            ? [width - 1 - x, height - 1 - y]
+            : [y, width - 1 - x];
+      out.set(
+        data.subarray((y * width + x) * channels, (y * width + x + 1) * channels),
+        (ny * outWidth + nx) * channels,
+      );
+    }
+  }
+  return { data: out, width: outWidth, height: swap ? width : height, channels };
+}

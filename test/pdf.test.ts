@@ -48,6 +48,15 @@ describe('pdf converter', () => {
     expect(result.warnings).toEqual([]);
   }, 60_000);
 
+  it('reads a 1-bit scan stored sideways and turned upright by /Rotate', async () => {
+    const data = new Uint8Array(spec('pdf/scanned-1bit.pdf'));
+
+    const result = await createAnymark().convert({ data, name: 'scanned-1bit.pdf' });
+
+    expect(result.markdown).toBe('## Page 1\n\nHELLO HOLE\n');
+    expect(result.warnings).toEqual([]);
+  }, 60_000);
+
   it('passes the converter contract', async () => {
     await assertConverterContract(new PdfConverter(), pdf());
   });

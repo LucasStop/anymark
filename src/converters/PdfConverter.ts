@@ -1,4 +1,12 @@
-import { extractImages, extractText, getDocumentProxy } from 'unpdf';
+import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
+import {
+  definePDFJSModule,
+  extractImages,
+  extractText,
+  getDocumentProxy,
+  getResolvedPDFJS,
+} from 'unpdf';
 import { ConversionError, NoBackendError } from '../core/errors.js';
 import { MarkdownBuilder } from '../core/MarkdownBuilder.js';
 import type {
@@ -8,7 +16,7 @@ import type {
   ConverterContext,
   Source,
 } from '../core/types.js';
-import { encodePng } from './encodePng.js';
+import { encodePng, rotateClockwise, type Raster } from './encodePng.js';
 
 const MIME = 'application/pdf';
 
@@ -18,6 +26,63 @@ const MAX_PAGE_IMAGES = 4;
 const MAX_IMAGE_BYTES = 64 * 1024 * 1024;
 
 type Document = Awaited<ReturnType<typeof getDocumentProxy>>;
+
+// unpdf's bundled pdf.js cannot load its JBIG2 and CCITT decoders (wasm), so every 1-bit fax scan
+// came out empty. The full pdfjs-dist ships them; its folder is passed as `wasmUrl`.
+const wasmUrl = `${join(dirname(createRequire(import.meta.url).resolve('pdfjs-dist/package.json')), 'wasm')}/`;
+let engine: Promise<void> | undefined;
+const useFullPdfjs = (): Promise<void> =>
+  (engine ??= definePDFJSModule(() => import('pdfjs-dist/legacy/build/pdf.mjs')));
+
+/**
+ * 1-bit images (fax scans: CCITT, JBIG2) are the ones `extractImages` drops. Read them from the
+ * page's operator list instead and widen the bits to 8-bit gray, which is what the backends take.
+ */
+async function bitonalImages(pdf: Document, pageNumber: number): Promise<Raster[]> {
+  const { OPS } = await getResolvedPDFJS();
+  const page = await pdf.getPage(pageNumber);
+  const list = await page.getOperatorList();
+  const images: Raster[] = [];
+  for (const [at, fn] of list.fnArray.entries()) {
+    if (fn !== OPS.paintImageXObject) continue;
+    const id = list.argsArray[at]?.[0] as string;
+    const image = await new Promise<{
+      data?: Uint8Array;
+      width: number;
+      height: number;
+      kind: number;
+    } | null>((resolve) => page.objs.get(id, resolve));
+    // kind 1 is GRAYSCALE_1BPP: one bit per pixel, rows padded to a whole byte, 1 is white.
+    if (image?.kind !== 1 || image.data === undefined) continue;
+    if (image.width * image.height > MAX_IMAGE_BYTES) {
+      images.push({ data: new Uint8ClampedArray(0), width: 0, height: 0, channels: 1 });
+      continue;
+    }
+    const { data, width, height } = image;
+    const stride = Math.ceil(width / 8);
+    const gray = new Uint8ClampedArray(width * height);
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        gray[y * width + x] = (data[y * stride + (x >> 3)]! >> (7 - (x & 7))) & 1 ? 255 : 0;
+      }
+    }
+    images.push({ data: gray, width, height, channels: 1 });
+  }
+  return images;
+}
+
+/** The images of a page, upright: pdf.js hands them over as stored, and /Rotate turns the page. */
+async function pageImages(pdf: Document, pageNumber: number): Promise<Raster[]> {
+  const found: Raster[] = (await extractImages(pdf, pageNumber)).map((image) => ({
+    data: image.data,
+    width: image.width,
+    height: image.height,
+    channels: image.channels as 1 | 3 | 4,
+  }));
+  const images = found.length > 0 ? found : await bitonalImages(pdf, pageNumber);
+  const { rotate } = await pdf.getPage(pageNumber);
+  return images.map((image) => (image.width === 0 ? image : rotateClockwise(image, rotate)));
+}
 
 /**
  * A page without a text layer is read through the `ocr` capability, from the images embedded in it
@@ -40,15 +105,19 @@ async function ocrScans(
       continue;
     }
     looked += 1;
-    let images: Awaited<ReturnType<typeof extractImages>>;
+    let images: Raster[];
     try {
-      images = await extractImages(pdf, index + 1);
+      images = await pageImages(pdf, index + 1);
     } catch {
       continue; // an image pdf.js cannot decode: the page stays empty
     }
     const found: string[] = [];
     for (const image of images) {
-      if (found.length >= MAX_PAGE_IMAGES || image.data.length > MAX_IMAGE_BYTES) {
+      if (
+        found.length >= MAX_PAGE_IMAGES ||
+        image.width === 0 ||
+        image.data.length > MAX_IMAGE_BYTES
+      ) {
         skipped += 1;
         continue;
       }
@@ -82,7 +151,11 @@ export class PdfConverter implements Converter {
     try {
       // The library may transfer the buffer, so it gets a copy. verbosity 0: pdf.js logs to the console.
       // ponytail: the signal is checked only before parsing; add a deadline if hostile PDFs matter.
-      pdf = await getDocumentProxy(new Uint8Array(source.data), { verbosity: 0 });
+      await useFullPdfjs();
+      pdf = await getDocumentProxy(new Uint8Array(source.data), {
+        verbosity: 0,
+        wasmUrl,
+      });
       const layers = (await extractText(pdf, { mergePages: false })).text;
       ({ pages, skipped, failed } = await ocrScans(pdf, layers, ctx));
     } catch {
