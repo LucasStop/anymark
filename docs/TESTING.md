@@ -64,6 +64,10 @@ Node 22, `main` em 17bbca6. 39 arquivos de uso próprio (faculdade e estudo), 3 
 2. **`.ppt` legado (P04). Resolvido (#67).** Vazio passa como texto vazio; com cabeçalho OLE2 vira `UnsupportedFormatError`, coberto por `test/legacy-office.test.ts`. `.doc`, `.ppt` e `.xls` ficam não suportados.
 3. Imagem com muito texto leva segundos (I02): o OCR não tem timeout próprio (limite conhecido).
 
+## Rodada 2: 20/10/2026, Lucas Stopinski, Desktop inteiro
+
+1.210 arquivos do Desktop (sem as pastas de faculdade e trabalho), conversão em lote com `scripts/manual-run.mjs`. Achado principal: célula de docx com mais de um parágrafo quebrava a linha da tabela em 17 de 29 docx (#85, corrigido: o `<br>` dentro de `td` e `th` sai literal). Lição em [PROBLEMAS.md](PROBLEMAS.md).
+
 ## Cenários ainda não rodados à mão
 
 Marcar data, responsável e resultado ao rodar.
@@ -89,7 +93,7 @@ Marcar data, responsável e resultado ao rodar.
 
 ## Limites conhecidos
 
-- html: entrada acima de 25 MB lança `ConversionError`; sem tempo máximo; tabelas sem cabeçalho ou aninhadas ficam como HTML cru.
+- html: quebra de linha dentro de célula de tabela sai como `<br>` literal para manter a linha do GFM inteira (#85); entrada acima de 25 MB lança `ConversionError`; sem tempo máximo; tabelas sem cabeçalho ou aninhadas ficam como HTML cru.
 - json: só inteiros em notação decimal pura ficam exatos; decimais longos, notação científica e `-0` seguem o `Number` do JavaScript.
 - xlsx: abas, linhas e colunas ocultas ficam fora por padrão (`includeHidden: true` inclui), com warning e contagem; células de erro saem com o texto do erro (#68). Só os oito erros do Excel são aceitos, outro valor em `t="e"` é ignorado. Fórmula sem valor em cache continua vazia. Planilha com mais de 10 milhões de células (linhas vezes a coluna mais larga) é recusada, porque a biblioteca preenche o retângulo inteiro.
 - docx: célula mesclada vira células vazias ao lado (warning `DOCX_MERGED_CELLS` com a contagem) e tabela aninhada vira texto da célula pai, células separadas por vírgula e linhas por ponto e vírgula (`DOCX_NESTED_TABLE`); a estrutura interna da tabela aninhada se perde (#69). Tabela com mais de 1 milhão de células depois de expandida (linhas vezes a largura) é recusada, e `gridSpan` e `rowspan` valem no máximo 1000. Avisos do mammoth não viram warnings; notas de rodapé mantidas.
