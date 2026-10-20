@@ -1,6 +1,6 @@
 // Manual test helper: converts the given files and writes the Markdown to manual-out/ (gitignored).
 // Prints one line per file with no path and no content: id, ext, size, ms, result. Run `yarn build` first.
-// Usage: node scripts/manual-run.mjs [--hidden] [--lang=pt] file...   (OCR reads the bundled eng and por data; ANYMARK_LANG_PATH=<dir> replaces them)
+// Usage: node scripts/manual-run.mjs [--hidden] [--lang=pt] [--pdf=spread,rotation=270,binding=right] file...   (OCR reads the bundled eng and por data; ANYMARK_LANG_PATH=<dir> replaces them)
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { basename, extname } from 'node:path';
@@ -12,7 +12,20 @@ const args = process.argv.slice(2);
 const files = args.filter((a) => !a.startsWith('--'));
 const langPath = process.env.ANYMARK_LANG_PATH;
 const lang = args.find((a) => a.startsWith('--lang='))?.slice('--lang='.length);
+// --pdf=<layout>[,rotation=<n|auto>][,binding=<left|right>]
+const pdfArg = args.find((a) => a.startsWith('--pdf='))?.slice('--pdf='.length);
+const pdf = pdfArg && {
+  layout: pdfArg.split(',')[0],
+  ...Object.fromEntries(
+    pdfArg
+      .split(',')
+      .slice(1)
+      .map((kv) => kv.split('='))
+      .map(([k, v]) => [k, k === 'rotation' && v !== 'auto' ? Number(v) : v]),
+  ),
+};
 const options = {
+  ...(pdf ? { pdf } : {}),
   ...(langPath ? { backends: [new TesseractBackend({ langPath })] } : {}),
   ...(args.includes('--hidden') ? { includeHidden: true } : {}),
   ...(lang ? { lang } : {}),

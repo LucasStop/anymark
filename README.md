@@ -67,6 +67,17 @@ No xlsx, abas `hidden` e `veryHidden`, linhas e colunas ocultas ficam fora do Ma
 
 Página sem camada de texto é lida por OCR a partir da imagem embutida nela (a mesma cadeia de backends da seção anterior); página com texto nunca chama o backend. Sem imagem embutida, ou sem backend utilizável, a página fica vazia e o warning `PDF_NO_TEXT` avisa. Limites: 100 páginas, 4 imagens por página e 64 MB por imagem decodificada; o que passar disso vira o warning `PDF_OCR_SKIPPED` com a contagem.
 
+Livro escaneado em folhas duplas (duas páginas impressas por página do PDF) e com rotação conhecida: declare o tipo e a lib aplica a correção, em vez de adivinhar.
+
+```ts
+await anymark.convert(input, {
+  lang: 'pt',
+  pdf: { layout: 'spread', rotation: 270, binding: 'left' },
+});
+```
+
+`layout: 'spread'` corta cada folha na lombada antes do OCR e entrega as duas páginas em ordem de leitura (`binding: 'right'` para livros que se leem da direita para a esquerda). `rotation` fixa (0, 90, 180, 270) gira todas as imagens sem segunda passada de OCR; `'auto'`, o padrão, acha o alto pelos pixels. Sem `pdf`, nada muda. Decisão em [ADR 0009](docs/adr/0009-pdf-escaneado-declarado.md).
+
 ### Cancelamento
 
 ```ts

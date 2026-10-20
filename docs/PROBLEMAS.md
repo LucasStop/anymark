@@ -62,6 +62,8 @@ Um achado de ferramenta no caminho: o tesseract.js grava o `.traineddata` baixad
 
 4. (#92) Eu afirmei que as 18 páginas saíam certas e estava errado: só 6 eram legíveis. As outras tinham `/Rotate 0` com o conteúdo de lado, então `/Rotate` não diz onde fica o alto numa página escaneada. A orientação passou a sair dos pixels. A primeira versão errou 4 páginas porque a faixa escura do scanner dominava a medida das linhas; descontar a média local resolveu. Medido de novo: cerca de 82% das palavras impressas, 6 de 18 páginas utilizáveis como estão, 5 recuperáveis. O que sobra custa mais: página dupla lida linha a linha (colunas intercaladas), manuscrito na margem e a lombada virando `|`.
 
+5. (#94) O que sobrou da #92, a folha dupla lida linha a linha, não se resolve com mais heurística: quem entrega o PDF sabe se ele é folha dupla e para que lado gira. A lib passou a pedir isso (`pdf: { layout, rotation, binding }`, ADR 0009) e a detecção automática ficou como padrão. No caminho, um achado de teste: o fixture de folha dupla com linhas idênticas enganava a detecção de eixo (as lacunas entre letras alinhavam pela página e as colunas pareciam tão listradas quanto as linhas); o fixture passou a ter linhas de tamanhos e inícios diferentes, como texto de verdade.
+
 Lição: quando o resultado é vazio, ver primeiro se o dado chega ao OCR antes de culpar o OCR. E conferir a saída contra a imagem antes de dizer que está certa.
 
 ## 5. Ferramentas e processo

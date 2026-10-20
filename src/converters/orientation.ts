@@ -20,21 +20,22 @@ export function textRuns(image: Raster): 'horizontal' | 'vertical' {
       }
     }
   }
-  return swing(rows, step) >= swing(cols, step) ? 'horizontal' : 'vertical';
+  // Both axes use the same rule, chosen by the shorter side, so their values stay comparable.
+  const snippet = Math.min(width, height) / step < MIN_PAGE_SAMPLES;
+  return swing(rows, step, snippet) >= swing(cols, step, snippet) ? 'horizontal' : 'vertical';
 }
 
 const MIN_PAGE_SAMPLES = 600;
 
 /**
- * Variation of a projection profile around its own local average (window of a twentieth of the
+ * Variation of a projection profile around its own local average (window of a fifth of the
  * side, wider than a line). Dark scanner borders and shadows are slow bands; text lines are not.
- * A short profile is a snippet (one line of text), where there is no band to remove: plain variation.
+ * A snippet (a page whose short side is short, like one line of text) is where there is no band to remove: plain variation.
  */
-function swing(profile: Float64Array, step: number): number {
+function swing(profile: Float64Array, step: number, snippet: boolean): number {
   const sampled: number[] = [];
   for (let i = 0; i < profile.length; i += step) sampled.push(profile[i] ?? 0);
-  const snippet = sampled.length < MIN_PAGE_SAMPLES;
-  const half = Math.max(1, Math.round(sampled.length / 40));
+  const half = Math.max(1, Math.round(sampled.length / 10));
   const around: number[] = [];
   let sum = 0;
   let squares = 0;

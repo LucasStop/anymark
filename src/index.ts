@@ -21,6 +21,7 @@ export type {
   ConversionResult,
   ConversionWarning,
   ConvertOptions,
+  PdfOptions,
   Converter,
   ConverterContext,
   ConverterEntry,
