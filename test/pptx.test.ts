@@ -79,3 +79,63 @@ describe('pptx converter on real-world quirks', () => {
     expect(markdown.startsWith('## Welcome to the talk\n')).toBe(true);
   });
 });
+
+describe('pptx alternate content and hidden slides', () => {
+  const MC = 'xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"';
+  const shape = (text: string) =>
+    `<p:sp><p:nvSpPr><p:cNvPr id="9" name="s"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr/><p:txBody><a:bodyPr/><a:p><a:r><a:t>${text}</a:t></a:r></a:p></p:txBody></p:sp>`;
+  const alternate = (choice: string, fallback: string) =>
+    `<mc:AlternateContent ${MC}><mc:Choice Requires="p14">${choice}</mc:Choice><mc:Fallback>${fallback}</mc:Fallback></mc:AlternateContent>`;
+  const addToSlide = (content: string) =>
+    withPart('ppt/slides/slide2.xml', (xml) => xml.replace('</p:spTree>', `${content}</p:spTree>`));
+
+  it('reads the text of an AlternateContent once, not twice', async () => {
+    const { markdown } = await convert(addToSlide(alternate(shape('MODERN'), shape('MODERN'))));
+
+    expect(markdown.match(/MODERN/g)).toHaveLength(1);
+  });
+
+  it('reads the Fallback when the Choice holds nothing readable', async () => {
+    const { markdown } = await convert(addToSlide(alternate('', shape('OLDER'))));
+
+    expect(markdown).toContain('OLDER');
+  });
+
+  it('prefers the Choice when both have text', async () => {
+    const { markdown } = await convert(addToSlide(alternate(shape('NEW'), shape('OLD'))));
+
+    expect(markdown).toContain('NEW');
+    expect(markdown).not.toContain('OLD');
+  });
+
+  const hidden = () =>
+    withPart('ppt/slides/slide2.xml', (xml) => xml.replace('<p:sld ', '<p:sld show="0" '));
+
+  it('skips a hidden slide by default, keeps the numbering and says how many', async () => {
+    const result = await convert(hidden());
+
+    expect(result.markdown).not.toMatch(/Welcome|First point/);
+    expect(result.markdown).toContain('## Slide 2');
+    expect(result.warnings).toEqual([
+      { code: 'HIDDEN_SLIDES_SKIPPED', message: '1 hidden slide skipped' },
+    ]);
+  });
+
+  it('includes a hidden slide, without a warning, with includeHidden', async () => {
+    const result = await createAnymark().convert(
+      { data: hidden(), name: 'x.pptx' },
+      { includeHidden: true },
+    );
+
+    expect(result.markdown).toContain('## Welcome');
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('treats show="1" and no attribute as visible', async () => {
+    const shown = withPart('ppt/slides/slide2.xml', (xml) =>
+      xml.replace('<p:sld ', '<p:sld show="1" '),
+    );
+
+    expect((await convert(shown)).warnings).toEqual([]);
+  });
+});
