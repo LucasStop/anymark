@@ -17,6 +17,7 @@ import type {
   Source,
 } from '../core/types.js';
 import { encodePng, rotateClockwise, type Raster } from './encodePng.js';
+import { textRuns, wordScore } from './orientation.js';
 
 const MIME = 'application/pdf';
 
@@ -79,8 +80,11 @@ async function bitonalImages(pdf: Document, pageNumber: number): Promise<Raster[
   return images;
 }
 
-/** The images of a page, upright: pdf.js hands them over as stored, and /Rotate turns the page. */
-async function pageImages(pdf: Document, pageNumber: number): Promise<Raster[]> {
+/** The images of a page as stored, with the page's /Rotate (only a hint for which way is up). */
+async function pageImages(
+  pdf: Document,
+  pageNumber: number,
+): Promise<{ images: Raster[]; rotate: number }> {
   const found: Raster[] = (await extractImages(pdf, pageNumber)).map((image) => ({
     data: image.data,
     width: image.width,
@@ -89,7 +93,29 @@ async function pageImages(pdf: Document, pageNumber: number): Promise<Raster[]> 
   }));
   const images = found.length > 0 ? found : await bitonalImages(pdf, pageNumber);
   const { rotate } = await pdf.getPage(pageNumber);
-  return images.map((image) => (image.width === 0 ? image : rotateClockwise(image, rotate)));
+  return { images, rotate };
+}
+
+/** Below this share of word-like tokens the first guess at "up" is doubted. */
+const MIN_WORD_SCORE = 0.85;
+/** Shorter texts say too little about the orientation to justify a second OCR pass. */
+const MIN_CHARS_TO_DOUBT = 20;
+
+/**
+ * OCR one image upright. The text lines tell which axis is up; /Rotate only orders the two turns on
+ * that axis. The second turn runs only when the first one reads like junk, and the better text wins.
+ */
+async function readUpright(image: Raster, rotate: number, ctx: ConverterContext): Promise<string> {
+  const turns = textRuns(image) === 'horizontal' ? [0, 180] : rotate === 90 ? [90, 270] : [270, 90];
+  const ocr = async (degrees: number): Promise<string> => {
+    const turned = rotateClockwise(image, degrees);
+    const png = encodePng(turned.data, turned.width, turned.height, turned.channels);
+    return (await ctx.backends.run<Uint8Array, string>('ocr', png)).trim();
+  };
+  const first = await ocr(turns[0]!);
+  if (first.length < MIN_CHARS_TO_DOUBT || wordScore(first) >= MIN_WORD_SCORE) return first;
+  const second = await ocr(turns[1]!);
+  return wordScore(second) > wordScore(first) ? second : first;
 }
 
 /**
@@ -114,8 +140,9 @@ async function ocrScans(
     }
     looked += 1;
     let images: Raster[];
+    let rotate: number;
     try {
-      images = await pageImages(pdf, index + 1);
+      ({ images, rotate } = await pageImages(pdf, index + 1));
     } catch {
       continue; // an image pdf.js cannot decode: the page stays empty
     }
@@ -130,8 +157,7 @@ async function ocrScans(
         continue;
       }
       try {
-        const png = encodePng(image.data, image.width, image.height, image.channels);
-        found.push((await ctx.backends.run<Uint8Array, string>('ocr', png)).trim());
+        found.push(await readUpright(image, rotate, ctx));
       } catch (error) {
         // An abort is the caller's call. Anything else ends the OCR but keeps what was already read;
         // no backend at all and nothing read is not a failure, PDF_NO_TEXT covers it.
