@@ -204,3 +204,66 @@ write(
   'scanned-orientations.pdf',
   buildPages([oneBitPage(1), oneBitPage(1), oneBitPage(2)], [270, 0, 0]),
 );
+
+// A book sheet scanned open: two printed pages side by side with a gutter between them, the left one
+// with HELLO lines and the right one with HOLE lines (same 5x7 glyphs as the image fixture). `turns`
+// is how often the stored bitmap was turned clockwise, like a scanner that laid the sheet down sideways.
+const GLYPHS = {
+  H: ['10001', '10001', '10001', '11111', '10001', '10001', '10001'],
+  E: ['11111', '10000', '10000', '11110', '10000', '10000', '11111'],
+  L: ['10000', '10000', '10000', '10000', '10000', '10000', '11111'],
+  O: ['01110', '10001', '10001', '10001', '10001', '10001', '01110'],
+};
+function spreadSheet(turns) {
+  const scale = 5;
+  const lines = 12; // a page-like count: the orientation guess needs many lines
+  // Lines differ in length and start (like real text), so gaps between letters do not line up
+  // down the page; identical lines would make the columns look as striped as the rows.
+  const line = (word, row) => {
+    const text = row % 2 ? word : `${word} ${word}`;
+    return text
+      .split('')
+      .flatMap((char, i) =>
+        char === ' ' ? [] : [{ glyph: GLYPHS[char], x: i * 6 * scale + ((row * 13) % 29) }],
+      );
+  };
+  const pageWidth = 11 * 6 * scale + 2 * 4 * scale + 30;
+  const gutter = 12 * scale;
+  let width = pageWidth * 2 + gutter;
+  let height = lines * 12 * scale + 2 * 4 * scale;
+  let pixels = Array.from({ length: height }, () => Array(width).fill(true));
+  for (const [word, left] of [
+    ['HELLO', 0],
+    ['HOLE', pageWidth + gutter],
+  ]) {
+    for (let row = 0; row < lines; row += 1) {
+      for (const { glyph, x } of line(word, row)) {
+        for (let gy = 0; gy < 7; gy += 1)
+          for (let gx = 0; gx < 5; gx += 1)
+            if (glyph[gy][gx] === '1')
+              for (let dy = 0; dy < scale; dy += 1)
+                for (let dx = 0; dx < scale; dx += 1)
+                  pixels[4 * scale + row * 12 * scale + gy * scale + dy][
+                    left + 4 * scale + x + gx * scale + dx
+                  ] = false;
+      }
+    }
+  }
+  for (let t = 0; t < turns; t += 1) {
+    pixels = Array.from({ length: width }, (_, y) =>
+      Array.from({ length: height }, (_, x) => pixels[height - 1 - x][y]),
+    );
+    [width, height] = [height, width];
+  }
+  const stride = Math.ceil(width / 8);
+  const bits = Buffer.alloc(stride * height);
+  for (let y = 0; y < height; y += 1)
+    for (let x = 0; x < width; x += 1)
+      if (pixels[y][x]) bits[y * stride + (x >> 3)] |= 0x80 >> (x & 7);
+  return { bits: bits.toString('latin1'), width, height };
+}
+
+// Four sheets, one per stored turn, /Rotate 0 on all (what the book's scanner wrote).
+write('scanned-spread.pdf', buildPages([0, 1, 2, 3].map(spreadSheet), [0, 0, 0, 0]));
+// Two sheets laid down sideways, for a declared rotation.
+write('scanned-spread-sideways.pdf', buildPages([1, 1].map(spreadSheet), [0, 0]));
