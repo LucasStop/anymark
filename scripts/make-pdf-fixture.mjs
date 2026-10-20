@@ -1,7 +1,7 @@
 // Writes specs/pdf/simple.pdf (two pages, one line of Helvetica text each) and specs/pdf/no-text.pdf
 // (two pages that only draw a rectangle, like a scan with no text layer) and specs/pdf/mixed.pdf (a
 // scanned cover, then a page with text) and specs/pdf/scanned.pdf (two pages, each one embedded JPEG of
-// "HELLO HOLE" and nothing else, like a real scan). Run: node scripts/make-pdf-fixture.mjs
+// "HELLO HOLE" and nothing else, like a real scan) and specs/pdf/scanned-many.pdf (101 such pages). Run: node scripts/make-pdf-fixture.mjs
 import { readFileSync, writeFileSync } from 'node:fs';
 import { URL } from 'node:url';
 
@@ -72,3 +72,5 @@ function buildScan(jpeg, width, height, pages) {
 
 const jpeg = readFileSync(new URL('../specs/image/hello.jpg', import.meta.url)).toString('latin1');
 write('scanned.pdf', buildScan(jpeg, 544, 120, 2));
+// More pages than the OCR page limit, all sharing the one image object.
+write('scanned-many.pdf', buildScan(jpeg, 544, 120, 101));

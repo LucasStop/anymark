@@ -19,6 +19,8 @@ Na #16 o `createAnymark()` nasceu sem backend: converter uma imagem exigia passa
 - Backends de CLI e de rede (#21, #22) entram na cadeia por opt-in, depois do local.
 - `Backend` (Adapter) e `Converter` (Strategy) seguem separados ([ADR 0002](0002-converter-e-backend-separados.md)).
 
+- O mesmo OCR atende o PDF escaneado (#66): o `PdfConverter` pede a capacidade `ocr` à cadeia para as imagens embutidas nas páginas sem texto. Nenhum converter nomeia provedor.
+
 ## Alternativa descartada
 
 Manter "sem backend padrão" e documentar `backends` no README. Mais explícito, mas a primeira chamada com uma imagem falha, e o exemplo mínimo da lib deixa de funcionar para um formato do escopo.
