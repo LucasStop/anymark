@@ -1,5 +1,5 @@
 import { extractImages, extractText, getDocumentProxy } from 'unpdf';
-import { ConversionError } from '../core/errors.js';
+import { ConversionError, NoBackendError } from '../core/errors.js';
 import { MarkdownBuilder } from '../core/MarkdownBuilder.js';
 import type {
   ConversionResult,
@@ -28,7 +28,7 @@ async function ocrScans(
   pdf: Document,
   texts: readonly string[],
   ctx: ConverterContext,
-): Promise<{ pages: string[]; skipped: number }> {
+): Promise<{ pages: string[]; skipped: number; failed: boolean }> {
   const pages = [...texts];
   let skipped = 0;
   let looked = 0;
@@ -55,15 +55,17 @@ async function ocrScans(
       try {
         const png = encodePng(image.data, image.width, image.height, image.channels);
         found.push((await ctx.backends.run<Uint8Array, string>('ocr', png)).trim());
-      } catch {
-        // No backend (or all failed): an abort is the caller's call, anything else just means no OCR.
+      } catch (error) {
+        // An abort is the caller's call. Anything else ends the OCR but keeps what was already read;
+        // no backend at all and nothing read is not a failure, PDF_NO_TEXT covers it.
         ctx.options.signal?.throwIfAborted();
-        return { pages, skipped };
+        pages[index] = found.filter((text) => text !== '').join('\n\n');
+        return { pages, skipped, failed: found.length > 0 || !(error instanceof NoBackendError) };
       }
     }
     pages[index] = found.filter((text) => text !== '').join('\n\n');
   }
-  return { pages, skipped };
+  return { pages, skipped, failed: false };
 }
 
 /** Plain text only, one section per page. Structure (tables, columns) is a stretch goal. */
@@ -75,13 +77,14 @@ export class PdfConverter implements Converter {
     ctx.options.signal?.throwIfAborted();
     let pages: string[];
     let skipped: number;
+    let failed: boolean;
     let pdf: Awaited<ReturnType<typeof getDocumentProxy>> | undefined;
     try {
       // The library may transfer the buffer, so it gets a copy. verbosity 0: pdf.js logs to the console.
       // ponytail: the signal is checked only before parsing; add a deadline if hostile PDFs matter.
       pdf = await getDocumentProxy(new Uint8Array(source.data), { verbosity: 0 });
       const layers = (await extractText(pdf, { mergePages: false })).text;
-      ({ pages, skipped } = await ocrScans(pdf, layers, ctx));
+      ({ pages, skipped, failed } = await ocrScans(pdf, layers, ctx));
     } catch {
       ctx.options.signal?.throwIfAborted();
       // Corrupted and password-protected files both land here; the library message quotes the file.
@@ -101,6 +104,12 @@ export class PdfConverter implements Converter {
       warnings.push({
         code: 'PDF_NO_TEXT',
         message: 'No page has a text layer; a scanned PDF needs OCR',
+      });
+    }
+    if (failed) {
+      warnings.push({
+        code: 'PDF_OCR_FAILED',
+        message: 'OCR stopped on a failure; later pages were not read',
       });
     }
     if (skipped > 0) {
