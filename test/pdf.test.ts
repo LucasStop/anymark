@@ -38,6 +38,15 @@ describe('pdf converter', () => {
     expect(result.warnings).toEqual([]);
   });
 
+  it('runs OCR on the embedded image of each scanned page, one section per page', async () => {
+    const data = new Uint8Array(spec('pdf/scanned.pdf'));
+
+    const result = await createAnymark().convert({ data, name: 'scanned.pdf' });
+
+    expect(result.markdown).toBe('## Page 1\n\nHELLO HOLE\n\n## Page 2\n\nHELLO HOLE\n');
+    expect(result.warnings).toEqual([]);
+  }, 60_000);
+
   it('passes the converter contract', async () => {
     await assertConverterContract(new PdfConverter(), pdf());
   });
