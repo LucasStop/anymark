@@ -34,7 +34,7 @@ describe('xlsx converter', () => {
 });
 
 /** Smallest workbook that reads: one sheet whose rows come from the caller. */
-const workbook = (sheetData: string, sheetName = 'S') => {
+const workbook = (sheetData: string, sheetName = 'S', cols = '') => {
   const ns = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
   const rel = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
   const files: Record<string, string> = {
@@ -42,7 +42,7 @@ const workbook = (sheetData: string, sheetName = 'S') => {
     '_rels/.rels': `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${rel}/officeDocument" Target="xl/workbook.xml"/></Relationships>`,
     'xl/workbook.xml': `<?xml version="1.0"?><workbook xmlns="${ns}" xmlns:r="${rel}"><sheets><sheet name="${sheetName}" sheetId="1" r:id="rId1"/></sheets></workbook>`,
     'xl/_rels/workbook.xml.rels': `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${rel}/worksheet" Target="worksheets/sheet1.xml"/></Relationships>`,
-    'xl/worksheets/sheet1.xml': `<?xml version="1.0"?><worksheet xmlns="${ns}"><sheetData>${sheetData}</sheetData></worksheet>`,
+    'xl/worksheets/sheet1.xml': `<?xml version="1.0"?><worksheet xmlns="${ns}">${cols}<sheetData>${sheetData}</sheetData></worksheet>`,
   };
   return zipSync(Object.fromEntries(Object.entries(files).map(([k, v]) => [k, strToU8(v)])));
 };
@@ -126,7 +126,7 @@ describe('xlsx hidden sheets', () => {
   it('includes them, in workbook order and without a warning, when asked', async () => {
     const result = await createAnymark().convert(
       { data, name: 'book.xlsx' },
-      { includeHiddenSheets: true },
+      { includeHidden: true },
     );
 
     const headings = result.markdown.split('\n').filter((line) => line.startsWith('## '));
@@ -156,5 +156,103 @@ describe('xlsx hidden sheets', () => {
     await expect(createAnymark().convert({ data: huge, name: 'huge.xlsx' })).rejects.toBeInstanceOf(
       ConversionError,
     );
+  });
+});
+
+const convert = (data: Uint8Array, options = {}) =>
+  createAnymark().convert({ data, name: 'book.xlsx' }, options);
+const row = (r: number, cells: string[], attrs = '') =>
+  `<row r="${r}"${attrs}>${cells.map((text, c) => cell(`${String.fromCharCode(65 + c)}${r}`, text)).join('')}</row>`;
+const error = (ref: string, text: string) => `<c r="${ref}" t="e"><v>${text}</v></c>`;
+
+describe('xlsx error cells', () => {
+  it('writes the error text instead of an empty cell, even in the last row', async () => {
+    const data = workbook(
+      `${row(1, ['a', 'b'])}<row r="2">${error('A2', '#DIV/0!')}${error('B2', '#N/A')}</row>`,
+    );
+
+    const { markdown } = await convert(data);
+
+    expect(markdown).toBe('## S\n\n| a | b |\n| --- | --- |\n| #DIV/0! | #N/A |\n');
+  });
+
+  it('keeps the error next to normal cells in the same row', async () => {
+    const data = workbook(
+      `${row(1, ['a', 'b'])}<row r="2">${cell('A2', 'ok')}${error('B2', '#REF!')}</row>`,
+    );
+
+    expect((await convert(data)).markdown).toContain('| ok | #REF! |');
+  });
+
+  it('ignores an error value that is not one of the spreadsheet errors', async () => {
+    const data = workbook(
+      `${row(1, ['a', 'b'])}<row r="2">${cell('A2', 'ok')}${error('B2', '**injected**')}</row>`,
+    );
+
+    expect((await convert(data)).markdown).not.toContain('injected');
+  });
+});
+
+describe('xlsx hidden rows and columns', () => {
+  const rows =
+    row(1, ['h1', 'h2', 'h3']) +
+    row(2, ['a1', 'a2', 'a3'], ' hidden="1"') +
+    row(3, ['b1', 'b2', 'b3']);
+
+  it('skips a hidden row by default and says how many', async () => {
+    const result = await convert(workbook(rows));
+
+    expect(result.markdown).not.toContain('a1');
+    expect(result.markdown).toContain('| b1 | b2 | b3 |');
+    expect(result.warnings).toEqual([
+      { code: 'HIDDEN_ROWS_SKIPPED', message: '1 hidden row skipped' },
+    ]);
+  });
+
+  it('reads hidden="true" and a hidden attribute placed before r', async () => {
+    const data = workbook(`${row(1, ['h1'])}<row hidden="true" r="2">${cell('A2', 'gone')}</row>`);
+
+    const result = await convert(data);
+
+    expect(result.markdown).not.toContain('gone');
+    expect(result.warnings.map((w) => w.code)).toEqual(['HIDDEN_ROWS_SKIPPED']);
+  });
+
+  it('skips a hidden column range by default and counts every column of it', async () => {
+    const data = workbook(
+      rows.replace(' hidden="1"', ''),
+      'S',
+      '<cols><col min="2" max="3" hidden="1"/></cols>',
+    );
+
+    const result = await convert(data);
+
+    expect(result.markdown).toContain('| h1 |');
+    expect(result.markdown).not.toMatch(/h2|h3|a2|b3/);
+    expect(result.warnings).toEqual([
+      { code: 'HIDDEN_COLUMNS_SKIPPED', message: '2 hidden columns skipped' },
+    ]);
+  });
+
+  it('does not count a hidden column that holds no data', async () => {
+    const data = workbook(row(1, ['h1']), 'S', '<cols><col min="5" max="9" hidden="1"/></cols>');
+
+    expect((await convert(data)).warnings).toEqual([]);
+  });
+
+  it('includes rows and columns, without a warning, with includeHidden', async () => {
+    const data = workbook(rows, 'S', '<cols><col min="3" max="3" hidden="1"/></cols>');
+
+    const result = await convert(data, { includeHidden: true });
+
+    expect(result.markdown).toContain('| a1 | a2 | a3 |');
+    expect(result.markdown).toContain('h3');
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('uses the first visible row as the table header', async () => {
+    const data = workbook(row(1, ['old'], ' hidden="1"') + row(2, ['head']) + row(3, ['body']));
+
+    expect((await convert(data)).markdown).toBe('## S\n\n| head |\n| --- |\n| body |\n');
   });
 });
