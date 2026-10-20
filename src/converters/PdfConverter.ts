@@ -46,15 +46,23 @@ async function bitonalImages(pdf: Document, pageNumber: number): Promise<Raster[
   for (const [at, fn] of list.fnArray.entries()) {
     if (fn !== OPS.paintImageXObject) continue;
     const id = list.argsArray[at]?.[0] as string;
-    const image = await new Promise<{
+    // Once the operator list is done the objects are resolved; `get` with a callback would wait
+    // forever for one that is not there (an image shared by pages lives in commonObjs, `g_` ids).
+    const store = id.startsWith('g_') ? page.commonObjs : page.objs;
+    if (!store.has(id)) continue;
+    const image = store.get(id) as {
       data?: Uint8Array;
       width: number;
       height: number;
       kind: number;
-    } | null>((resolve) => page.objs.get(id, resolve));
+    } | null;
     // kind 1 is GRAYSCALE_1BPP: one bit per pixel, rows padded to a whole byte, 1 is white.
     if (image?.kind !== 1 || image.data === undefined) continue;
-    if (image.width * image.height > MAX_IMAGE_BYTES) {
+    // Past the per-page cap nothing is expanded (8 bits per pixel is 8 times the source); the empty
+    // image only tells the caller to count it as left out.
+    const tooBig = image.width * image.height > MAX_IMAGE_BYTES;
+    const short = image.data.length < Math.ceil(image.width / 8) * image.height;
+    if (images.length >= MAX_PAGE_IMAGES || tooBig || short) {
       images.push({ data: new Uint8ClampedArray(0), width: 0, height: 0, channels: 1 });
       continue;
     }

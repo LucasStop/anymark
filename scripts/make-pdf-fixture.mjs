@@ -104,19 +104,22 @@ function oneBitSideways() {
 }
 
 /** One page, one raw 1-bit image drawn full page; /Rotate 270 turns the sideways image upright. */
-function buildOneBit({ bits, width, height }) {
+function buildOneBit({ bits, width, height }, pages = 1) {
+  const kids = Array.from({ length: pages }, (_, i) => `${4 + i * 2} 0 R`).join(' ');
   const objects = [
     '<< /Type /Catalog /Pages 2 0 R >>',
-    '<< /Type /Pages /Kids [4 0 R] /Count 1 >>',
+    `<< /Type /Pages /Kids [${kids}] /Count ${pages} >>`,
   ];
   objects.push(
     `<< /Type /XObject /Subtype /Image /Width ${width} /Height ${height} /ColorSpace /DeviceGray /BitsPerComponent 1 /Length ${bits.length} >>\nstream\n${bits}\nendstream`,
   );
   const draw = `${width} 0 0 ${height} 0 0 cm /Im1 Do`;
-  objects.push(
-    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${width} ${height}] /Rotate 270 /Contents 5 0 R /Resources << /XObject << /Im1 3 0 R >> >> >>`,
-  );
-  objects.push(`<< /Length ${draw.length} >>\nstream\n${draw}\nendstream`);
+  for (let i = 0; i < pages; i += 1) {
+    objects.push(
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${width} ${height}] /Rotate 270 /Contents ${5 + i * 2} 0 R /Resources << /XObject << /Im1 3 0 R >> >> >>`,
+    );
+    objects.push(`<< /Length ${draw.length} >>\nstream\n${draw}\nendstream`);
+  }
   let pdf = '%PDF-1.4\n';
   const offsets = [];
   objects.forEach((body, i) => {
@@ -131,3 +134,5 @@ function buildOneBit({ bits, width, height }) {
 }
 
 write('scanned-1bit.pdf', buildOneBit(oneBitSideways()));
+// The same image object on three pages: pdf.js keeps it in commonObjs, not in the page's objs.
+write('scanned-1bit-shared.pdf', buildOneBit(oneBitSideways(), 3));

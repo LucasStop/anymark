@@ -75,16 +75,11 @@ export function rotateClockwise(image: Raster, degrees: number): Raster {
   const out = new Uint8ClampedArray(data.length);
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
-      const [nx, ny] =
-        turns === 1
-          ? [height - 1 - y, x]
-          : turns === 2
-            ? [width - 1 - x, height - 1 - y]
-            : [y, width - 1 - x];
-      out.set(
-        data.subarray((y * width + x) * channels, (y * width + x + 1) * channels),
-        (ny * outWidth + nx) * channels,
-      );
+      const nx = turns === 1 ? height - 1 - y : turns === 2 ? width - 1 - x : y;
+      const ny = turns === 1 ? x : turns === 2 ? height - 1 - y : width - 1 - x;
+      const from = (y * width + x) * channels;
+      const to = (ny * outWidth + nx) * channels;
+      for (let c = 0; c < channels; c += 1) out[to + c] = data[from + c]!;
     }
   }
   return { data: out, width: outWidth, height: swap ? width : height, channels };

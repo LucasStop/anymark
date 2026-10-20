@@ -57,6 +57,16 @@ describe('pdf converter', () => {
     expect(result.warnings).toEqual([]);
   }, 60_000);
 
+  it('reads a 1-bit image shared by several pages instead of hanging', async () => {
+    const data = new Uint8Array(spec('pdf/scanned-1bit-shared.pdf'));
+
+    const result = await createAnymark().convert({ data, name: 'shared.pdf' });
+
+    expect(result.markdown).toBe(
+      '## Page 1\n\nHELLO HOLE\n\n## Page 2\n\nHELLO HOLE\n\n## Page 3\n\nHELLO HOLE\n',
+    );
+  }, 60_000);
+
   it('passes the converter contract', async () => {
     await assertConverterContract(new PdfConverter(), pdf());
   });
