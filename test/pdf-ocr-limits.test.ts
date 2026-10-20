@@ -49,6 +49,19 @@ describe('pdf OCR limits', () => {
     ]);
   });
 
+  it('keeps the first reading when the second look at the orientation fails', async () => {
+    extractImages.mockResolvedValue([image()]);
+    const fake = backend(async (n) => {
+      if (n % 2 === 0) throw new Error('boom');
+      return 'NOTA FISCAL ELETRONICA DO MES';
+    });
+
+    const result = await createAnymark().convert(scan(), { backends: [fake as Backend] });
+
+    expect(result.markdown.match(/NOTA FISCAL ELETRONICA DO MES/g)).toHaveLength(2);
+    expect(result.warnings.map((w) => w.code)).not.toContain('PDF_OCR_FAILED');
+  });
+
   it('skips an image past 64 MB without calling the backend', async () => {
     extractImages.mockResolvedValue([image(64 * 1024 * 1024 + 3)]);
     let calls = 0;

@@ -53,14 +53,16 @@ Lição: a regra "teste primeiro com casos definidos por uma pessoa" não basta 
 Na rodada 2, `O Princípio Responsabilidade` (18 páginas escaneadas) saiu só com `## Page N` vazios. Eram três causas empilhadas, e só a terceira parecia "OCR ruim":
 
 1. As páginas são imagens de 1 bit (CCITT). O pdf.js embutido no `unpdf` não carrega o wasm do decodificador (`Jbig2Error: JBig2 failed to initialize`) e `extractImages` descarta 1 bit. O OCR nem chegava a rodar.
-2. As páginas trazem `/Rotate 270`. Sem girar a imagem, o OCR devolveu lixo (confiança 27 de 100).
+2. Páginas de lado: sem girar a imagem, o OCR devolveu lixo (confiança 27 de 100). Girar por `/Rotate` só acertava algumas (ver o item 4).
 3. O texto é em português e o OCR padrão era só inglês (`injungdo` em vez de `injunção`).
 
-Corrigido com `pdfjs-dist` completo e `wasmUrl`, leitura do 1 bit pela lista de operadores, rotação da página aplicada aos pixels e o idioma `por` incluído (`lang: 'pt'`). Confiança 80 e acentos certos no spike.
+Corrigido com `pdfjs-dist` completo e `wasmUrl`, leitura do 1 bit pela lista de operadores, rotação dos pixels e o idioma `por` incluído (`lang: 'pt'`). Confiança 80 e acentos certos no spike.
 
 Um achado de ferramenta no caminho: o tesseract.js grava o `.traineddata` baixado na pasta atual e lê dela antes de qualquer outra fonte. Um modelo `por` incompatível, baixado de teste, ficou no repositório e fez o modelo bom falhar com `missing function: DotProductSSE` até ser apagado. O `TesseractBackend` já usa `cacheMethod: 'none'`; em spike, defina `cachePath` ou rode fora do repositório.
 
-Lição: quando o resultado é vazio, ver primeiro se o dado chega ao OCR antes de culpar o OCR.
+4. (#92) Eu afirmei que as 18 páginas saíam certas e estava errado: só 6 eram legíveis. As outras tinham `/Rotate 0` com o conteúdo de lado, então `/Rotate` não diz onde fica o alto numa página escaneada. A orientação passou a sair dos pixels. A primeira versão errou 4 páginas porque a faixa escura do scanner dominava a medida das linhas; descontar a média local resolveu. Medido de novo: cerca de 82% das palavras impressas, 6 de 18 páginas utilizáveis como estão, 5 recuperáveis. O que sobra custa mais: página dupla lida linha a linha (colunas intercaladas), manuscrito na margem e a lombada virando `|`.
+
+Lição: quando o resultado é vazio, ver primeiro se o dado chega ao OCR antes de culpar o OCR. E conferir a saída contra a imagem antes de dizer que está certa.
 
 ## 5. Ferramentas e processo
 
