@@ -59,9 +59,9 @@ Formato novo é um `Converter` dentro de um `Plugin` (`createAnymark().use(plugi
 ## Convenções
 
 - Idioma: README, docs e vídeo em português brasileiro. Identificadores, commits e PRs em inglês.
-- Git: GitHub Flow com merge commit (sem rebase nem squash), para a `main` mostrar cada issue como uma branch separada; o merge commit mantém esse grafo mesmo com a branch apagada. Depois do merge o GitHub apaga a branch remota (`delete branch on merge`) e quem fez o PR apaga a local: `git switch main && git pull --ff-only && git branch -d <branch> && git fetch --prune`. Branch `feat/<issue>-slug` ou `fix/<issue>-slug`, um PR por issue, review do outro, `main` protegida com CI verde. Commits por fase (`test:`, `feat:`, `refactor:`), com a mensagem explicando o porquê. Commit e push só quando a pessoa dona da sessão pedir.
+- Git: GitHub Flow com merge commit (sem rebase nem squash), para a `main` mostrar cada issue como uma branch separada; o merge commit mantém esse grafo mesmo com a branch apagada. Depois do merge o GitHub apaga a branch remota (`delete branch on merge`) e quem fez o PR apaga a local: `git switch main && git pull --ff-only && git branch -d <branch> && git fetch --prune`. Branch criada pela issue (`<issue>-slug`), um PR por issue com `Closes #<n>`, review do outro, `main` protegida com CI verde. Commits por fase no formato Conventional Commits completo, `tipo(escopo): resumo` + corpo com o porquê (`test(html): ...`, `feat(html): ...`, `refactor(html): ...`), sem `Co-Authored-By`. Depois do merge, apagar a branch local (`git branch -d`). Commit e push só quando a pessoa dona da sessão pedir.
 - TDD: red, green, refactor, um teste por vez, pela interface pública, sem refatorar em vermelho. Parsing e regra de negócio levam teste primeiro, com os casos definidos por uma pessoa (golden files em `specs/`).
-- Estilo: editar o que existe antes de criar arquivo novo. Comentário só para o porquê não óbvio. Dependência nova só depois de conferir versão, licença e CVE (`npm view`, `npm audit`); evitar AGPL.
+- Estilo: editar o que existe antes de criar arquivo novo. Comentário só para o porquê não óbvio. Dependência nova só depois de conferir versão, licença e CVE (`yarn info`, `yarn audit`); evitar AGPL.
 - Nada é dado como pronto sem verificação independente: rodar teste, typecheck e lint e ler a saída, não alegar.
 
 ## Segurança
@@ -76,7 +76,7 @@ Formato novo é um `Converter` dentro de um `Plugin` (`createAnymark().use(plugi
 
 ## Stack decidida
 
-TypeScript `~6.0`, ESM-only compilado com `tsc`, Node `>=22` (CI em 22 e 24), npm, Vitest, Prettier e ESLint, licença MIT. Dependências por formato em [docs/PLAN.md](docs/PLAN.md).
+TypeScript `~6.0`, ESM-only compilado com `tsc`, Node `>=22` (CI em 22 e 24), yarn (classic, sem lockfile no git), Vitest, Prettier e ESLint, licença MIT. Dependências por formato em [docs/PLAN.md](docs/PLAN.md).
 
 ## Uso de IA
 

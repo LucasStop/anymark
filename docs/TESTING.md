@@ -1,11 +1,11 @@
 # Cenários de teste manual
 
-Mapa dos cenários que a dupla roda à mão, além dos testes automatizados (`npm test`, golden files em `specs/`). Os arquivos reais usados ficam fora do repositório (público): a tabela guarda só formato, tamanho aproximado e os 8 primeiros caracteres do sha256 do conteúdo (`sourceId`), sem caminho nem texto.
+Mapa dos cenários que a dupla roda à mão, além dos testes automatizados (`yarn test`, golden files em `specs/`). Os arquivos reais usados ficam fora do repositório (público): a tabela guarda só formato, tamanho aproximado e os 8 primeiros caracteres do sha256 do conteúdo (`sourceId`), sem caminho nem texto.
 
 ## Como rodar
 
 ```sh
-npm run build
+yarn build
 ANYMARK_LANG_PATH="$PWD/node_modules/@tesseract.js-data/eng/4.0.0_best_int" \
   node scripts/manual-run.mjs arquivo1.pdf arquivo2.xlsx
 ```

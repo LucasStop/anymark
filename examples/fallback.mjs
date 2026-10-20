@@ -1,4 +1,4 @@
-// Fallback in a few lines. Run: npm run build && node examples/fallback.mjs
+// Fallback in a few lines. Run: yarn build && node examples/fallback.mjs
 import { stdout } from 'node:process';
 import { BackendChain } from '../dist/index.js';
 

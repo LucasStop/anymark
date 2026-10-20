@@ -7,4 +7,4 @@ pre-commit:
       run: gitleaks git --staged --redact --no-banner
     formato:
       glob: '*.{js,ts,json}'
-      run: npx prettier --check {staged_files}
+      run: yarn prettier --check {staged_files}

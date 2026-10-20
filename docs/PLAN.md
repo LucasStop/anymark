@@ -12,7 +12,7 @@ Prazos: 28/10 congela o escopo do MVP. 29/10 é a apresentação do parcial (30%
 
 | Tema | Decisão |
 |---|---|
-| Stack | TypeScript e npm. Pacote e repositório `anymark`. |
+| Stack | TypeScript e yarn (classic, sem lockfile no git; decidido em 20/10/2026). Pacote e repositório `anymark`. |
 | Equipe | Dono do repositório: `LucasStop`. Colaborador: `Luc-Bruno`. |
 | Método | PRD, SDD, TDD, issues, GitHub Project, CI/CD. `docs/SDD.md` e `specs/` por feature, ligadas às issues. Red, green, refactor, commits por fase. |
 | Git | GitHub Flow com merge commit (sem rebase nem squash), para a `main` mostrar cada issue como uma branch separada; o merge commit mantém esse grafo mesmo com a branch apagada. Depois do merge o GitHub apaga a branch remota (`delete branch on merge`) e quem fez o PR apaga a local: `git switch main && git pull --ff-only && git branch -d <branch> && git fetch --prune`. Branch `feat/<issue>-slug`, um PR por issue com review cruzado, `main` protegida com CI verde. |

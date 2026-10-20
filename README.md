@@ -17,10 +17,10 @@ Requer Node 22 ou superior. A lib é só ESM. Ainda não está publicada no npm 
 ```sh
 git clone https://github.com/LucasStop/anymark.git
 cd anymark
-npm install
-npm pack                      # gera anymark-0.0.0.tgz (compila antes)
+yarn install
+yarn pack --filename anymark.tgz   # compila antes e gera anymark.tgz
 cd /caminho/do/seu/projeto
-npm install /caminho/para/anymark/anymark-0.0.0.tgz
+yarn add file:/caminho/para/anymark/anymark.tgz
 ```
 
 ## Uso
@@ -98,9 +98,9 @@ Adapter e Chain of Responsibility (Lucas Stopinski); Strategy, Registry/Plugin e
 ## Desenvolvimento
 
 ```sh
-npm run typecheck
-npm run lint
-npm test
+yarn typecheck
+yarn lint
+yarn test
 ```
 
 Fluxo de trabalho, TDD e convenções: [AGENTS.md](AGENTS.md). Cenários de teste manual: [docs/TESTING.md](docs/TESTING.md). Plano e decisões: [docs/PLAN.md](docs/PLAN.md).

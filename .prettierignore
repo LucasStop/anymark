@@ -1,6 +1,5 @@
 dist
 coverage
-package-lock.json
 graphify-out
 .claude
 docs
