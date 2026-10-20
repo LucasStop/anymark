@@ -87,6 +87,14 @@ describe('html converter', () => {
     expect((error as Error).message).not.toContain('aaaa');
   });
 
+  it('still converts an input of exactly 25 MB', async () => {
+    const edge = { data: new Uint8Array(25 * 1024 * 1024).fill(97), name: 'edge.html' };
+
+    const { markdown } = await createAnymark().convert(edge);
+
+    expect(markdown.startsWith('aaaa')).toBe(true);
+  });
+
   it('returns empty Markdown for an empty document', async () => {
     const { markdown } = await createAnymark().convert(html(''));
 
