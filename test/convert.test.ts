@@ -16,6 +16,17 @@ describe('convert() on a .txt', () => {
   });
 });
 
+describe('text encodings without a BOM', () => {
+  const sample = 'Olá, ação\nsegunda linha\n';
+  const utf16le = () => new Uint8Array(Buffer.from(sample, 'utf16le'));
+
+  it('decodes UTF-16LE', async () => {
+    const result = await createAnymark().convert({ data: utf16le(), name: 'a.txt' });
+
+    expect(result.markdown).toBe(sample);
+  });
+});
+
 describe('instances and unsupported formats', () => {
   const fooEntry: ConverterEntry = {
     name: 'foo',
