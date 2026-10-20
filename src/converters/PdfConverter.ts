@@ -106,7 +106,14 @@ const MIN_CHARS_TO_DOUBT = 20;
  * that axis. The second turn runs only when the first one reads like junk, and the better text wins.
  */
 async function readUpright(image: Raster, rotate: number, ctx: ConverterContext): Promise<string> {
-  const turns = textRuns(image) === 'horizontal' ? [0, 180] : rotate === 90 ? [90, 270] : [270, 90];
+  const turns =
+    textRuns(image) === 'horizontal'
+      ? rotate === 180
+        ? [180, 0]
+        : [0, 180]
+      : rotate === 90
+        ? [90, 270]
+        : [270, 90];
   const ocr = async (degrees: number): Promise<string> => {
     const turned = rotateClockwise(image, degrees);
     const png = encodePng(turned.data, turned.width, turned.height, turned.channels);
@@ -114,7 +121,13 @@ async function readUpright(image: Raster, rotate: number, ctx: ConverterContext)
   };
   const first = await ocr(turns[0]!);
   if (first.length < MIN_CHARS_TO_DOUBT || wordScore(first) >= MIN_WORD_SCORE) return first;
-  const second = await ocr(turns[1]!);
+  let second: string;
+  try {
+    second = await ocr(turns[1]!);
+  } catch {
+    ctx.options.signal?.throwIfAborted();
+    return first; // the second look is a bonus: its failure must not cost the text already read
+  }
   return wordScore(second) > wordScore(first) ? second : first;
 }
 
