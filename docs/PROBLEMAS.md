@@ -36,7 +36,7 @@ Lição: padrão de falha repetido. Onde a decisão é "o que esconder", o erro 
 |---|---|---|
 | `read-excel-file` | Descarta células de erro, visibilidade de linhas e colunas, e preenche o retângulo inteiro | Leitura própria do XML da planilha para o que ela esconde (ADR 0008) |
 | `mammoth` | Ignora `w:vanish`; emite `colspan`, `rowspan` e tabela dentro de célula | Pré-processamento do zip e passe próprio de tabelas |
-| `unpdf` / pdf.js | Sem canvas, só devolve imagens embutidas já decodificadas; descarta imagem de 1 bit sem avisar | OCR só das imagens embutidas; o limite foi documentado (#66) |
+| `unpdf` / pdf.js | Sem canvas, só devolve imagens embutidas já decodificadas; o pdf.js embutido não carrega o decodificador wasm de CCITT e JBIG2 e `extractImages` descarta 1 bit sem avisar | OCR só das imagens embutidas (#66); `pdfjs-dist` completo com `wasmUrl` e leitura do 1 bit pela lista de operadores (#89) |
 | `pdf.js` | Segura o documento e as fontes até `destroy()` | `loadingTask.destroy()` em todo caminho |
 | `tesseract.js` | Baixa dados de idioma da rede por padrão | Dados `eng` locais como dependência; `allowDownload` só por opt-in (ADR 0007) |
 | TypeScript 6 | Não tipa `JSON.rawJSON` nem o terceiro argumento do reviver | Declaração ambient em `src/converters/json-source.d.ts` (#64) |
@@ -47,6 +47,20 @@ Lição: padrão de falha repetido. Onde a decisão é "o que esconder", o erro 
 A rodada 1 (16/10, 39 arquivos) achou o PDF escaneado mudo e o `.ppt` vazio. A rodada 2 (20/10, 1.210 arquivos do Desktop) achou o que nenhum fixture sintético pegou: célula de docx com mais de um parágrafo quebra a linha da tabela em 17 de 29 arquivos (#85). Os fixtures tinham só células de um parágrafo. Corrigido na #85: dentro de `td` e `th` o `<br>` sai literal, em uma linha só, para html e docx.
 
 Lição: a regra "teste primeiro com casos definidos por uma pessoa" não basta sozinha; rodar a lib em arquivos de verdade a cada conjunto de mudanças é parte do trabalho, e o resultado entra no [TESTING.md](TESTING.md).
+
+## 4b. O livro escaneado que saía vazio (#89)
+
+Na rodada 2, `O Princípio Responsabilidade` (18 páginas escaneadas) saiu só com `## Page N` vazios. Eram três causas empilhadas, e só a terceira parecia "OCR ruim":
+
+1. As páginas são imagens de 1 bit (CCITT). O pdf.js embutido no `unpdf` não carrega o wasm do decodificador (`Jbig2Error: JBig2 failed to initialize`) e `extractImages` descarta 1 bit. O OCR nem chegava a rodar.
+2. As páginas trazem `/Rotate 270`. Sem girar a imagem, o OCR devolveu lixo (confiança 27 de 100).
+3. O texto é em português e o OCR padrão era só inglês (`injungdo` em vez de `injunção`).
+
+Corrigido com `pdfjs-dist` completo e `wasmUrl`, leitura do 1 bit pela lista de operadores, rotação da página aplicada aos pixels e o idioma `por` incluído (`lang: 'pt'`). Confiança 80 e acentos certos no spike.
+
+Um achado de ferramenta no caminho: o tesseract.js grava o `.traineddata` baixado na pasta atual e lê dela antes de qualquer outra fonte. Um modelo `por` incompatível, baixado de teste, ficou no repositório e fez o modelo bom falhar com `missing function: DotProductSSE` até ser apagado. O `TesseractBackend` já usa `cacheMethod: 'none'`; em spike, defina `cachePath` ou rode fora do repositório.
+
+Lição: quando o resultado é vazio, ver primeiro se o dado chega ao OCR antes de culpar o OCR.
 
 ## 5. Ferramentas e processo
 
@@ -60,5 +74,4 @@ Lição: a regra "teste primeiro com casos definidos por uma pessoa" não basta 
 ## 6. Em aberto
 
 - OCR de slide que é só diagrama devolve texto lixo; o OCR não tem timeout próprio.
-- Imagens de 1 bit em PDF são descartadas sem aviso.
 - Link do vídeo no README ainda é placeholder; vídeo só na entrega final (12/11).

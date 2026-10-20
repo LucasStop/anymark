@@ -66,11 +66,13 @@
   },
   "dependencies": {
     "@tesseract.js-data/eng": "^1.0.0",
+    "@tesseract.js-data/por": "^1.0.0",
     "chardet": "^2.2.0",
     "csv-parse": "^7.0.3",
     "fast-xml-parser": "^5.11.2",
     "fflate": "^0.8.3",
     "mammoth": "^1.13.0",
+    "pdfjs-dist": "6.4.299",
     "read-excel-file": "^9.3.12",
     "tesseract.js": "^7.0.0",
     "turndown": "^7.2.4",

@@ -68,6 +68,14 @@ describe('TesseractBackend', () => {
       );
     });
 
+    it('looks for the language in every langPath folder, in order', async () => {
+      const empty = mkdtempSync(join(tmpdir(), 'tess-'));
+
+      const text = await new TesseractBackend({ langPath: [empty, langPath] }).run(png(), {});
+
+      expect(text.trim()).toBe('HELLO HOLE');
+    }, 30_000);
+
     it('does not leak a local path in its error', async () => {
       const dir = mkdtempSync(join(tmpdir(), 'tess-'));
       const error = await new TesseractBackend({ langPath: dir })
@@ -128,6 +136,17 @@ describe('images through the facade', () => {
 
       expect(result.markdown).toBe('HELLO HOLE\n');
       expect(result.metadata.mime).toBe('image/png');
+    },
+    SLOW,
+  );
+
+  it(
+    'reads Portuguese out of the box with lang pt, offline',
+    async () => {
+      const result = await createAnymark().convert(image(), { lang: 'pt' });
+
+      expect(result.markdown).toBe('HELLO HOLE\n');
+      expect(result.warnings).toEqual([]);
     },
     SLOW,
   );

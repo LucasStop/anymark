@@ -70,11 +70,13 @@ export class Anymark {
   }
 }
 
-/** Language data shipped with the package, so the default OCR never needs the network. */
-const bundledLangPath = (): string =>
-  join(
-    dirname(createRequire(import.meta.url).resolve('@tesseract.js-data/eng/package.json')),
-    '4.0.0_best_int',
+/** Language data shipped with the package (English and Portuguese), so the default OCR never needs the network. */
+const bundledLangPath = (): string[] =>
+  ['eng', 'por'].map((lang) =>
+    join(
+      dirname(createRequire(import.meta.url).resolve(`@tesseract.js-data/${lang}/package.json`)),
+      '4.0.0_best_int',
+    ),
   );
 
 /**
