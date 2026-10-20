@@ -52,7 +52,7 @@ Node 22, `main` em 17bbca6. 39 arquivos de uso próprio (faculdade e estudo), 3 
 | F01 | pdf | vazio (0 B) | 0 B | `CONVERSION_FAILED` | esperado |
 | F02 | pdf | tabela-verdade | 233 KB | ok | |
 | F03 | pdf | slides com código | 751 KB | ok | |
-| F04 | pdf | livro escaneado, sem camada de texto | 15 MB | ok, mas só `## Page N` vazios | resolvido em 16/10/2026 (#49): warning `PDF_NO_TEXT` |
+| F04 | pdf | livro escaneado, sem camada de texto | 15 MB | ok, mas só `## Page N` vazios | resolvido em 16/10/2026 (#49): warning `PDF_NO_TEXT`; #66: páginas com imagem embutida passam por OCR |
 | R01 | srt | nome com espaço duplo e `+` | 18 KB | ok | |
 | I01 | jpg | captura de tela com texto (OCR) | 29 KB | ok, 51 caracteres, 233 ms | |
 | I02 | jpg | foto de documento (OCR) | 2,1 MB | ok, 1274 caracteres, 3,6 s | |
@@ -60,7 +60,7 @@ Node 22, `main` em 17bbca6. 39 arquivos de uso próprio (faculdade e estudo), 3 
 
 ### Achados da rodada 1
 
-1. **PDF escaneado sem aviso (F04). Resolvido (#49).** Saía uma lista de `## Page N` vazia e `warnings` vazio. Agora o warning `PDF_NO_TEXT` aparece quando nenhuma página tem texto e aponta o OCR como saída; o PDF continua sem passar por OCR.
+1. **PDF escaneado sem aviso (F04). Resolvido (#49).** Saía uma lista de `## Page N` vazia e `warnings` vazio. Agora o warning `PDF_NO_TEXT` aparece quando nenhuma página tem texto e aponta o OCR como saída. Desde a #66 as páginas com imagem embutida passam por OCR; o warning fica para quando não dá (sem imagem ou sem backend).
 2. **`.ppt` legado vazio (P04)** passou como texto. Conferir com um `.ppt` legado não vazio se vira `UnsupportedFormatError` ou lixo binário.
 3. Imagem com muito texto leva segundos (I02): o OCR não tem timeout próprio (limite conhecido).
 
@@ -94,6 +94,6 @@ Marcar data, responsável e resultado ao rodar.
 - xlsx: células de erro saem vazias; abas `hidden` e `veryHidden` ficam fora por padrão (`includeHiddenSheets: true` as inclui), mas linhas e colunas ocultas dentro de uma aba visível seguem no Markdown.
 - docx: células mescladas e tabelas aninhadas ficam como HTML cru; avisos do mammoth não viram warnings; notas de rodapé mantidas.
 - pptx: não lê `mc:AlternateContent`, slides ocultos nem aninhamento de bullets.
-- pdf: sem prazo próprio além do `signal`; PDF escaneado não passa por OCR (só recebe o warning `PDF_NO_TEXT`).
+- pdf: sem prazo próprio além do `signal`. PDF escaneado passa por OCR só se a página traz imagem embutida (JPEG, PNG etc.); página vetorial sem imagem fica vazia (renderizar exigiria canvas, dependência nativa) e o limite é 100 páginas, 4 imagens por página e 64 MB por imagem decodificada, com o warning `PDF_OCR_SKIPPED` e a contagem. Sem backend `ocr` utilizável a página fica vazia e o warning é `PDF_NO_TEXT`. Falha do backend no meio mantém o texto já lido e acrescenta `PDF_OCR_FAILED`. O teto de 64 MB é checado depois que o pdf.js decodifica a imagem, então uma imagem gigante em PDF pequeno ainda gasta memória antes de ser pulada; imagem de 1 bit (CCITT, JBIG2) o pdf.js descarta sem contar. O OCR padrão é só em inglês.
 - tesseract: sem timeout próprio.
 - Texto UTF-16 sem BOM só é detectado quando é majoritariamente latino (um byte zero em quase toda unidade); CJK sem BOM não. Um arquivo sem extensão em UTF-16 sem BOM continua não reconhecido como texto pelo detector.

@@ -63,6 +63,10 @@ Decisão registrada em [ADR 0007](docs/adr/0007-ocr-padrao-no-createanymark.md).
 
 Abas `hidden` e `veryHidden` do xlsx ficam fora do Markdown e geram o warning `HIDDEN_SHEETS_SKIPPED` com a contagem. Para incluí-las: `convert(input, { includeHiddenSheets: true })`.
 
+### PDF escaneado
+
+Página sem camada de texto é lida por OCR a partir da imagem embutida nela (a mesma cadeia de backends da seção anterior); página com texto nunca chama o backend. Sem imagem embutida, ou sem backend utilizável, a página fica vazia e o warning `PDF_NO_TEXT` avisa. Limites: 100 páginas, 4 imagens por página e 64 MB por imagem decodificada; o que passar disso vira o warning `PDF_OCR_SKIPPED` com a contagem.
+
 ### Cancelamento
 
 ```ts
