@@ -8,7 +8,7 @@ Trabalho final de Design Patterns (PUCPR, 2026/2), feito em dupla por **Lucas St
 
 ## Formatos
 
-txt, md, csv, json, xml, html, docx, pptx, xlsx, pdf e, por OCR, png, jpg, gif e webp. Áudio, vídeo e URL entram na entrega final (12/11). Limites conhecidos estão em [docs/TESTING.md](docs/TESTING.md).
+txt, md, csv, json, xml, html, docx, pptx, xlsx, pdf e, por OCR, png, jpg, gif e webp. Áudio, vídeo e URL entram na entrega final (12/11). Os formatos legados `.doc`, `.ppt` e `.xls` (OLE2) não são suportados e geram `UnsupportedFormatError`: salve como `.docx`, `.pptx` ou `.xlsx`. Limites conhecidos estão em [docs/TESTING.md](docs/TESTING.md).
 
 ## Instalação
 
