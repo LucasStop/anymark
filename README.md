@@ -107,7 +107,7 @@ yarn lint
 yarn test
 ```
 
-Fluxo de trabalho, TDD e convenções: [AGENTS.md](AGENTS.md). Cenários de teste manual: [docs/TESTING.md](docs/TESTING.md). Plano e decisões: [docs/PLAN.md](docs/PLAN.md).
+Fluxo de trabalho, TDD e convenções: [AGENTS.md](AGENTS.md). Cenários de teste manual: [docs/TESTING.md](docs/TESTING.md). Problemas do caminho: [docs/PROBLEMAS.md](docs/PROBLEMAS.md). Plano e decisões: [docs/PLAN.md](docs/PLAN.md).
 
 ## Uso de IA
 
