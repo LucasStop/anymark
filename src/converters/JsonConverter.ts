@@ -5,10 +5,10 @@ import { decodeText } from './decodeText.js';
 
 const MIME = 'application/json';
 
-type Row = Record<string, string | number | boolean | null>;
+type Row = Record<string, string | number | bigint | boolean | null>;
 
 const isScalar = (value: unknown): boolean =>
-  value === null || ['string', 'number', 'boolean'].includes(typeof value);
+  value === null || ['string', 'number', 'bigint', 'boolean'].includes(typeof value);
 
 /** A non-empty array of objects whose values are all scalars: the only shape a table shows without loss. */
 function isFlatRows(value: unknown): value is Row[] {
@@ -34,7 +34,12 @@ export class JsonConverter implements Converter {
     ctx.options.signal?.throwIfAborted();
     let value: unknown;
     try {
-      value = JSON.parse(decodeText(source.data));
+      // An integer past 2^53 would be rounded by the parse; its source text is exact, so it becomes a BigInt.
+      value = JSON.parse(decodeText(source.data), (_key, parsed, { source: text = '' }) =>
+        typeof parsed === 'number' && !Number.isSafeInteger(parsed) && /^-?\d+$/.test(text)
+          ? BigInt(text)
+          : parsed,
+      );
     } catch {
       // SyntaxError messages quote the offending text; the document must not reach logs.
       throw new ConversionError('json');
@@ -47,7 +52,10 @@ export class JsonConverter implements Converter {
         value.map((row) => header.map((key) => (Object.hasOwn(row, key) ? String(row[key]) : ''))),
       );
     } else {
-      builder.code(JSON.stringify(value, null, 2), 'json');
+      // JSON.stringify throws on BigInt; rawJSON writes the digits as they are.
+      const exact = (_key: string, item: unknown) =>
+        typeof item === 'bigint' ? JSON.rawJSON(String(item)) : item;
+      builder.code(JSON.stringify(value, exact, 2), 'json');
     }
     return {
       markdown: builder.build(),

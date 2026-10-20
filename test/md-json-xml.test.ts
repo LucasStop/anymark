@@ -34,6 +34,19 @@ describe('md converter', () => {
 });
 
 describe('json converter', () => {
+  it('keeps integers above 2^53 exact, and leaves safe integers and floats alone', async () => {
+    const result = await run('json/bigint.json', 'bigint.json');
+
+    expect(result.markdown).toBe(text('json/bigint.md'));
+  });
+
+  it('keeps an integer above 2^53 exact inside the code block of a nested document', async () => {
+    const result = await inline('{"a": {"id": 12345678901234567890, "f": 0.1}}', 'a.json');
+
+    expect(result.markdown).toContain('"id": 12345678901234567890,');
+    expect(result.markdown).toContain('"f": 0.1');
+  });
+
   it('turns a list of flat objects into a table, with the union of the keys', async () => {
     const result = await run('json/people.json', 'people.json');
 
