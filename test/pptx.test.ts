@@ -138,4 +138,32 @@ describe('pptx alternate content and hidden slides', () => {
 
     expect((await convert(shown)).warnings).toEqual([]);
   });
+
+  it.each(['false', 'False', ' 0 '])('hides a slide written with show="%s"', async (value) => {
+    const data = withPart('ppt/slides/slide2.xml', (xml) =>
+      xml.replace('<p:sld ', `<p:sld show="${value}" `),
+    );
+
+    expect((await convert(data)).warnings.map((w) => w.code)).toEqual(['HIDDEN_SLIDES_SKIPPED']);
+  });
+
+  it('counts every hidden slide', async () => {
+    const files = unzipSync(hidden());
+    files['ppt/slides/slide1.xml'] = strToU8(
+      strFromU8(files['ppt/slides/slide1.xml'] as Uint8Array).replace(
+        '<p:sld ',
+        '<p:sld show="0" ',
+      ),
+    );
+
+    expect((await convert(zipSync(files))).warnings).toEqual([
+      { code: 'HIDDEN_SLIDES_SKIPPED', message: '2 hidden slides skipped' },
+    ]);
+  });
+
+  it('reads an AlternateContent inside a group once', async () => {
+    const group = `<p:grpSp><p:nvGrpSpPr><p:cNvPr id="8" name="g"/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/>${alternate(shape('GROUPED'), shape('GROUPED'))}</p:grpSp>`;
+
+    expect((await convert(addToSlide(group))).markdown.match(/GROUPED/g)).toHaveLength(1);
+  });
 });

@@ -159,7 +159,7 @@ export class PptxConverter implements Converter {
         const root = slide.find((n) => !tagOf(n).startsWith('?'));
         if (
           ctx.options.includeHidden !== true &&
-          ['0', 'false'].includes(attr(root ?? {}, 'show') ?? '')
+          ['0', 'false'].includes((attr(root ?? {}, 'show') ?? '').trim().toLowerCase())
         ) {
           hiddenSlides += 1;
           return;
