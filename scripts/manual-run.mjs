@@ -1,6 +1,6 @@
 // Manual test helper: converts the given files and writes the Markdown to manual-out/ (gitignored).
 // Prints one line per file with no path and no content: id, ext, size, ms, result. Run `yarn build` first.
-// Usage: node scripts/manual-run.mjs [--hidden] file...   (OCR needs ANYMARK_LANG_PATH=<dir with eng.traineddata>)
+// Usage: node scripts/manual-run.mjs [--hidden] [--lang=pt] file...   (OCR reads the bundled eng and por data; ANYMARK_LANG_PATH=<dir> replaces them)
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { basename, extname } from 'node:path';
@@ -11,9 +11,11 @@ import { createAnymark, TesseractBackend } from '../dist/index.js';
 const args = process.argv.slice(2);
 const files = args.filter((a) => !a.startsWith('--'));
 const langPath = process.env.ANYMARK_LANG_PATH;
+const lang = args.find((a) => a.startsWith('--lang='))?.slice('--lang='.length);
 const options = {
   ...(langPath ? { backends: [new TesseractBackend({ langPath })] } : {}),
   ...(args.includes('--hidden') ? { includeHidden: true } : {}),
+  ...(lang ? { lang } : {}),
 };
 const anymark = createAnymark();
 await mkdir('manual-out', { recursive: true });

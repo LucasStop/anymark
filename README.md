@@ -46,7 +46,7 @@ Formato não reconhecido lança `UnsupportedFormatError`; arquivo ilegível lan�
 const { markdown } = await createAnymark().convert({ data: pngBytes, name: 'pagina.png' });
 ```
 
-Para outro idioma ou outro backend, passe `backends` na chamada (substitui o padrão). `langPath` aponta para uma pasta com `<idioma>.traineddata.gz`; baixar os dados exige `allowDownload: true` no `TesseractBackend` (opt-in explícito):
+O OCR padrão traz inglês e português. Para ler português, passe `lang: 'pt'` na chamada (`createAnymark().convert(entrada, { lang: 'pt' })`); sem a dica, o idioma é inglês. Para outro idioma ou outro backend, passe `backends` na chamada (substitui o padrão). `langPath` aponta para uma pasta com `<idioma>.traineddata.gz`; baixar os dados exige `allowDownload: true` no `TesseractBackend` (opt-in explícito):
 
 ```ts
 import { createAnymark, TesseractBackend } from 'anymark';
