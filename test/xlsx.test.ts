@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { strToU8, zipSync } from 'fflate';
+import { strToU8, unzipSync, zipSync } from 'fflate';
 import { describe, expect, it } from 'vitest';
 import { XlsxConverter } from '../src/converters/XlsxConverter.js';
 import { ConversionError, createAnymark } from '../src/index.js';
@@ -184,6 +184,17 @@ describe('xlsx error cells', () => {
     expect((await convert(data)).markdown).toContain('| ok | #REF! |');
   });
 
+  it('keeps row positions when an error sits below an empty gap', async () => {
+    const data = workbook(
+      `${row(1, ['a'])}<row r="3" hidden="1">${cell('A3', 'gone')}</row><row r="4">${error('A4', '#N/A')}</row>`,
+    );
+
+    const result = await convert(data);
+
+    expect(result.markdown).toBe('## S\n\n| a |\n| --- |\n|  |\n| #N/A |\n');
+    expect(result.warnings.map((w) => w.code)).toEqual(['HIDDEN_ROWS_SKIPPED']);
+  });
+
   it('ignores an error value that is not one of the spreadsheet errors', async () => {
     const data = workbook(
       `${row(1, ['a', 'b'])}<row r="2">${cell('A2', 'ok')}${error('B2', '**injected**')}</row>`,
@@ -254,5 +265,81 @@ describe('xlsx hidden rows and columns', () => {
     const data = workbook(row(1, ['old'], ' hidden="1"') + row(2, ['head']) + row(3, ['body']));
 
     expect((await convert(data)).markdown).toBe('## S\n\n| head |\n| --- |\n| body |\n');
+  });
+});
+
+describe('xlsx markup the sheet XML may legally use', () => {
+  it('reads an error cell that comes from a formula', async () => {
+    const data = workbook(
+      `${row(1, ['a', 'b'])}<row r="2">${cell('A2', 'ok')}<c r="B2" t="e"><f>1/0</f><v>#DIV/0!</v></c></row>`,
+    );
+
+    expect((await convert(data)).markdown).toContain('| ok | #DIV/0! |');
+  });
+
+  it.each([
+    ['single quotes', `<row r="2" hidden='1'>`],
+    ['spaces around =', `<row r = "2" hidden = "1">`],
+    ['no r attribute', `<row hidden="1">`],
+  ])('still hides a row written with %s', async (_label, open) => {
+    const data = workbook(`${row(1, ['h'])}${open}${cell('A2', 'SECRET')}</row>`);
+
+    const result = await convert(data);
+
+    expect(result.markdown).not.toContain('SECRET');
+    expect(result.warnings.map((w) => w.code)).toEqual(['HIDDEN_ROWS_SKIPPED']);
+  });
+
+  it('hides a column written with single quotes', async () => {
+    const data = workbook(
+      row(1, ['h', 'SECRET']),
+      'S',
+      `<cols><col min='2' max = "2" hidden='1'/></cols>`,
+    );
+
+    expect((await convert(data)).markdown).not.toContain('SECRET');
+  });
+
+  it('hides rows of a sheet kept in a subfolder of worksheets', async () => {
+    const data = unzipSync(
+      workbook(`${row(1, ['h'])}<row r="2" hidden="1">${cell('A2', 'SECRET')}</row>`),
+    );
+    const rels = 'xl/_rels/workbook.xml.rels';
+    const moved = {
+      ...data,
+      'xl/worksheets/sub/sheet1.xml': data['xl/worksheets/sheet1.xml'] as Uint8Array,
+      [rels]: strToU8(
+        new TextDecoder()
+          .decode(data[rels])
+          .replace('worksheets/sheet1.xml', 'worksheets/sub/sheet1.xml'),
+      ),
+    };
+    delete (moved as Record<string, unknown>)['xl/worksheets/sheet1.xml'];
+
+    await expect(convert(zipSync(moved))).resolves.toMatchObject({
+      markdown: expect.not.stringContaining('SECRET'),
+    });
+  });
+
+  it('resolves an absolute sheet target', async () => {
+    const data = unzipSync(
+      workbook(`${row(1, ['h'])}<row r="2" hidden="1">${cell('A2', 'SECRET')}</row>`),
+    );
+    const rels = 'xl/_rels/workbook.xml.rels';
+    data[rels] = strToU8(
+      new TextDecoder()
+        .decode(data[rels])
+        .replace('"worksheets/sheet1.xml"', '"/xl/worksheets/sheet1.xml"'),
+    );
+
+    expect((await convert(zipSync(data))).markdown).not.toContain('SECRET');
+  });
+
+  it('refuses a sheet whose rows times columns would exhaust memory', async () => {
+    const data = workbook(
+      `${row(1, ['a'])}<row r="20000"><c r="XFD20000" t="inlineStr"><is><t>z</t></is></c></row>`,
+    );
+
+    await expect(convert(data)).rejects.toBeInstanceOf(ConversionError);
   });
 });

@@ -13,7 +13,7 @@ const files = args.filter((a) => !a.startsWith('--'));
 const langPath = process.env.ANYMARK_LANG_PATH;
 const options = {
   ...(langPath ? { backends: [new TesseractBackend({ langPath })] } : {}),
-  ...(args.includes('--hidden') ? { includeHiddenSheets: true } : {}),
+  ...(args.includes('--hidden') ? { includeHidden: true } : {}),
 };
 const anymark = createAnymark();
 await mkdir('manual-out', { recursive: true });
