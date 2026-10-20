@@ -44,7 +44,7 @@ Lição: padrão de falha repetido. Onde a decisão é "o que esconder", o erro 
 
 ## 4. Teste sintético não é arquivo real
 
-A rodada 1 (16/10, 39 arquivos) achou o PDF escaneado mudo e o `.ppt` vazio. A rodada 2 (20/10, 1.210 arquivos do Desktop) achou o que nenhum fixture sintético pegou: célula de docx com mais de um parágrafo quebra a linha da tabela em 17 de 29 arquivos (#85). Os fixtures tinham só células de um parágrafo.
+A rodada 1 (16/10, 39 arquivos) achou o PDF escaneado mudo e o `.ppt` vazio. A rodada 2 (20/10, 1.210 arquivos do Desktop) achou o que nenhum fixture sintético pegou: célula de docx com mais de um parágrafo quebra a linha da tabela em 17 de 29 arquivos (#85). Os fixtures tinham só células de um parágrafo. Corrigido na #85: dentro de `td` e `th` o `<br>` sai literal, em uma linha só, para html e docx.
 
 Lição: a regra "teste primeiro com casos definidos por uma pessoa" não basta sozinha; rodar a lib em arquivos de verdade a cada conjunto de mudanças é parte do trabalho, e o resultado entra no [TESTING.md](TESTING.md).
 
@@ -59,7 +59,6 @@ Lição: a regra "teste primeiro com casos definidos por uma pessoa" não basta 
 
 ## 6. Em aberto
 
-- Célula de docx com vários parágrafos quebra a tabela (#85).
 - OCR de slide que é só diagrama devolve texto lixo; o OCR não tem timeout próprio.
 - Imagens de 1 bit em PDF são descartadas sem aviso.
 - Link do vídeo no README ainda é placeholder; vídeo só na entrega final (12/11).
