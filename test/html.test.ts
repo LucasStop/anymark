@@ -126,4 +126,15 @@ describe('html converter', () => {
 
     expect(markdown).toContain('| **um<br>dois** |');
   });
+
+  it('does not turn a break inside a code span into a literal <br> the reader sees', async () => {
+    const html = '<table><tr><th>A</th></tr><tr><td><code>a<br>b</code></td></tr></table>';
+
+    const { markdown } = await createAnymark().convert({
+      data: new TextEncoder().encode(html),
+      name: 'code.html',
+    });
+
+    expect(markdown).not.toContain('<br>');
+  });
 });

@@ -41,6 +41,8 @@ const inCell = (node: {
   parentNode?: { nodeName: string; parentNode?: unknown } | null;
 }): boolean => {
   for (let at = node.parentNode; at; at = at.parentNode as typeof at) {
+    // Markdown does not read HTML inside a code span, so the reader would see the tag as text.
+    if (at.nodeName === 'CODE' || at.nodeName === 'PRE') return false;
     if (at.nodeName === 'TD' || at.nodeName === 'TH') return true;
   }
   return false;
