@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { PdfConverter } from '../src/converters/PdfConverter.js';
-import { ConversionError, createAnymark } from '../src/index.js';
+import { ConversionError, createAnymark, TesseractBackend } from '../src/index.js';
 import type { Backend } from '../src/index.js';
 import { assertConverterContract } from '../src/testing/index.js';
 
@@ -77,6 +77,62 @@ describe('pdf converter', () => {
     expect(pages).toHaveLength(3);
     for (const page of pages) expect(page.match(/HELLO HOLE/g)).toHaveLength(4);
   }, 120_000);
+
+  describe('declared scan layout', () => {
+    const sheets = () => new Uint8Array(spec('pdf/scanned-spread.pdf'));
+    const pagesOf = (markdown: string) => markdown.split(/^## Page \d+\n/m).slice(1);
+
+    it('reads the left printed page before the right one, whatever the sheet rotation', async () => {
+      const { markdown } = await createAnymark().convert(
+        { data: sheets(), name: 'spread.pdf' },
+        { pdf: { layout: 'spread' } },
+      );
+
+      const pages = pagesOf(markdown);
+      expect(pages).toHaveLength(4);
+      for (const page of pages) {
+        expect(page.match(/HELLO/g)).toHaveLength(18);
+        expect(page.match(/HOLE/g)).toHaveLength(18);
+        expect(page.lastIndexOf('HELLO')).toBeLessThan(page.indexOf('HOLE'));
+      }
+    }, 240_000);
+
+    it('reads the right printed page first when the binding is on the right', async () => {
+      const { markdown } = await createAnymark().convert(
+        { data: sheets(), name: 'spread.pdf' },
+        { pdf: { layout: 'spread', binding: 'right', rotation: 'auto' } },
+      );
+
+      for (const page of pagesOf(markdown))
+        expect(page.lastIndexOf('HOLE')).toBeLessThan(page.indexOf('HELLO'));
+    }, 240_000);
+
+    it('turns by the declared rotation and asks the backend once per printed page', async () => {
+      const run = vi.spyOn(TesseractBackend.prototype, 'run');
+      const data = new Uint8Array(spec('pdf/scanned-spread-sideways.pdf'));
+
+      const { markdown } = await createAnymark().convert(
+        { data, name: 'sideways.pdf' },
+        { pdf: { layout: 'spread', rotation: 270 } },
+      );
+
+      expect(run).toHaveBeenCalledTimes(4); // 2 sheets x 2 printed pages, no second look
+      for (const page of pagesOf(markdown)) expect(page.match(/HELLO/g)).toHaveLength(18);
+      run.mockRestore();
+    }, 240_000);
+
+    it.each([{ layout: 'triple' }, { rotation: 45 }, { binding: 'top' }])(
+      'rejects the unknown option %j without echoing it',
+      async (pdfOptions) => {
+        const error = await createAnymark()
+          .convert(pdf(), { pdf: pdfOptions as never })
+          .catch((e: unknown) => e);
+
+        expect(error).toBeInstanceOf(ConversionError);
+        expect(String((error as Error).message)).not.toMatch(/triple|45|top/);
+      },
+    );
+  });
 
   it('passes the converter contract', async () => {
     await assertConverterContract(new PdfConverter(), pdf());

@@ -19,6 +19,16 @@ export type Capability = 'ocr' | 'transcription';
 /** Where a backend runs. `cli` needs `allowCli`; `remote` needs `allowNetwork`. */
 export type Locality = 'local' | 'cli' | 'remote';
 
+/** Declares what kind of scanned PDF comes in, so the fix is chosen by the caller and not guessed. */
+export interface PdfOptions {
+  /** `spread`: each sheet holds two printed pages, cut at the gutter before OCR. Default `single`. */
+  readonly layout?: 'single' | 'spread';
+  /** Clockwise turn applied to every scanned image. Default `auto`: found from the pixels. */
+  readonly rotation?: 0 | 90 | 180 | 270 | 'auto';
+  /** Which printed page of a spread comes first. Default `left`. */
+  readonly binding?: 'left' | 'right';
+}
+
 export interface ConvertOptions {
   readonly signal?: AbortSignal;
   /** Off by default: spawning a CLI is opt-in. */
@@ -31,6 +41,8 @@ export interface ConvertOptions {
   readonly lang?: string;
   /** Off by default: hidden sheets, rows, columns (and slides) are skipped, with a warning. */
   readonly includeHidden?: boolean;
+  /** Scanned PDFs only. Without it: `single` pages, `auto` rotation. */
+  readonly pdf?: PdfOptions;
 }
 
 /** A non-fatal problem. Never carries keys, absolute paths or user data. */

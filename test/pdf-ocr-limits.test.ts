@@ -62,6 +62,22 @@ describe('pdf OCR limits', () => {
     expect(result.warnings.map((w) => w.code)).not.toContain('PDF_OCR_FAILED');
   });
 
+  it('keeps the first printed page of a spread when the second one fails', async () => {
+    extractImages.mockResolvedValue([image(900)]);
+    const fake = backend(async (n) => {
+      if (n === 2) throw new Error('boom');
+      return 'FIRST PAGE';
+    });
+
+    const result = await createAnymark().convert(scan(), {
+      backends: [fake as Backend],
+      pdf: { layout: 'spread', rotation: 0 },
+    });
+
+    expect(result.markdown).toContain('FIRST PAGE');
+    expect(result.warnings.map((w) => w.code)).toContain('PDF_OCR_FAILED');
+  });
+
   it('skips an image past 64 MB without calling the backend', async () => {
     extractImages.mockResolvedValue([image(64 * 1024 * 1024 + 3)]);
     let calls = 0;

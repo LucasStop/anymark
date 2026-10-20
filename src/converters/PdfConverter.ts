@@ -13,11 +13,13 @@ import type {
   ConversionResult,
   ConversionWarning,
   Converter,
+  ConvertOptions,
   ConverterContext,
   Source,
 } from '../core/types.js';
 import { encodePng, rotateClockwise, type Raster } from './encodePng.js';
 import { textRuns, wordScore } from './orientation.js';
+import { splitSpread } from './scanPrep.js';
 
 const MIME = 'application/pdf';
 
@@ -101,11 +103,64 @@ const MIN_WORD_SCORE = 0.85;
 /** Shorter texts say too little about the orientation to justify a second OCR pass. */
 const MIN_CHARS_TO_DOUBT = 20;
 
+/** What the caller declared about the scan, checked at the edge: an unknown value is an error. */
+interface ScanKind {
+  layout: 'single' | 'spread';
+  rotation: 0 | 90 | 180 | 270 | 'auto';
+  binding: 'left' | 'right';
+}
+
+function scanKind(declared: ConvertOptions['pdf']): ScanKind {
+  try {
+    if (declared !== undefined && (typeof declared !== 'object' || declared === null))
+      throw new Error('not an object');
+    const { layout = 'single', rotation = 'auto', binding = 'left' } = declared ?? {};
+    if (
+      !['single', 'spread'].includes(layout) ||
+      ![0, 90, 180, 270, 'auto'].includes(rotation) ||
+      !['left', 'right'].includes(binding)
+    )
+      throw new Error('unknown value');
+    return { layout, rotation, binding };
+  } catch {
+    throw new ConversionError('pdf'); // a getter that throws lands here too
+  }
+}
+
+/** A sheet narrower than this is no spread: there is no gutter to find in a sliver. */
+const MIN_SPREAD_WIDTH = 100;
+
 /**
- * OCR one image upright. The text lines tell which axis is up; /Rotate only orders the two turns on
- * that axis. The second turn runs only when the first one reads like junk, and the better text wins.
+ * OCR one scanned image into one text per printed page (two for a spread, in reading order), pushed
+ * to `out` as they are read so a failure on the second page keeps the first.
+ * A declared rotation is applied as is. With `auto`, the text lines tell which axis is up and /Rotate
+ * only orders the two turns on that axis; the second turn is read only when the first one reads like
+ * junk, and the better text wins. A spread is judged as a whole (both pages), because the second
+ * turn puts the other printed page first.
  */
-async function readUpright(image: Raster, rotate: number, ctx: ConverterContext): Promise<string> {
+async function readSheet(
+  image: Raster,
+  rotate: number,
+  kind: ScanKind,
+  ctx: ConverterContext,
+  out: string[],
+): Promise<void> {
+  const ocr = async (page: Raster): Promise<string> => {
+    const png = encodePng(page.data, page.width, page.height, page.channels);
+    return (await ctx.backends.run<Uint8Array, string>('ocr', png)).trim();
+  };
+  const pagesTurned = (degrees: number): Raster[] => {
+    const turned = rotateClockwise(image, degrees);
+    return kind.layout === 'spread' && turned.width >= MIN_SPREAD_WIDTH
+      ? splitSpread(turned, kind.binding)
+      : [turned];
+  };
+  const readAll = async (pages: Raster[], sink: string[]): Promise<void> => {
+    for (const page of pages) sink.push(await ocr(page));
+  };
+
+  if (kind.rotation !== 'auto') return readAll(pagesTurned(kind.rotation), out);
+
   const turns =
     textRuns(image) === 'horizontal'
       ? rotate === 180
@@ -114,21 +169,28 @@ async function readUpright(image: Raster, rotate: number, ctx: ConverterContext)
       : rotate === 90
         ? [90, 270]
         : [270, 90];
-  const ocr = async (degrees: number): Promise<string> => {
-    const turned = rotateClockwise(image, degrees);
-    const png = encodePng(turned.data, turned.width, turned.height, turned.channels);
-    return (await ctx.backends.run<Uint8Array, string>('ocr', png)).trim();
-  };
-  const first = await ocr(turns[0]!);
-  if (first.length < MIN_CHARS_TO_DOUBT || wordScore(first) >= MIN_WORD_SCORE) return first;
-  let second: string;
+  const first: string[] = [];
   try {
-    second = await ocr(turns[1]!);
-  } catch {
-    ctx.options.signal?.throwIfAborted();
-    return first; // the second look is a bonus: its failure must not cost the text already read
+    await readAll(pagesTurned(turns[0]!), first);
+  } catch (error) {
+    out.push(...first);
+    throw error;
   }
-  return wordScore(second) > wordScore(first) ? second : first;
+  const firstText = first.join('\n');
+  if (firstText.length < MIN_CHARS_TO_DOUBT || wordScore(firstText) >= MIN_WORD_SCORE) {
+    out.push(...first);
+    return;
+  }
+  const second: string[] = [];
+  try {
+    await readAll(pagesTurned(turns[1]!), second);
+  } catch {
+    // the second look is a bonus: its failure must not cost the text already read
+    ctx.options.signal?.throwIfAborted();
+    out.push(...first);
+    return;
+  }
+  out.push(...(wordScore(second.join('\n')) > wordScore(firstText) ? second : first));
 }
 
 /**
@@ -139,6 +201,7 @@ async function readUpright(image: Raster, rotate: number, ctx: ConverterContext)
 async function ocrScans(
   pdf: Document,
   texts: readonly string[],
+  kind: ScanKind,
   ctx: ConverterContext,
 ): Promise<{ pages: string[]; skipped: number; failed: boolean }> {
   const pages = [...texts];
@@ -160,17 +223,15 @@ async function ocrScans(
       continue; // an image pdf.js cannot decode: the page stays empty
     }
     const found: string[] = [];
+    let read = 0; // images, not printed pages: a spread gives two texts per image
     for (const image of images) {
-      if (
-        found.length >= MAX_PAGE_IMAGES ||
-        image.width === 0 ||
-        image.data.length > MAX_IMAGE_BYTES
-      ) {
+      if (read >= MAX_PAGE_IMAGES || image.width === 0 || image.data.length > MAX_IMAGE_BYTES) {
         skipped += 1;
         continue;
       }
       try {
-        found.push(await readUpright(image, rotate, ctx));
+        read += 1;
+        await readSheet(image, rotate, kind, ctx, found);
       } catch (error) {
         // An abort is the caller's call. Anything else ends the OCR but keeps what was already read;
         // no backend at all and nothing read is not a failure, PDF_NO_TEXT covers it.
@@ -191,6 +252,7 @@ export class PdfConverter implements Converter {
 
   async convert(source: Source, ctx: ConverterContext): Promise<ConversionResult> {
     ctx.options.signal?.throwIfAborted();
+    const kind = scanKind(ctx.options.pdf);
     let pages: string[];
     let skipped: number;
     let failed: boolean;
@@ -204,7 +266,7 @@ export class PdfConverter implements Converter {
         wasmUrl,
       });
       const layers = (await extractText(pdf, { mergePages: false })).text;
-      ({ pages, skipped, failed } = await ocrScans(pdf, layers, ctx));
+      ({ pages, skipped, failed } = await ocrScans(pdf, layers, kind, ctx));
     } catch {
       ctx.options.signal?.throwIfAborted();
       // Corrupted and password-protected files both land here; the library message quotes the file.
