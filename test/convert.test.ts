@@ -34,6 +34,35 @@ describe('text encodings without a BOM', () => {
     expect(result.markdown).toBe(sample);
   });
 
+  it('decodes a UTF-16LE csv', async () => {
+    const csv = new Uint8Array(Buffer.from('nome,idade\nAna,30\n', 'utf16le'));
+
+    const result = await createAnymark().convert({ data: csv, name: 'a.csv' });
+
+    expect(result.markdown).toBe('| nome | idade |\n| --- | --- |\n| Ana | 30 |\n');
+  });
+
+  it('still reads UTF-16LE when a few characters are not Latin', async () => {
+    const text = `${'a'.repeat(97)}ΩΩΩ`;
+
+    const result = await createAnymark().convert({
+      data: new Uint8Array(Buffer.from(text, 'utf16le')),
+      name: 'a.txt',
+    });
+
+    expect(result.markdown).toBe(text);
+  });
+
+  it('does not read UTF-16 when only 85% of the high bytes are zero', async () => {
+    const mixed = new Uint8Array(200).map((_, i) =>
+      i % 2 === 0 ? 0x41 : (i - 1) / 2 < 85 ? 0 : 0x42,
+    );
+
+    const result = await createAnymark().convert({ data: mixed, name: 'a.txt' });
+
+    expect(result.markdown).not.toContain('\u4241');
+  });
+
   it('leaves Latin-1, UTF-8 with a BOM and plain UTF-8 as they were', async () => {
     const latin1 = new Uint8Array(Buffer.from(sample, 'latin1'));
     const bom = new Uint8Array(Buffer.from(`\ufeff${sample}`, 'utf8'));
