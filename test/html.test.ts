@@ -84,7 +84,7 @@ describe('html converter', () => {
       .catch((e: unknown) => e);
 
     expect(error).toBeInstanceOf(ConversionError);
-    expect((error as Error).message).not.toContain('aaaa');
+    expect((error as Error).message).toBe('Could not convert html content');
   });
 
   it('still converts an input of exactly 25 MB', async () => {
