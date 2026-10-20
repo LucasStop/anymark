@@ -90,6 +90,7 @@ Marcar data, responsável e resultado ao rodar.
 ## Limites conhecidos
 
 - html: entrada acima de 25 MB lança `ConversionError`; sem tempo máximo; tabelas sem cabeçalho ou aninhadas ficam como HTML cru.
+- json: só inteiros em notação decimal pura ficam exatos; decimais longos, notação científica e `-0` seguem o `Number` do JavaScript.
 - xlsx: células de erro saem vazias; abas `hidden` e `veryHidden` ficam fora por padrão (`includeHiddenSheets: true` as inclui), mas linhas e colunas ocultas dentro de uma aba visível seguem no Markdown.
 - docx: células mescladas e tabelas aninhadas ficam como HTML cru; avisos do mammoth não viram warnings; notas de rodapé mantidas.
 - pptx: não lê `mc:AlternateContent`, slides ocultos nem aninhamento de bullets.
