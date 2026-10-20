@@ -3,8 +3,8 @@ import { join } from 'node:path';
 import type { Backend, BackendContext } from '../core/types.js';
 
 export interface TesseractOptions {
-  /** Directory holding `<lang>.traineddata.gz`. Without it nothing is read locally. */
-  readonly langPath?: string;
+  /** Directories holding `<lang>.traineddata.gz`, searched in order. Without it nothing is read locally. */
+  readonly langPath?: string | readonly string[];
   /** Where downloaded language data is cached. Only used together with `allowDownload`. */
   readonly cachePath?: string;
   /** Lets tesseract.js fetch language data from its CDN. Off unless the caller turns it on. */
@@ -48,17 +48,23 @@ export class TesseractBackend implements Backend<Uint8Array, string> {
     return this.#hasLanguage('eng');
   }
 
+  /** The folder that holds `lang`, or `undefined` when the data is not local. */
+  async #folderOf(lang: string): Promise<string | undefined> {
+    const { langPath } = this.options;
+    for (const folder of langPath === undefined ? [] : [langPath].flat()) {
+      try {
+        await access(join(folder, `${lang}.traineddata.gz`));
+        return folder;
+      } catch {
+        // not in this one; try the next
+      }
+    }
+    return undefined;
+  }
+
   /** The data for `lang` is local, or the caller allowed a download. */
   async #hasLanguage(lang: string): Promise<boolean> {
-    const { langPath, allowDownload } = this.options;
-    if (allowDownload === true) return true;
-    if (langPath === undefined) return false;
-    try {
-      await access(join(langPath, `${lang}.traineddata.gz`));
-      return true;
-    } catch {
-      return false;
-    }
+    return this.options.allowDownload === true || (await this.#folderOf(lang)) !== undefined;
   }
 
   async run(input: Uint8Array, ctx: BackendContext): Promise<string> {
@@ -67,7 +73,8 @@ export class TesseractBackend implements Backend<Uint8Array, string> {
     // run() is a door of its own: isAvailable() guards the chain, not a direct caller.
     if (input.length > MAX_BYTES || !(await this.#hasLanguage(lang))) throw new OcrError();
     const { createWorker } = await import('tesseract.js');
-    const { langPath, cachePath, allowDownload } = this.options;
+    const { cachePath, allowDownload } = this.options;
+    const langPath = await this.#folderOf(lang);
     let worker: Awaited<ReturnType<typeof createWorker>>;
     try {
       worker = await createWorker(lang, 1, {
