@@ -49,7 +49,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
-    "prepack": "npm run build",
+    "prepack": "yarn build",
     "docs:api": "typedoc"
   },
   "devDependencies": {
@@ -61,6 +61,7 @@
     "typedoc": "^0.28.20",
     "typescript": "~6.0",
     "typescript-eslint": "^8.71.2",
+    "vite": "^8.3.4",
     "vitest": "^5.0.4"
   },
   "dependencies": {

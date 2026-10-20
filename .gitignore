@@ -5,6 +5,10 @@ coverage/
 *.tsbuildinfo
 .DS_Store
 
+# sem lockfile no git (regra global: yarn e npm geram o seu, os dois ficam fora)
+yarn.lock
+package-lock.json
+
 # segredos: só o exemplo é versionado
 .env*
 !.env.example

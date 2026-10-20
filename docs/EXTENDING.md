@@ -120,5 +120,5 @@ Teste o contrato com `assertBackendContract(backend, amostra)` de `anymark/testi
 1. Formato novo? `Converter` + `Plugin`, em arquivo próprio. Não edite `src/converters/index.ts` a menos que seja um formato do núcleo.
 2. Provedor novo? `Backend`. Nunca chame o provedor de dentro de um converter.
 3. Teste primeiro (red, green, refactor), pela interface pública, com golden file em `specs/`.
-4. Dependência nova só depois de conferir versão, licença (evitar AGPL) e CVE (`npm view`, `npm audit`).
-5. Rode `npm run typecheck`, `npm run lint` e `npm test` e leia a saída antes de dizer que terminou.
+4. Dependência nova só depois de conferir versão, licença (evitar AGPL) e CVE (`yarn info`, `yarn audit`).
+5. Rode `yarn typecheck`, `yarn lint` e `yarn test` e leia a saída antes de dizer que terminou.

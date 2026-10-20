@@ -1,5 +1,5 @@
 // Manual test helper: converts the given files and writes the Markdown to manual-out/ (gitignored).
-// Prints one line per file with no path and no content: id, ext, size, ms, result. Run `npm run build` first.
+// Prints one line per file with no path and no content: id, ext, size, ms, result. Run `yarn build` first.
 // Usage: node scripts/manual-run.mjs [--hidden] file...   (OCR needs ANYMARK_LANG_PATH=<dir with eng.traineddata>)
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
