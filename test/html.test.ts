@@ -104,4 +104,26 @@ describe('html converter', () => {
   it('passes the converter contract', async () => {
     await assertConverterContract(new HtmlConverter(), html('<h1>a</h1>'));
   });
+
+  it('keeps a line break inside a table cell on one Markdown row', async () => {
+    const html = '<table><tr><th>A</th></tr><tr><td>um<br>dois</td></tr></table>';
+
+    const { markdown } = await createAnymark().convert({
+      data: new TextEncoder().encode(html),
+      name: 'cell.html',
+    });
+
+    expect(markdown).toBe(['| A |', '| --- |', '| um<br>dois |', ''].join('\n'));
+  });
+
+  it('keeps a break nested in a cell (inside bold) on one row', async () => {
+    const html = '<table><tr><th>A</th></tr><tr><td><b>um<br>dois</b></td></tr></table>';
+
+    const { markdown } = await createAnymark().convert({
+      data: new TextEncoder().encode(html),
+      name: 'bold.html',
+    });
+
+    expect(markdown).toContain('| **um<br>dois** |');
+  });
 });

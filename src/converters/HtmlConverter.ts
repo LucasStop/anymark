@@ -37,6 +37,14 @@ const isHidden = (node: unknown): boolean => {
     HIDDEN_STYLE.test(element.getAttribute('style') ?? '')
   );
 };
+const inCell = (node: {
+  parentNode?: { nodeName: string; parentNode?: unknown } | null;
+}): boolean => {
+  for (let at = node.parentNode; at; at = at.parentNode as typeof at) {
+    if (at.nodeName === 'TD' || at.nodeName === 'TH') return true;
+  }
+  return false;
+};
 const targetOf = (node: unknown, attribute: string): string =>
   (node as Attributes).getAttribute(attribute) ?? '';
 
@@ -77,6 +85,11 @@ export class HtmlConverter implements Converter {
       .use(gfm)
       .addRule('listItem', { filter: 'li', replacement: listItem })
       .remove([...DROPPED])
+      // A hard break ("  \n") would end the GFM row; a literal <br> keeps the cell on one line.
+      .addRule('cellBreak', {
+        filter: (node) => node.nodeName === 'BR' && inCell(node),
+        replacement: () => '<br>',
+      })
       .addRule('hidden', { filter: isHidden, replacement: () => '' })
       .addRule('unsafeLink', {
         filter: (node) => node.nodeName === 'A' && UNSAFE_TARGET.test(targetOf(node, 'href')),

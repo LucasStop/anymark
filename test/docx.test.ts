@@ -189,4 +189,14 @@ describe('docx merged cells and nested tables', () => {
       ['| A | B | C |', '| --- | --- | --- |', '| big |  | c1 |', '|  |  | c2 |', ''].join('\n'),
     );
   });
+
+  it('keeps a cell with two paragraphs on one Markdown row', async () => {
+    const two =
+      '<w:tc><w:p><w:r><w:t>um</w:t></w:r></w:p><w:p><w:r><w:t>dois</w:t></w:r></w:p></w:tc>';
+    const data = withTable(table(tr(tc('H')) + tr(two)));
+
+    const { markdown } = await createAnymark().convert({ data, name: 'paras.docx' });
+
+    expect(markdown).toContain(['| H |', '| --- |', '| um<br>dois |'].join('\n'));
+  });
 });
