@@ -79,3 +79,60 @@ describe('docx converter on hostile files', () => {
     );
   });
 });
+
+describe('docx merged cells and nested tables', () => {
+  const run = (name: string) =>
+    createAnymark().convert({ data: new Uint8Array(spec(`docx/${name}`)), name });
+
+  it('expands merged cells into a plain Markdown table and counts them', async () => {
+    const result = await run('merged.docx');
+
+    expect(result.markdown).toBe(
+      [
+        '| A | B | C |',
+        '| --- | --- | --- |',
+        '| wide |  | c2 |',
+        '| tall | x | y |',
+        '|  | p | q |',
+        '',
+      ].join('\n'),
+    );
+    expect(result.warnings).toEqual([
+      { code: 'DOCX_MERGED_CELLS', message: '2 merged cells expanded' },
+    ]);
+  });
+
+  it('flattens a nested table into the text of its parent cell and counts it', async () => {
+    const result = await run('nested.docx');
+
+    expect(result.markdown).toBe(
+      ['| H1 | H2 |', '| --- | --- |', '| outer | i1, i2; i3, i4 |', ''].join('\n'),
+    );
+    expect(result.warnings).toEqual([
+      { code: 'DOCX_NESTED_TABLE', message: '1 nested table flattened into the cell text' },
+    ]);
+  });
+
+  it('leaves no raw table markup behind', async () => {
+    for (const name of ['merged.docx', 'nested.docx']) {
+      expect((await run(name)).markdown).not.toMatch(/<\/?(table|tr|td|th)\b|colspan|rowspan/);
+    }
+  });
+
+  it('stays silent on a plain table', async () => {
+    expect((await createAnymark().convert(docx())).warnings).toEqual([]);
+  });
+
+  it('does not expand a colspan far past any real table', async () => {
+    const data = withBody((xml) =>
+      xml.replace('<w:tc>', '<w:tc><w:tcPr><w:gridSpan w:val="1000000000"/></w:tcPr>'),
+    );
+
+    const attempt = await createAnymark()
+      .convert({ data, name: 'span.docx' })
+      .catch((e: unknown) => e);
+
+    if (attempt instanceof Error) expect(attempt).toBeInstanceOf(ConversionError);
+    else expect(attempt.markdown.length).toBeLessThan(100_000);
+  });
+});
