@@ -43,7 +43,7 @@ Node 22, `main` em 17bbca6. 39 arquivos de uso próprio (faculdade e estudo), 3 
 | P01 | pptx | acento no nome | 61 KB | ok | |
 | P02 | pptx | com imagens | 1,7 MB | ok | |
 | P03 | pptx | com mídia, quase só imagens | 4,4 MB | ok, 144 caracteres | slides sem texto saem só com o título `## Slide N` |
-| P04 | ppt | formato legado, vazio | 0 B | ok, 0 caracteres | **a verificar**: um `.ppt` legado não é suportado e passa como texto vazio |
+| P04 | ppt | formato legado, vazio | 0 B | ok, 0 caracteres | vazio passa como texto vazio; legado não vazio vira `UnsupportedFormatError` (Z04, #67) |
 | S01 | xlsx | extensão `.XLSX` maiúscula, mime ambíguo | 5,7 KB | ok, 10 caracteres | só `## Sheet1`, planilha sem dados |
 | S02 | xlsx | tabela de casos de teste | 9,7 KB | ok | |
 | S03 | xlsx | dados | 13 KB | ok | |
@@ -61,7 +61,7 @@ Node 22, `main` em 17bbca6. 39 arquivos de uso próprio (faculdade e estudo), 3 
 ### Achados da rodada 1
 
 1. **PDF escaneado sem aviso (F04). Resolvido (#49).** Saía uma lista de `## Page N` vazia e `warnings` vazio. Agora o warning `PDF_NO_TEXT` aparece quando nenhuma página tem texto e aponta o OCR como saída. Desde a #66 as páginas com imagem embutida passam por OCR; o warning fica para quando não dá (sem imagem ou sem backend).
-2. **`.ppt` legado vazio (P04)** passou como texto. Conferir com um `.ppt` legado não vazio se vira `UnsupportedFormatError` ou lixo binário.
+2. **`.ppt` legado (P04). Resolvido (#67).** Vazio passa como texto vazio; com cabeçalho OLE2 vira `UnsupportedFormatError`, coberto por `test/legacy-office.test.ts`. `.doc`, `.ppt` e `.xls` ficam não suportados.
 3. Imagem com muito texto leva segundos (I02): o OCR não tem timeout próprio (limite conhecido).
 
 ## Cenários ainda não rodados à mão
@@ -73,7 +73,7 @@ Marcar data, responsável e resultado ao rodar.
 | Z01 | pdf protegido por senha | `ConversionError`, sem vazar a senha ou o caminho | |
 | Z02 | arquivo corrompido (docx, xlsx, pptx, pdf truncados) | `CONVERSION_FAILED` genérico | |
 | Z03 | extensão trocada (um `.pdf` renomeado para `.docx`) | detecta pela assinatura, não pela extensão | |
-| Z04 | `.ppt` e `.doc` legados não vazios | erro claro de formato não suportado | |
+| Z04 | `.ppt`, `.doc` e `.xls` legados não vazios | erro claro de formato não suportado | 20/10/2026: `UnsupportedFormatError` nos três (`test/legacy-office.test.ts`) |
 | Z05 | gif, webp e jpeg com texto (#47) | texto reconhecido | 16/10/2026, Lucas Stopinski: ok, `HELLO HOLE` nos três (golden files em `specs/image`, gerados por `scripts/make-image-fixture.mjs`; jpeg via `sips`); sem arquivo real do Desktop com gif ou webp |
 | Z06 | xlsx com aba oculta e `veryHidden` (#48) | pulada por padrão com warning `HIDDEN_SHEETS_SKIPPED`; incluída com `includeHiddenSheets` | 16/10/2026, Lucas Stopinski: ok, workbook sintético com `hidden` e `veryHidden` (testes em `test/xlsx.test.ts`); sem planilha real com aba oculta |
 | Z07 | OCR sem traineddata local e sem `allowDownload` | `OcrError` genérico, sem download | |
