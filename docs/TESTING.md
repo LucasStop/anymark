@@ -60,7 +60,7 @@ Node 22, `main` em 17bbca6. 39 arquivos de uso próprio (faculdade e estudo), 3 
 
 ### Achados da rodada 1
 
-1. **PDF escaneado sem aviso (F04). Resolvido (#49).** Saía uma lista de `## Page N` vazia e `warnings` vazio. Agora o warning `PDF_NO_TEXT` aparece quando nenhuma página tem texto e aponta o OCR como saída; o PDF continua sem passar por OCR.
+1. **PDF escaneado sem aviso (F04). Resolvido (#49).** Saía uma lista de `## Page N` vazia e `warnings` vazio. Agora o warning `PDF_NO_TEXT` aparece quando nenhuma página tem texto e aponta o OCR como saída. Desde a #66 as páginas com imagem embutida passam por OCR; o warning fica para quando não dá (sem imagem ou sem backend).
 2. **`.ppt` legado vazio (P04)** passou como texto. Conferir com um `.ppt` legado não vazio se vira `UnsupportedFormatError` ou lixo binário.
 3. Imagem com muito texto leva segundos (I02): o OCR não tem timeout próprio (limite conhecido).
 
