@@ -24,6 +24,8 @@ interface Counts {
 
 // A hostile gridSpan could ask for a billion columns.
 const MAX_SPAN = 1000;
+// Rows x width after the merged cells are expanded; a wide cell over many rows multiplies the markup.
+const MAX_CELLS = 1_000_000;
 const span = (tag: string, name: string): number => {
   const value = Number(new RegExp(`\\b${name}\\s*=\\s*["'](\\d+)["']`).exec(tag)?.[1] ?? 1);
   return Math.min(Math.max(value, 1), MAX_SPAN);
@@ -41,7 +43,7 @@ function plainTables(html: string, counts: Counts): string {
   const tokens = html.split(/(<\/?(?:table|tr|td|th)\b[^>]*>)/);
   let at = 0;
 
-  const parseTable = (): Cell[][] => {
+  const parseTable = (nested = false): Cell[][] => {
     const rows: Cell[][] = [];
     while (at < tokens.length) {
       const token = tokens[at++] ?? '';
@@ -53,13 +55,14 @@ function plainTables(html: string, counts: Counts): string {
           colspan: span(token, 'colspan'),
           rowspan: span(token, 'rowspan'),
         };
-        if (cell.colspan > 1 || cell.rowspan > 1) counts.merged += 1;
+        // Inside a nested table nothing is expanded, only flattened, so there is nothing to count.
+        if (!nested && (cell.colspan > 1 || cell.rowspan > 1)) counts.merged += 1;
         while (at < tokens.length) {
           const inner = tokens[at++] ?? '';
           if (/^<\/t[dh]/.test(inner)) break;
           if (/^<table\b/.test(inner)) {
             counts.nested += 1;
-            cell.html += flatten(parseTable());
+            cell.html += ` ${flatten(parseTable(true))} `;
           } else cell.html += inner;
         }
         (rows[rows.length - 1] ?? rows[rows.push([]) - 1])?.push(cell);
@@ -105,7 +108,8 @@ function plainTables(html: string, counts: Counts): string {
       fill();
       return out;
     });
-    const width = Math.max(0, ...grid.map((row) => row.length));
+    const width = grid.reduce((most, row) => Math.max(most, row.length), 0);
+    if (width * grid.length > MAX_CELLS) throw new Error('table too large');
     return `<table>${grid
       .map((row, r) => {
         const tag = r === 0 ? 'th' : 'td';

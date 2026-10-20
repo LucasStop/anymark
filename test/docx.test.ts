@@ -132,4 +132,61 @@ describe('docx merged cells and nested tables', () => {
 
     expect(markdown.length).toBeLessThan(100_000);
   });
+
+  const table = (rows: string) => `<w:tbl>${rows}</w:tbl>`;
+  const tc = (text: string, props = '') =>
+    `<w:tc><w:tcPr>${props}</w:tcPr><w:p><w:r><w:t>${text}</w:t></w:r></w:p></w:tc>`;
+  const tr = (cells: string) => `<w:tr>${cells}</w:tr>`;
+  const withTable = (xml: string) => withBody((doc) => doc.replace(/<w:tbl>.*<\/w:tbl>/s, xml));
+
+  it('refuses a table whose expanded size would be absurd instead of exhausting memory', async () => {
+    const wide = tc('x', '<w:gridSpan w:val="1000"/>');
+    const data = withTable(table(tr(wide) + tr(tc('y')).repeat(2000)));
+
+    await expect(createAnymark().convert({ data, name: 'wide.docx' })).rejects.toBeInstanceOf(
+      ConversionError,
+    );
+  });
+
+  it('keeps words apart around a nested table', async () => {
+    const inner = table(tr(tc('i1') + tc('i2')));
+    const data = withTable(
+      table(
+        tr(tc('H')) +
+          tr(
+            `<w:tc><w:p><w:r><w:t>before</w:t></w:r></w:p>${inner}<w:p><w:r><w:t>after</w:t></w:r></w:p></w:tc>`,
+          ),
+      ),
+    );
+
+    const { markdown } = await createAnymark().convert({ data, name: 'around.docx' });
+
+    expect(markdown).toContain('before');
+    expect(markdown).not.toMatch(/beforei1|i2after/);
+  });
+
+  it('does not count a merged cell inside a nested table as expanded', async () => {
+    const inner = table(tr(tc('m', '<w:gridSpan w:val="2"/>')));
+    const data = withTable(table(tr(tc('H')) + tr(`<w:tc>${inner}<w:p/></w:tc>`)));
+
+    const { warnings } = await createAnymark().convert({ data, name: 'inner.docx' });
+
+    expect(warnings.map((w) => w.code)).toEqual(['DOCX_NESTED_TABLE']);
+  });
+
+  it('carries a rowspan that is also a colspan down every column it covers', async () => {
+    const data = withTable(
+      table(
+        tr(tc('A') + tc('B') + tc('C')) +
+          tr(tc('big', '<w:gridSpan w:val="2"/><w:vMerge w:val="restart"/>') + tc('c1')) +
+          tr(tc('', '<w:gridSpan w:val="2"/><w:vMerge/>') + tc('c2')),
+      ),
+    );
+
+    const { markdown } = await createAnymark().convert({ data, name: 'both.docx' });
+
+    expect(markdown).toContain(
+      ['| A | B | C |', '| --- | --- | --- |', '| big |  | c1 |', '|  |  | c2 |', ''].join('\n'),
+    );
+  });
 });
