@@ -88,3 +88,4 @@ O projeto é desenvolvido com apoio de agentes de IA (Claude Code). O README fin
 - [docs/ENUNCIADO.md](docs/ENUNCIADO.md): exigências do trabalho e checklist do vídeo.
 - `docs/PRD.md`, `docs/SDD.md`, `docs/adr/`, `specs/`: criados na Fase 1.
 - [docs/PATTERNS.md](docs/PATTERNS.md), [docs/EXTENDING.md](docs/EXTENDING.md), [docs/TESTING.md](docs/TESTING.md): crescem durante o desenvolvimento e fecham até 12/11.
+- [docs/PROBLEMAS.md](docs/PROBLEMAS.md): problemas do caminho (causa, solução, lição); problema novo entra aqui quando aparece.
