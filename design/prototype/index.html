@@ -38,12 +38,14 @@
 
       /* top bar */
       .top {
+        flex-wrap: wrap;
         display: flex;
         align-items: center;
         gap: 12px;
         margin-bottom: 24px;
       }
       .logo {
+        margin: 0;
         font-weight: 700;
         font-size: 28px;
         letter-spacing: -0.02em;
@@ -51,7 +53,6 @@
       .logo i {
         color: var(--accent);
         font-style: normal;
-        animation: blink 1.1s steps(1) infinite;
       }
       .top .spacer {
         flex: 1;
@@ -105,12 +106,15 @@
         font-weight: 500;
       }
       .steps li {
+        flex: 0 1 auto;
         display: flex;
         align-items: center;
         gap: 8px;
       }
       .steps li + li::before {
         content: '';
+        flex: 1;
+        min-width: 12px;
         width: 32px;
         height: 1px;
         background: var(--line);
@@ -210,7 +214,6 @@
         background: var(--paper);
         border: 1px solid var(--line);
         border-radius: 6px;
-        box-shadow: 0 6px 20px rgb(14 19 24 / 12%);
         opacity: 0;
         transform: translate(-50%, 28px);
         transition:
@@ -269,7 +272,6 @@
         right: 0;
         height: 3px;
         background: var(--accent);
-        box-shadow: 0 0 14px var(--accent);
         opacity: 0;
       }
       [data-state='reading'] .scan {
@@ -312,7 +314,7 @@
         font-weight: 500;
       }
       .opt select {
-        min-height: 32px;
+        min-height: 40px;
         padding: 0 8px;
         background: var(--sunken);
         border: 1px solid var(--line);
@@ -391,7 +393,7 @@
         flex-wrap: wrap;
       }
       .tab {
-        min-height: 32px;
+        min-height: 40px;
         padding: 0 12px;
         border: 1px solid var(--line);
         border-radius: var(--r-pill);
@@ -401,7 +403,7 @@
         font-weight: 500;
         cursor: pointer;
       }
-      .tab[aria-selected='true'] {
+      .tab[aria-pressed='true'] {
         background: var(--accent);
         border-color: var(--accent);
         color: var(--accent-on);
@@ -418,6 +420,7 @@
         font: 400 13px/1.6 var(--font-mono);
       }
       .blk {
+        visibility: hidden;
         opacity: 0;
         transform: translateY(8px);
         transition:
@@ -426,16 +429,17 @@
       }
       [data-state='extracting'] .blk,
       [data-state='done'] .blk {
+        visibility: visible;
         opacity: 1;
         transform: none;
       }
-      .blk:nth-child(2) {
+      .blk:nth-child(3) {
         transition-delay: 120ms;
       }
-      .blk:nth-child(3) {
+      .blk:nth-child(4) {
         transition-delay: 240ms;
       }
-      .blk:nth-child(4) {
+      .blk:nth-child(5) {
         transition-delay: 360ms;
       }
       .placeholder {
@@ -472,7 +476,7 @@
       }
       .alert .btn {
         margin-left: auto;
-        min-height: 32px;
+        min-height: 40px;
         padding: 0 12px;
         border-color: currentColor;
         color: inherit;
@@ -489,6 +493,32 @@
         margin: 0;
         color: var(--muted);
         font-size: 13px;
+      }
+      [data-state='done'].reviewed .chip {
+        background: var(--ok-bg);
+        color: var(--ok);
+      }
+      [data-state='done'].reviewed .chip .t.done {
+        display: none;
+      }
+      [data-state='done'].reviewed .chip .t.ok {
+        display: inline;
+      }
+      .reviewed .alert .btn {
+        visibility: hidden;
+      }
+      .reviewed .alert {
+        background: var(--ok-bg);
+        color: var(--ok);
+      }
+      .foot .after {
+        display: none;
+      }
+      .reviewed .foot .before {
+        display: none;
+      }
+      .reviewed .foot .after {
+        display: block;
       }
       .ok {
         color: var(--ok);
@@ -548,6 +578,7 @@
           opacity: 0;
         }
         [data-state='drag'] .doc {
+          opacity: 0;
           transform: translate(-50%, 28px);
         }
       }
@@ -556,7 +587,7 @@
   <body>
     <main>
       <div class="top">
-        <span class="logo">anymark<i>_</i></span>
+        <h1 class="logo">anymark<i>_</i></h1>
         <span class="spacer"></span>
         <button class="btn" id="theme" type="button">Tema: auto</button>
         <button class="btn" id="replay" type="button">Repetir</button>
@@ -564,9 +595,9 @@
 
       <section class="card" id="card" data-state="idle" aria-label="Conversor">
         <ol class="steps" aria-label="Progresso">
-          <li id="s1" aria-current="step"><span class="n">1</span>Enviar</li>
-          <li id="s2"><span class="n">2</span>Converter</li>
-          <li id="s3"><span class="n">3</span>Revisar</li>
+          <li data-name="Enviar" id="s1" aria-current="step"><span class="n">1</span>Enviar</li>
+          <li data-name="Converter" id="s2"><span class="n">2</span>Converter</li>
+          <li data-name="Revisar" id="s3"><span class="n">3</span>Revisar</li>
         </ol>
 
         <div class="grid">
@@ -587,7 +618,7 @@
                 </svg>
                 <strong>Solte um documento aqui</strong>
                 <small>docx, pdf, xlsx, srt, imagens... até 10 MB</small>
-                <button class="btn" type="button" tabindex="-1">Escolher arquivo</button>
+                <button class="btn" type="button" id="pick">Escolher arquivo</button>
               </div>
               <div class="doc" aria-hidden="true">
                 <h4>Relatório trimestral</h4>
@@ -634,22 +665,23 @@
                 ><span>Remover bordas do scanner</span> <input type="checkbox"
               /></label>
             </details>
-            <button class="btn primary convert" type="button">Converter</button>
+            <button class="btn primary convert" id="go" type="button">Converter</button>
           </div>
 
-          <div class="result" aria-live="polite">
+          <div class="result">
             <div class="head">
               <h2>Resultado</h2>
-              <span class="chip">
+              <span class="chip" role="status">
                 <span class="t idle">Aguardando arquivo</span>
                 <span class="t reading">Lendo documento</span>
                 <span class="t done">1 aviso para revisar</span>
+                <span class="t ok">Revisado</span>
               </span>
             </div>
-            <div class="tabs" role="tablist">
-              <button class="tab" role="tab" aria-selected="true">Markdown</button>
-              <button class="tab" role="tab" aria-selected="false">Metadata</button>
-              <button class="tab" role="tab" aria-selected="false">Avisos (1)</button>
+            <div class="tabs" role="group" aria-label="Visualização">
+              <button class="tab" type="button" aria-pressed="true">Markdown</button>
+              <button class="tab" type="button" aria-pressed="false">Metadata</button>
+              <button class="tab" type="button" aria-pressed="false">Avisos (1)</button>
             </div>
             <div class="blocks">
               <span class="placeholder">O Markdown aparece aqui.</span>
@@ -675,7 +707,8 @@
               </div>
             </div>
             <div class="foot">
-              <p>Revise os avisos antes de usar o texto.</p>
+              <p class="before">Revise os avisos antes de usar o texto.</p>
+              <p class="after ok">Avisos revisados.</p>
               <button class="btn primary" id="dl" type="button" disabled>Baixar .md</button>
             </div>
           </div>
@@ -704,9 +737,13 @@
 
       function setState(state) {
         card.dataset.state = state;
+        if (state === 'idle') card.classList.remove('reviewed');
         const at = { idle: 0, drag: 0, reading: 1, extracting: 1, done: 2 }[state];
         steps.forEach((li, i) => {
-          li.classList.toggle('done', i < at || (state === 'done' && i === 2));
+          const done = i < at || (state === 'done' && i === 2);
+          li.classList.toggle('done', done);
+          li.querySelector('.n').textContent = done ? '\u2713' : i + 1;
+          li.setAttribute('aria-label', `${li.dataset.name}${done ? ', concluído' : ''}`);
           if (i === at && state !== 'done') li.setAttribute('aria-current', 'step');
           else li.removeAttribute('aria-current');
         });
@@ -721,11 +758,16 @@
       }
 
       document.getElementById('replay').onclick = play;
-      document.querySelector('.alert .btn').onclick = () => {
-        document.querySelector('.alert').style.opacity = '0.6';
-        document.querySelector('.chip .t.done').textContent = 'Revisado';
-        card.querySelector('.foot p').innerHTML = '<span class="ok">Avisos revisados.</span>';
-      };
+      document.getElementById('pick').onclick = play;
+      document.getElementById('go').onclick = play;
+      document.querySelector('.alert .btn').onclick = () => card.classList.add('reviewed');
+      document.querySelectorAll('.tab').forEach((tab) =>
+        tab.addEventListener('click', () => {
+          document
+            .querySelectorAll('.tab')
+            .forEach((t) => t.setAttribute('aria-pressed', t === tab));
+        }),
+      );
 
       const modes = ['auto', 'light', 'dark'];
       let mode = 0;
