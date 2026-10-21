@@ -1,0 +1,65 @@
+/* Tokens of docs/DESIGN.md. Keep the values in sync with that file. */
+:root {
+  --bg: #eef2f1;
+  --paper: #ffffff;
+  --sunken: #f3f5f4;
+  --line: #d5dcdb;
+  --ink: #16202a;
+  --muted: #566271;
+  --accent: #0b7a6b;
+  --accent-on: #ffffff;
+  --accent-soft: #eaf7f4;
+  --warn: #8a4b00;
+  --warn-bg: #fff4dc;
+  --error: #b3261e;
+  --ok: #1b6b3a;
+  --ok-bg: #e6f5ea;
+  --shadow-card: 0 12px 40px rgb(14 19 24 / 14%);
+
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-pill: 999px;
+
+  --ease-in: cubic-bezier(0.2, 0, 0, 1);
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #0e1318;
+    --paper: #161c23;
+    --sunken: #1d252e;
+    --line: #2a343f;
+    --ink: #e8edf2;
+    --muted: #9aa7b5;
+    --accent: #3ccfb7;
+    --accent-on: #04201c;
+    --accent-soft: #12302c;
+    --warn: #f2c46d;
+    --warn-bg: #33290f;
+    --error: #ff8f86;
+    --ok: #7fdc9c;
+    --ok-bg: #12301e;
+    --shadow-card: 0 4px 16px rgb(0 0 0 / 40%);
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #0e1318;
+  --paper: #161c23;
+  --sunken: #1d252e;
+  --line: #2a343f;
+  --ink: #e8edf2;
+  --muted: #9aa7b5;
+  --accent: #3ccfb7;
+  --accent-on: #04201c;
+  --accent-soft: #12302c;
+  --warn: #f2c46d;
+  --warn-bg: #33290f;
+  --error: #ff8f86;
+  --ok: #7fdc9c;
+  --ok-bg: #12301e;
+  --shadow-card: 0 4px 16px rgb(0 0 0 / 40%);
+}
