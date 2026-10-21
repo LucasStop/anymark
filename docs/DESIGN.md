@@ -120,13 +120,13 @@ Os nomes deste documento são semânticos; no tema do shadcn viram: `--bg` para 
 
 1. **Token novo ou valor novo:** altere a tabela "Cor" primeiro, recalcule o contraste (mínimo 4,5:1 para texto) e depois espelhe em `tokens.css` e em `globals.css`, no claro e no escuro. Sem valor solto em componente: use a classe do token (`bg-primary`, `text-warn`).
 2. **Componente novo:** crie em `components/ui/` no padrão shadcn (`cva` para variantes, `cn` de `lib/utils.ts`, foco visível e alvo de 40 px) e acrescente a linha em "Mapa de componentes".
-3. **Texto novo:** entra nos dois idiomas em `lib/i18n.ts`; o tipo `Messages` faz o typecheck falhar se faltar em um deles.
+3. **Texto novo:** entra nos dois idiomas em `lib/i18n.ts`; o tipo `Messages` faz o typecheck falhar se faltar uma chave em um deles, exceto em `steps` (tamanho) e `warnings` (códigos), que são frouxos: um `code` sem tradução cai no `message` da lib.
 4. **Movimento novo:** registre na tabela "Movimento" e desligue com `motion-reduce:`.
 5. **Verificação:** abra a demo (`yarn dev` em `examples/nextjs`), confira claro e escuro e teclado, e atualize as capturas se a tela mudou.
 
 ## Capturas
 
-Em `docs/assets/design/`, geradas da demo rodando em `localhost:3000` no tema escuro:
+Em `docs/assets/design/`, geradas da demo rodando em `localhost:3000` no tema escuro (o "N" no canto inferior esquerdo é o indicador do `next dev`, que não aparece no build):
 
 - `01-empty.jpg`: estado vazio.
 - `02-result-pt.jpg`: resultado com aviso, em português.
