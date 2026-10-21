@@ -1,6 +1,6 @@
 # Exemplo Next.js
 
-Consumidor de demonstração da lib: upload de um arquivo, preview do Markdown e download do `.md`. Não é backend nem entrega do trabalho, e não tem deploy.
+Consumidor de demonstração e interface de teste da lib: dropzone, opções (idioma, `includeHidden` e as do PDF escaneado: layout, rotação, lombada, limpeza), preview do Markdown com abas de metadata e avisos, e download do `.md`. Não é backend nem entrega do trabalho, e não tem deploy.
 
 O formato `.srt` não existe na lib: entra por `createAnymark().use(srtPlugin)` em [lib/anymark.ts](lib/anymark.ts), com o plugin em [lib/srtPlugin.ts](lib/srtPlugin.ts) (cópia de `examples/plugins/srt` que importa de `anymark`).
 
