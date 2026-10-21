@@ -76,7 +76,7 @@ await anymark.convert(input, {
 });
 ```
 
-`layout: 'spread'` corta cada folha na lombada antes do OCR e entrega as duas páginas em ordem de leitura (`binding: 'right'` para livros que se leem da direita para a esquerda). `rotation` fixa (0, 90, 180, 270) gira todas as imagens sem segunda passada de OCR; `'auto'`, o padrão, acha o alto pelos pixels. Sem `pdf`, nada muda. Decisão em [ADR 0009](docs/adr/0009-pdf-escaneado-declarado.md).
+`layout: 'spread'` corta cada folha na lombada antes do OCR e entrega as duas páginas em ordem de leitura (`binding: 'right'` para livros que se leem da direita para a esquerda). `rotation` fixa (0, 90, 180, 270) gira todas as imagens sem segunda passada de OCR; `'auto'`, o padrão, acha o alto pelos pixels. `cleanup: { trim: true }` corta a moldura escura do scanner e o sombreado da lombada antes do OCR; `cleanup: { dehyphenate: true }` cola a palavra quebrada em fim de linha (`respon-` + `sabilidade`). Os dois vêm desligados. Sem `pdf`, nada muda. Decisão em [ADR 0009](docs/adr/0009-pdf-escaneado-declarado.md).
 
 ### Cancelamento
 

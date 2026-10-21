@@ -81,6 +81,10 @@ await assertConverterContract(new MeuConverter(), { data: sample, name: 'a.meu' 
 
 O kit funciona com qualquer runner (vitest, node:test). Ele lança `ContractError` na primeira regra quebrada e nunca ecoa o conteúdo da amostra. Escreva também um teste com um arquivo de referência (golden file) em `specs/<formato>/`.
 
+### Opções que chegam ao Converter
+
+Tudo que o chamador passa em `convert(input, options)` chega ao seu `Converter` em `ctx.options` (`includeHidden`, `lang`, `pdf`, `signal`). O `PdfConverter` lê `options.pdf` (`layout`, `rotation`, `binding`, `cleanup`, ver [ADR 0009](adr/0009-pdf-escaneado-declarado.md)); plugin próprio pode ler as mesmas chaves, mas valor vindo do chamador se valida na borda e o erro não ecoa o valor.
+
 ## Novo provedor de IA: Backend
 
 ```ts
