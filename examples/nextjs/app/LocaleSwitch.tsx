@@ -19,7 +19,7 @@ export function LocaleSwitch({ locale, label }: { locale: Locale; label: string 
           aria-pressed={l === locale}
           onClick={() => change(l)}
           className={cn(
-            'min-h-10 min-w-10 rounded-lg border border-border px-3 text-sm text-muted-foreground transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
+            'min-h-10 min-w-10 cursor-pointer rounded-lg border border-border px-3 text-sm text-muted-foreground transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
             l === locale && 'border-primary bg-primary text-primary-foreground',
           )}
         >

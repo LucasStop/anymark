@@ -3,7 +3,7 @@
 import { startTransition, useActionState, useRef, useState } from 'react';
 import { Check } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import type { Messages } from '../lib/i18n';
 import { MAX_BYTES } from '../lib/limits';
 import { cn } from '../lib/utils';
@@ -12,6 +12,8 @@ import { convertFile, type ConvertState } from './actions';
 const initial: ConvertState = { status: 'idle' };
 const ACCEPT =
   '.txt,.md,.csv,.json,.xml,.html,.docx,.pptx,.xlsx,.pdf,.srt,.png,.jpg,.jpeg,.gif,.webp';
+
+const ANIMATED_BLOCKS = 8;
 
 type Tab = 'markdown' | 'metadata' | 'warnings';
 
@@ -59,7 +61,10 @@ export function Converter({ t }: { t: Messages }) {
     'min-h-10 rounded-lg border border-border bg-muted px-2 text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
   const row = 'mt-3 flex items-center justify-between gap-2 text-sm';
   const check = 'mt-3 flex min-h-10 items-center gap-2 text-sm';
-  const blocks = state.status === 'ok' ? state.markdown.split(/\n{2,}/) : [];
+  // Only the first blocks animate: a large document must not become tens of thousands of nodes.
+  const parts = state.status === 'ok' ? state.markdown.split(/\n{2,}/) : [];
+  const blocks = parts.slice(0, ANIMATED_BLOCKS);
+  const rest = parts.slice(ANIMATED_BLOCKS).join('\n\n');
   const chip = pending ? t.reading : state.status === 'ok' ? t.done : null;
 
   return (
@@ -216,61 +221,65 @@ export function Converter({ t }: { t: Messages }) {
             <p className="m-0 py-12 text-center text-sm text-muted-foreground">{t.empty}</p>
           )}
           {pending && (
-            <p className="m-0 py-12 text-center text-sm text-muted-foreground">{t.reading}</p>
+            <p aria-hidden className="m-0 py-12 text-center text-sm text-muted-foreground">
+              {t.reading}
+            </p>
           )}
           {state.status === 'ok' && !pending && (
             <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
-              <TabsList>
-                {(['markdown', 'metadata', 'warnings'] as const).map((name) => (
-                  <TabsTrigger key={name} value={name}>
-                    {t.tabs[name]}
-                    {name === 'warnings' &&
-                      state.warnings.length > 0 &&
-                      ` (${state.warnings.length})`}
-                  </TabsTrigger>
-                ))}
-                <Button type="button" variant="ghost" className="ml-auto" onClick={download}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <TabsList>
+                  {(['markdown', 'metadata', 'warnings'] as const).map((name) => (
+                    <TabsTrigger key={name} value={name}>
+                      {t.tabs[name]}
+                      {name === 'warnings' &&
+                        state.warnings.length > 0 &&
+                        ` (${state.warnings.length})`}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+                <Button type="button" variant="ghost" onClick={download}>
                   {t.download.replace('{name}', () => state.name)}
                 </Button>
-              </TabsList>
-              <div className="mt-3">
-                {tab === 'markdown' && (
-                  <div className="max-h-128 overflow-auto rounded-lg bg-muted p-4 font-mono text-[13px] leading-relaxed">
-                    {blocks.map((b, i) => (
-                      <pre
-                        key={i}
-                        style={{ animationDelay: `${Math.min(i, 8) * 120}ms` }}
-                        className="m-0 mb-3 animate-block whitespace-pre-wrap last:mb-0 motion-reduce:animate-none"
-                      >
-                        {b}
-                      </pre>
-                    ))}
-                  </div>
-                )}
-                {tab === 'metadata' && (
-                  <dl className="m-0 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2">
-                    <dt className="text-muted-foreground">{t.metaMime}</dt>
-                    <dd className="m-0 wrap-anywhere">{state.mime}</dd>
-                    <dt className="text-muted-foreground">{t.metaSource}</dt>
-                    <dd className="m-0 wrap-anywhere">{state.sourceId}</dd>
-                    <dt className="text-muted-foreground">{t.metaChars}</dt>
-                    <dd className="m-0">{state.markdown.length}</dd>
-                  </dl>
-                )}
-                {tab === 'warnings' &&
-                  (state.warnings.length === 0 ? (
-                    <p className="m-0 text-sm text-muted-foreground">{t.noWarnings}</p>
-                  ) : (
-                    state.warnings.map((w, i) => (
-                      <p
-                        key={`${i}-${w.code}`}
-                        className="m-0 mb-2 rounded-lg bg-warn-bg px-3 py-2 text-warn"
-                      >
-                        {warningText(t, w)}
-                      </p>
-                    ))
-                  ))}
               </div>
+              <TabsContent value="markdown" className="mt-3">
+                <div className="flex max-h-128 flex-col gap-3 overflow-auto rounded-lg bg-muted p-4 font-mono text-[13px] leading-relaxed">
+                  {blocks.map((b, i) => (
+                    <pre
+                      key={i}
+                      style={{ animationDelay: `${i * 120}ms` }}
+                      className="m-0 animate-block whitespace-pre-wrap motion-reduce:animate-none"
+                    >
+                      {b}
+                    </pre>
+                  ))}
+                  {rest && <pre className="m-0 whitespace-pre-wrap">{rest}</pre>}
+                </div>
+              </TabsContent>
+              <TabsContent value="metadata" className="mt-3">
+                <dl className="m-0 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2">
+                  <dt className="text-muted-foreground">{t.metaMime}</dt>
+                  <dd className="m-0 wrap-anywhere">{state.mime}</dd>
+                  <dt className="text-muted-foreground">{t.metaSource}</dt>
+                  <dd className="m-0 wrap-anywhere">{state.sourceId}</dd>
+                  <dt className="text-muted-foreground">{t.metaChars}</dt>
+                  <dd className="m-0">{state.markdown.length}</dd>
+                </dl>
+              </TabsContent>
+              <TabsContent value="warnings" className="mt-3">
+                {state.warnings.length === 0 ? (
+                  <p className="m-0 text-sm text-muted-foreground">{t.noWarnings}</p>
+                ) : (
+                  state.warnings.map((w, i) => (
+                    <p
+                      key={`${i}-${w.code}`}
+                      className="m-0 mb-2 rounded-lg bg-warn-bg px-3 py-2 text-warn"
+                    >
+                      {warningText(t, w)}
+                    </p>
+                  ))
+                )}
+              </TabsContent>
             </Tabs>
           )}
         </section>
