@@ -13,8 +13,12 @@ type Tab = 'markdown' | 'metadata' | 'warnings';
 
 // A translation may use `{n}` for the first number in the library's own message.
 function warningText(t: Messages, w: { code: string; message: string }) {
-  const text = t.warnings[w.code];
-  return text ? text.replace('{n}', /\d+/.exec(w.message)?.[0] ?? '') : w.message;
+  if (!Object.hasOwn(t.warnings, w.code)) return w.message;
+  const text = t.warnings[w.code]!;
+  const n = /\d+/.exec(w.message)?.[0];
+  // A `{n}` with no number to fill it would read "expandidas: ."; the lib's own message is better.
+  if (text.includes('{n}') && n === undefined) return w.message;
+  return text.replace('{n}', () => n ?? '');
 }
 
 export function Converter({ t }: { t: Messages }) {
@@ -179,7 +183,7 @@ export function Converter({ t }: { t: Messages }) {
                   </button>
                 ))}
                 <button type="button" className="ghost" onClick={download}>
-                  {t.download.replace('{name}', state.name)}
+                  {t.download.replace('{name}', () => state.name)}
                 </button>
               </div>
               {tab === 'markdown' && <pre>{state.markdown}</pre>}
