@@ -214,7 +214,7 @@ const GLYPHS = {
   L: ['10000', '10000', '10000', '10000', '10000', '10000', '11111'],
   O: ['01110', '10001', '10001', '10001', '10001', '10001', '01110'],
 };
-function spreadSheet(turns) {
+function spreadSheet(turns, framed = false) {
   const scale = 5;
   const lines = 12; // a page-like count: the orientation guess needs many lines
   // Lines differ in length and start (like real text), so gaps between letters do not line up
@@ -249,6 +249,21 @@ function spreadSheet(turns) {
       }
     }
   }
+  if (framed) {
+    // What a flatbed leaves: a dark frame around the sheet and a shadow down the gutter.
+    const edge = 14;
+    const mid = pageWidth + Math.floor(gutter / 2);
+    for (let y = 0; y < height; y += 1)
+      for (let x = 0; x < width; x += 1)
+        if (
+          x < edge ||
+          x >= width - edge ||
+          y < edge ||
+          y >= height - edge ||
+          Math.abs(x - mid) < 10
+        )
+          pixels[y][x] = false;
+  }
   for (let t = 0; t < turns; t += 1) {
     pixels = Array.from({ length: width }, (_, y) =>
       Array.from({ length: height }, (_, x) => pixels[height - 1 - x][y]),
@@ -264,6 +279,27 @@ function spreadSheet(turns) {
 }
 
 // Four sheets, one per stored turn, /Rotate 0 on all (what the book's scanner wrote).
-write('scanned-spread.pdf', buildPages([0, 1, 2, 3].map(spreadSheet), [0, 0, 0, 0]));
+write(
+  'scanned-spread.pdf',
+  buildPages(
+    [0, 1, 2, 3].map((t) => spreadSheet(t)),
+    [0, 0, 0, 0],
+  ),
+);
 // Two sheets laid down sideways, for a declared rotation.
-write('scanned-spread-sideways.pdf', buildPages([1, 1].map(spreadSheet), [0, 0]));
+write(
+  'scanned-spread-sideways.pdf',
+  buildPages(
+    [1, 1].map((t) => spreadSheet(t)),
+    [0, 0],
+  ),
+);
+
+// Sheets with a dark frame and a gutter shadow, for pdf.cleanup.trim.
+write(
+  'scanned-spread-framed.pdf',
+  buildPages(
+    [0].map((t) => spreadSheet(t, true)),
+    [0],
+  ),
+);

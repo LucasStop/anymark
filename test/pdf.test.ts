@@ -121,6 +121,23 @@ describe('pdf converter', () => {
       run.mockRestore();
     }, 240_000);
 
+    it('reads a sheet with a dark frame and a gutter shadow once trim is on', async () => {
+      const data = new Uint8Array(spec('pdf/scanned-spread-framed.pdf'));
+
+      const { markdown } = await createAnymark().convert(
+        { data, name: 'framed.pdf' },
+        { pdf: { layout: 'spread', rotation: 0, cleanup: { trim: true } } },
+      );
+
+      const pages = pagesOf(markdown);
+      expect(pages.length).toBeGreaterThan(0);
+      for (const page of pages.slice(0, 1)) {
+        expect(page.match(/HELLO/g)).toHaveLength(18);
+        expect(page.match(/HOLE/g)).toHaveLength(18);
+        expect(page).not.toMatch(/^[|!:]/m);
+      }
+    }, 240_000);
+
     it.each([{ layout: 'triple' }, { rotation: 45 }, { binding: 'top' }])(
       'rejects the unknown option %j without echoing it',
       async (pdfOptions) => {
@@ -129,7 +146,7 @@ describe('pdf converter', () => {
           .catch((e: unknown) => e);
 
         expect(error).toBeInstanceOf(ConversionError);
-        expect(String((error as Error).message)).not.toMatch(/triple|45|top/);
+        expect(String((error as Error).message)).not.toMatch(/triple|45|top|yes/);
       },
     );
   });

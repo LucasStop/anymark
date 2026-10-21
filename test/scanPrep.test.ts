@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { Raster } from '../src/converters/encodePng.js';
-import { splitSpread } from '../src/converters/scanPrep.js';
+import { splitSpread, trimBorders } from '../src/converters/scanPrep.js';
 
-/** Gray sheet, `ink` marks the dark columns; everything else is white. */
+/** Gray sheet, `ink` marks the columns with ink in them; everything else is white. */
 function sheet(width: number, height: number, ink: (x: number) => boolean): Raster {
   const data = new Uint8ClampedArray(width * height).fill(255);
-  for (let y = 0; y < height; y += 1)
+  // Ink stops short of the top and bottom rows, like text inside a page margin.
+  for (let y = 4; y < height - 4; y += 1)
     for (let x = 0; x < width; x += 1) if (ink(x)) data[y * width + x] = 0;
   return { data, width, height, channels: 1 };
 }
@@ -46,5 +47,32 @@ describe('splitSpread', () => {
 
     expect(first.data.some((v) => v === 0)).toBe(true); // the inked right page
     expect(splitSpread(image, 'left')[0].data.some((v) => v === 0)).toBe(false);
+  });
+});
+
+describe('trimBorders', () => {
+  it('drops the dark frame of a scan and keeps the content', () => {
+    const image = sheet(200, 100, (x) => x < 12 || x >= 188 || (x > 60 && x < 140 && x % 2 === 0));
+    for (let y = 0; y < 100; y += 1)
+      if (y < 9 || y >= 93) image.data.fill(0, y * 200, (y + 1) * 200);
+
+    const trimmed = trimBorders(image);
+
+    expect(trimmed.width).toBe(176); // 12 columns off each side
+    expect(trimmed.height).toBe(84); // 9 rows off the top, 7 off the bottom
+    expect(trimmed.data.some((v) => v === 0)).toBe(true);
+  });
+
+  it('leaves a page without a frame as it is', () => {
+    const image = sheet(200, 100, (x) => x > 60 && x < 140 && x % 2 === 0);
+
+    expect(trimBorders(image)).toEqual(image);
+  });
+
+  it('never eats a page that is dark all over', () => {
+    const trimmed = trimBorders(sheet(200, 100, () => true));
+
+    expect(trimmed.width).toBeGreaterThan(100);
+    expect(trimmed.height).toBeGreaterThan(50);
   });
 });
