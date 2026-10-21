@@ -1,5 +1,5 @@
 // Builds design/brand/icons/ (sprite, one SVG per icon, sheet page) from the paths below.
-// Grid 24, stroke 1.5, round caps and joins, currentColor. Run: node scripts/build-icons.mjs
+// Grid 24, stroke 1.5, round caps and joins, currentColor. Run: node scripts/build-icons.mjs && yarn prettier --write design/brand/icons
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import process from 'node:process';
@@ -28,7 +28,7 @@ const FORMATS = {
     '<path d="M10.5 10c-1.5 0-1.75.75-1.75 1.75v.5c0 .5-.5.75-.75.75.25 0 .75.25.75.75v.5c0 1 .25 1.75 1.75 1.75M13.5 10c1.5 0 1.75.75 1.75 1.75v.5c0 .5.5.75.75.75-.25 0-.75.25-.75.75v.5c0 1-.25 1.75-1.75 1.75"/>',
   ),
   xml: doc('<path d="M10.5 10.5L8 12.75l2.5 2.25M13.5 10.5l2.5 2.25-2.5 2.25M12.75 10l-1.5 5.5"/>'),
-  html: doc('<path d="M10.5 10.5L8 12.75l2.5 2.25M13.5 10.5l2.5 2.25-2.5 2.25M12 12.75h.01"/>'),
+  html: doc('<path d="M10.5 10.5L8 12.75l2.5 2.25M13.5 10.5l2.5 2.25-2.5 2.25M11 12.75h2"/>'),
   image: doc('<path d="M8 15.5l2.75-3.25 2 2.25 1.25-1.5 2 2.5M14.5 10.75h.01"/>'),
   audio: doc('<path d="M8.75 12.5v1.5M11 11v4.5M13.25 10v5.5M15.5 11.5V14"/>'),
   video: doc('<path d="M10 10.25v5l4.5-2.5z"/>'),
@@ -98,7 +98,7 @@ writeFileSync(
   <body>
     <main>
       <h1>anymark: ícones</h1>
-      <p>Grade de 24 px, traço de 1,5 px, pontas e junções arredondadas, <code>currentColor</code>. Cada ícone aparece em 16, 24, 32 e 48 px (os de tamanho ímpar na cor de destaque). O bloco sólido é o cursor do Markdown, presente em todo ícone de documento. Gerado por <code>scripts/build-icons.mjs</code>.</p>
+      <p>Grade de 24 px, traço de 1,5 px, pontas e junções arredondadas, <code>currentColor</code>. Cada ícone aparece em 16, 24, 32 e 48 px (os de tamanho ímpar na cor de destaque); o cursor só se lê de 24 px para cima. O bloco sólido é o cursor do Markdown, presente em todo ícone de documento. Gerado por <code>scripts/build-icons.mjs</code>.</p>
       ${section('Formatos', FORMATS)}
       ${section('Ações', ACTIONS)}
     </main>
