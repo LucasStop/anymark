@@ -30,7 +30,7 @@ const pick = <T extends string>(value: FormDataEntryValue | null, allowed: reado
   allowed.find((a) => a === value);
 
 function readOptions(form: FormData): ConvertOptions {
-  const lang = form.get('lang');
+  const lang = String(form.get('lang') ?? '').toLowerCase();
   const layout = pick(form.get('layout'), ['single', 'spread']);
   const binding = pick(form.get('binding'), ['left', 'right']);
   const turn = pick(form.get('rotation'), ['0', '90', '180', '270']);
@@ -44,7 +44,7 @@ function readOptions(form: FormData): ConvertOptions {
   };
   return {
     signal: AbortSignal.timeout(TIMEOUT_MS),
-    ...(typeof lang === 'string' && /^[a-z]{2,3}$/.test(lang) && { lang }),
+    ...(/^[a-z]{2,3}$/.test(lang) && { lang }),
     ...(form.get('includeHidden') === 'on' && { includeHidden: true }),
     pdf,
   };

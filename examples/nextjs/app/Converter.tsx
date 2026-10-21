@@ -38,7 +38,7 @@ export function Converter() {
     link.href = url;
     link.download = `${state.name}.md`;
     link.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   return (
@@ -48,6 +48,7 @@ export function Converter() {
       onSubmit={(e) => {
         e.preventDefault();
         const data = new FormData(e.currentTarget);
+        setTab('markdown');
         startTransition(() => action(data));
       }}
     >
@@ -151,7 +152,7 @@ export function Converter() {
         </section>
 
         <section className="right" aria-live="polite">
-          {state.status === 'error' && (
+          {state.status === 'error' && !pending && (
             <p role="alert" className="error">
               {state.message}
             </p>
@@ -194,8 +195,8 @@ export function Converter() {
                 (state.warnings.length === 0 ? (
                   <p className="muted">No warnings.</p>
                 ) : (
-                  state.warnings.map((w) => (
-                    <p key={w} className="warning">
+                  state.warnings.map((w, i) => (
+                    <p key={`${i}-${w}`} className="warning">
                       {w}
                     </p>
                   ))
