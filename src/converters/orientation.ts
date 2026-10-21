@@ -20,12 +20,38 @@ export function textRuns(image: Raster): 'horizontal' | 'vertical' {
       }
     }
   }
+  flattenBands(rows, step, Math.ceil(width / step));
+  flattenBands(cols, step, Math.ceil(height / step));
   // Both axes use the same rule, chosen by the shorter side, so their values stay comparable.
   const snippet = Math.min(width, height) / step < MIN_PAGE_SAMPLES;
   return swing(rows, step, snippet) >= swing(cols, step, snippet) ? 'horizontal' : 'vertical';
 }
 
 const MIN_PAGE_SAMPLES = 600;
+const BAND_INK = 0.9;
+const MAX_BAND_SHARE = 0.15;
+
+/**
+ * A row or column that is almost all ink is a scanner frame or a gutter shadow, never a line of
+ * text. When such bands are a thin minority, they are levelled to the average of the others so a
+ * hard band does not pass for text lines.
+ */
+function flattenBands(profile: Float64Array, step: number, across: number): void {
+  const limit = BAND_INK * across;
+  let sum = 0;
+  let plain = 0;
+  let bands = 0;
+  for (let i = 0; i < profile.length; i += step) {
+    if (profile[i]! > limit) bands += 1;
+    else {
+      sum += profile[i]!;
+      plain += 1;
+    }
+  }
+  if (bands === 0 || bands > MAX_BAND_SHARE * (bands + plain)) return;
+  const level = plain === 0 ? 0 : sum / plain;
+  for (let i = 0; i < profile.length; i += step) if (profile[i]! > limit) profile[i] = level;
+}
 
 /**
  * Variation of a projection profile around its own local average (window of a fifth of the

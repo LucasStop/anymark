@@ -8,7 +8,7 @@ Na conferência do livro escaneado (#89, #92), cada folha trazia duas páginas i
 
 ## Decisão
 
-`ConvertOptions.pdf` (`PdfOptions`) deixa o chamador dizer o que entra: `layout` (`single`, padrão, ou `spread`), `rotation` (`0`, `90`, `180`, `270` ou `auto`, padrão) e `binding` (`left`, padrão, ou `right`). Com `spread`, cada folha é girada e cortada na lombada antes do OCR e as duas páginas saem em ordem de leitura. Rotação fixa pula a detecção e o segundo OCR. Sem declaração, o comportamento é o de antes (`single`, `auto`). Valor desconhecido lança `ConversionError('pdf')`, sem eco do valor.
+`ConvertOptions.pdf` (`PdfOptions`) deixa o chamador dizer o que entra: `layout` (`single`, padrão, ou `spread`), `rotation` (`0`, `90`, `180`, `270` ou `auto`, padrão) e `binding` (`left`, padrão, ou `right`). Com `spread`, cada folha é girada e cortada na lombada antes do OCR e as duas páginas saem em ordem de leitura. Rotação fixa pula a detecção e o segundo OCR. Sem declaração, o comportamento é o de antes (`single`, `auto`). `cleanup` (`trim`, `dehyphenate`, ambos `false` por padrão, #96) limpa o que o scanner e a diagramação deixam: `trim` corta a moldura escura (bordas com mais de 90% de tinta, no máximo 10% por lado) e o sombreado da lombada, antes da detecção do eixo; `dehyphenate` cola a palavra partida no fim da linha. Valor desconhecido lança `ConversionError('pdf')`, sem eco do valor.
 
 ## Consequências
 

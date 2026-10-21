@@ -19,7 +19,8 @@ import type {
 } from '../core/types.js';
 import { encodePng, rotateClockwise, type Raster } from './encodePng.js';
 import { textRuns, wordScore } from './orientation.js';
-import { splitSpread } from './scanPrep.js';
+import { dehyphenate } from './cleanText.js';
+import { splitSpread, trimBorders } from './scanPrep.js';
 
 const MIME = 'application/pdf';
 
@@ -108,20 +109,27 @@ interface ScanKind {
   layout: 'single' | 'spread';
   rotation: 0 | 90 | 180 | 270 | 'auto';
   binding: 'left' | 'right';
+  trim: boolean;
+  dehyphenate: boolean;
 }
 
 function scanKind(declared: ConvertOptions['pdf']): ScanKind {
   try {
     if (declared !== undefined && (typeof declared !== 'object' || declared === null))
       throw new Error('not an object');
-    const { layout = 'single', rotation = 'auto', binding = 'left' } = declared ?? {};
+    const { layout = 'single', rotation = 'auto', binding = 'left', cleanup = {} } = declared ?? {};
+    if (typeof cleanup !== 'object' || cleanup === null || Array.isArray(cleanup))
+      throw new Error('not an object');
+    const { trim = false, dehyphenate = false } = cleanup;
     if (
       !['single', 'spread'].includes(layout) ||
       ![0, 90, 180, 270, 'auto'].includes(rotation) ||
-      !['left', 'right'].includes(binding)
+      !['left', 'right'].includes(binding) ||
+      typeof trim !== 'boolean' ||
+      typeof dehyphenate !== 'boolean'
     )
       throw new Error('unknown value');
-    return { layout, rotation, binding };
+    return { layout, rotation, binding, trim, dehyphenate };
   } catch {
     throw new ConversionError('pdf'); // a getter that throws lands here too
   }
@@ -151,9 +159,11 @@ async function readSheet(
   };
   const pagesTurned = (degrees: number): Raster[] => {
     const turned = rotateClockwise(image, degrees);
-    return kind.layout === 'spread' && turned.width >= MIN_SPREAD_WIDTH
-      ? splitSpread(turned, kind.binding)
-      : [turned];
+    const pages =
+      kind.layout === 'spread' && turned.width >= MIN_SPREAD_WIDTH
+        ? splitSpread(turned, kind.binding, kind.trim)
+        : [turned];
+    return kind.trim ? pages.map(trimBorders) : pages;
   };
   const readAll = async (pages: Raster[], sink: string[]): Promise<void> => {
     for (const page of pages) sink.push(await ocr(page));
@@ -162,7 +172,8 @@ async function readSheet(
   if (kind.rotation !== 'auto') return readAll(pagesTurned(kind.rotation), out);
 
   const turns =
-    textRuns(image) === 'horizontal'
+    // the scanner frame is dark on all four sides, so with trim the axis is judged without it
+    textRuns(kind.trim ? trimBorders(image) : image) === 'horizontal'
       ? rotate === 180
         ? [180, 0]
         : [0, 180]
@@ -236,14 +247,20 @@ async function ocrScans(
         // An abort is the caller's call. Anything else ends the OCR but keeps what was already read;
         // no backend at all and nothing read is not a failure, PDF_NO_TEXT covers it.
         ctx.options.signal?.throwIfAborted();
-        pages[index] = found.filter((text) => text !== '').join('\n\n');
+        pages[index] = joinTexts(found, kind);
         return { pages, skipped, failed: found.length > 0 || !(error instanceof NoBackendError) };
       }
     }
-    pages[index] = found.filter((text) => text !== '').join('\n\n');
+    pages[index] = joinTexts(found, kind);
   }
   return { pages, skipped, failed: false };
 }
+
+/** The texts read from one page, joined; with `dehyphenate`, words split at a line end are whole again. */
+const joinTexts = (texts: readonly string[], kind: ScanKind): string => {
+  const joined = texts.filter((text) => text !== '').join('\n\n');
+  return kind.dehyphenate ? dehyphenate(joined) : joined;
+};
 
 /** Plain text only, one section per page. Structure (tables, columns) is a stretch goal. */
 export class PdfConverter implements Converter {

@@ -36,6 +36,20 @@ const backend = (run: (n: number) => Promise<string>): Backend<Uint8Array, strin
 beforeEach(() => extractImages.mockReset());
 
 describe('pdf OCR limits', () => {
+  it('joins words broken at a line end only when cleanup.dehyphenate is on', async () => {
+    extractImages.mockResolvedValue([image()]);
+    const fake = backend(async () => 'a deter-\nminação clara');
+
+    const plain = await createAnymark().convert(scan(), { backends: [fake as Backend] });
+    const cleaned = await createAnymark().convert(scan(), {
+      backends: [fake as Backend],
+      pdf: { cleanup: { dehyphenate: true } },
+    });
+
+    expect(plain.markdown).toContain('deter-');
+    expect(cleaned.markdown).toContain('determinação');
+  });
+
   it('reads at most 4 images per page and counts the rest', async () => {
     extractImages.mockResolvedValue(Array.from({ length: 5 }, () => image()));
     let calls = 0;
