@@ -15,6 +15,15 @@ const ACCEPT =
 
 const ANIMATED_BLOCKS = 8;
 
+// Format icons live in the brand sprite; anything else falls back to the plain-text page.
+const ICONS = new Set(['txt', 'md', 'pdf', 'docx', 'pptx', 'xlsx', 'csv', 'json', 'xml', 'html']);
+const IMAGES = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp']);
+function iconFor(name: string) {
+  const ext = name.split('.').pop()?.toLowerCase() ?? '';
+  if (IMAGES.has(ext)) return 'image';
+  return ICONS.has(ext) ? ext : 'txt';
+}
+
 type Tab = 'markdown' | 'metadata' | 'warnings';
 
 // A translation may use `{n}` for the first number in the library's own message.
@@ -147,6 +156,11 @@ export function Converter({ t }: { t: Messages }) {
               hidden
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             />
+            {file && (
+              <svg aria-hidden className="size-8 text-primary">
+                <use href={`/brand/icons.svg#i-${iconFor(file.name)}`} />
+              </svg>
+            )}
             <p className="m-0 font-semibold wrap-anywhere">{file ? file.name : t.dropTitle}</p>
             <p className="m-0 text-sm text-muted-foreground">
               {file ? `${(file.size / 1024).toFixed(1)} KB` : t.dropHint}
@@ -230,7 +244,10 @@ export function Converter({ t }: { t: Messages }) {
             </p>
           )}
           {state.status === 'idle' && !pending && (
-            <p className="m-0 py-12 text-center text-sm text-muted-foreground">{t.empty}</p>
+            <div className="flex flex-col items-center gap-2 py-6">
+              <img src="/brand/empty.svg" alt="" width={240} height={160} className="h-auto w-60" />
+              <p className="m-0 text-center text-sm text-muted-foreground">{t.empty}</p>
+            </div>
           )}
           {pending && (
             <div className="py-12">

@@ -12,8 +12,8 @@ export default async function Page() {
   return (
     <main className="mx-auto max-w-248">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-[28px] font-bold tracking-tight">
-          anymark<span className="text-primary">_</span>
+        <h1 className="m-0">
+          <img src="/brand/logo.svg" alt="anymark" width={158} height={32} className="h-8 w-auto" />
         </h1>
         <LocaleSwitch locale={locale} label={t.language} />
       </div>
