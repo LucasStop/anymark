@@ -1,17 +1,23 @@
 'use client';
 
 import { startTransition, useActionState, useRef, useState } from 'react';
+import type { Messages } from '../lib/i18n';
 import { MAX_BYTES } from '../lib/limits';
 import { convertFile, type ConvertState } from './actions';
 
 const initial: ConvertState = { status: 'idle' };
 const ACCEPT =
   '.txt,.md,.csv,.json,.xml,.html,.docx,.pptx,.xlsx,.pdf,.srt,.png,.jpg,.jpeg,.gif,.webp';
-const STEPS = ['Upload', 'Convert', 'Review'];
 
 type Tab = 'markdown' | 'metadata' | 'warnings';
 
-export function Converter() {
+// A translation may use `{n}` for the first number in the library's own message.
+function warningText(t: Messages, w: { code: string; message: string }) {
+  const text = t.warnings[w.code];
+  return text ? text.replace('{n}', /\d+/.exec(w.message)?.[0] ?? '') : w.message;
+}
+
+export function Converter({ t }: { t: Messages }) {
   const [state, action, pending] = useActionState(convertFile, initial);
   const [file, setFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -52,8 +58,8 @@ export function Converter() {
         startTransition(() => action(data));
       }}
     >
-      <ol className="steps" aria-label="Progress">
-        {STEPS.map((label, i) => (
+      <ol className="steps" aria-label={t.steps.join(', ')}>
+        {t.steps.map((label, i) => (
           <li key={label} data-state={i < step ? 'done' : i === step ? 'current' : 'todo'}>
             <span>{i + 1}</span>
             {label}
@@ -86,42 +92,38 @@ export function Converter() {
               hidden
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             />
-            <p className="drop-title">{file ? file.name : 'Drop a document here'}</p>
-            <p className="muted">
-              {file
-                ? `${(file.size / 1024).toFixed(1)} KB`
-                : 'docx, pdf, xlsx, srt, images... up to 10 MB'}
-            </p>
+            <p className="drop-title">{file ? file.name : t.dropTitle}</p>
+            <p className="muted">{file ? `${(file.size / 1024).toFixed(1)} KB` : t.dropHint}</p>
             <button type="button" className="ghost" onClick={() => input.current?.click()}>
-              Choose file
+              {t.chooseFile}
             </button>
           </div>
           {tooBig && (
             <p role="alert" className="error">
-              File larger than 10 MB.
+              {t.errors.tooBig}
             </p>
           )}
 
           <details className="options">
-            <summary>Options</summary>
+            <summary>{t.options}</summary>
             <label>
-              Language
+              {t.langHint}
               <input name="lang" placeholder="pt" maxLength={3} />
             </label>
             <label className="check">
-              <input type="checkbox" name="includeHidden" /> Include hidden sheets and slides
+              <input type="checkbox" name="includeHidden" /> {t.includeHidden}
             </label>
             <fieldset>
-              <legend>Scanned PDF</legend>
+              <legend>{t.scannedPdf}</legend>
               <label>
-                Layout
+                {t.layout}
                 <select name="layout" defaultValue="single">
                   <option value="single">single</option>
                   <option value="spread">spread</option>
                 </select>
               </label>
               <label>
-                Rotation
+                {t.rotation}
                 <select name="rotation" defaultValue="auto">
                   <option value="auto">auto</option>
                   <option value="0">0</option>
@@ -131,73 +133,73 @@ export function Converter() {
                 </select>
               </label>
               <label>
-                Binding
+                {t.binding}
                 <select name="binding" defaultValue="left">
                   <option value="left">left</option>
                   <option value="right">right</option>
                 </select>
               </label>
               <label className="check">
-                <input type="checkbox" name="trim" /> Trim scanner borders
+                <input type="checkbox" name="trim" /> {t.trim}
               </label>
               <label className="check">
-                <input type="checkbox" name="dehyphenate" /> Join hyphenated words
+                <input type="checkbox" name="dehyphenate" /> {t.dehyphenate}
               </label>
             </fieldset>
           </details>
 
           <button type="submit" className="primary" disabled={pending || tooBig || !file}>
-            {pending ? 'Converting...' : 'Convert'}
+            {pending ? t.converting : t.convert}
           </button>
         </section>
 
         <section className="right" aria-live="polite">
           {state.status === 'error' && !pending && (
             <p role="alert" className="error">
-              {state.message}
+              {state.code === 'lib' ? state.message : t.errors[state.code]}
             </p>
           )}
-          {state.status === 'idle' && !pending && (
-            <p className="muted empty">The Markdown shows up here.</p>
-          )}
-          {pending && <p className="muted empty">Reading the document...</p>}
+          {state.status === 'idle' && !pending && <p className="muted empty">{t.empty}</p>}
+          {pending && <p className="muted empty">{t.reading}</p>}
           {state.status === 'ok' && !pending && (
             <>
               <div className="tabs" role="tablist">
-                {(['markdown', 'metadata', 'warnings'] as const).map((t) => (
+                {(['markdown', 'metadata', 'warnings'] as const).map((name) => (
                   <button
-                    key={t}
+                    key={name}
                     type="button"
                     role="tab"
-                    aria-selected={tab === t}
-                    onClick={() => setTab(t)}
+                    aria-selected={tab === name}
+                    onClick={() => setTab(name)}
                   >
-                    {t}
-                    {t === 'warnings' && state.warnings.length > 0 && ` (${state.warnings.length})`}
+                    {t.tabs[name]}
+                    {name === 'warnings' &&
+                      state.warnings.length > 0 &&
+                      ` (${state.warnings.length})`}
                   </button>
                 ))}
                 <button type="button" className="ghost" onClick={download}>
-                  Download {state.name}.md
+                  {t.download.replace('{name}', state.name)}
                 </button>
               </div>
               {tab === 'markdown' && <pre>{state.markdown}</pre>}
               {tab === 'metadata' && (
                 <dl>
-                  <dt>mime</dt>
+                  <dt>{t.metaMime}</dt>
                   <dd>{state.mime}</dd>
-                  <dt>sourceId</dt>
+                  <dt>{t.metaSource}</dt>
                   <dd>{state.sourceId}</dd>
-                  <dt>characters</dt>
+                  <dt>{t.metaChars}</dt>
                   <dd>{state.markdown.length}</dd>
                 </dl>
               )}
               {tab === 'warnings' &&
                 (state.warnings.length === 0 ? (
-                  <p className="muted">No warnings.</p>
+                  <p className="muted">{t.noWarnings}</p>
                 ) : (
                   state.warnings.map((w, i) => (
-                    <p key={`${i}-${w}`} className="warning">
-                      {w}
+                    <p key={`${i}-${w.code}`} className="warning">
+                      {warningText(t, w)}
                     </p>
                   ))
                 ))}

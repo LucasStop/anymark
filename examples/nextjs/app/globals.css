@@ -227,3 +227,24 @@ dd {
 .error {
   color: var(--err);
 }
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.locale {
+  display: flex;
+  gap: 0.25rem;
+}
+.locale button {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+}
+.locale [aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
