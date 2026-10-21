@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>anymark: opções de logo</title>
+    <link rel="stylesheet" href="../../prototype/tokens.css" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 32px 16px 64px;
+        background: var(--bg);
+        color: var(--ink);
+        font: 15px/1.55 var(--font-sans);
+      }
+      main {
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+        letter-spacing: -0.02em;
+      }
+      h2 {
+        margin: 48px 0 4px;
+        font-size: 18px;
+      }
+      p {
+        margin: 0 0 16px;
+        color: var(--muted);
+      }
+      .opt {
+        padding: 24px;
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: var(--r-lg);
+      }
+      .lockups {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .lk {
+        --mk-a: var(--ink);
+        --mk-b: var(--accent);
+        --mk-box: var(--accent);
+        --mk-neg: var(--accent-on);
+        display: grid;
+        place-items: center;
+        min-height: 150px;
+        padding: 16px;
+        background: var(--sunken);
+        border-radius: var(--r-md);
+      }
+      .lk small {
+        display: block;
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        text-align: center;
+      }
+      .word {
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1;
+        color: var(--ink);
+      }
+      .word i {
+        font-style: normal;
+        color: var(--accent);
+      }
+      .h {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .h .word {
+        font-size: 36px;
+      }
+      .s {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+      .s .word {
+        font-size: 30px;
+      }
+      /* cursor block as a typographic part of the wordmark */
+      .blk {
+        display: inline-block;
+        width: 0.42em;
+        height: 0.78em;
+        margin-left: 0.08em;
+        vertical-align: -0.04em;
+        background: var(--accent);
+        border-radius: 0.06em;
+      }
+      .und {
+        display: inline-block;
+        width: 0.5em;
+        height: 0.14em;
+        margin-left: 0.06em;
+        background: var(--accent);
+        border-radius: 0.04em;
+      }
+      .themes {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 16px;
+      }
+      .t-light {
+        --bg: #eef2f1;
+        --paper: #fff;
+        --ink: #16202a;
+        --accent: #0b7a6b;
+        --accent-on: #fff;
+        --muted: #566271;
+      }
+      .t-dark {
+        --bg: #0e1318;
+        --paper: #161c23;
+        --ink: #e8edf2;
+        --accent: #3ccfb7;
+        --accent-on: #04201c;
+        --muted: #9aa7b5;
+      }
+      .theme {
+        padding: 12px;
+        background: var(--bg);
+        border: 1px solid var(--line);
+        border-radius: var(--r-md);
+        color: var(--ink);
+      }
+      .theme > b {
+        display: block;
+        margin: 0 0 8px;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .tile {
+        display: flex;
+        align-items: flex-end;
+        gap: 20px;
+        padding: 16px;
+        margin-bottom: 8px;
+        border-radius: var(--r-sm);
+        --mk-a: var(--ink);
+        --mk-b: var(--accent);
+        --mk-box: var(--accent);
+        --mk-neg: var(--accent-on);
+      }
+      .tile.bg {
+        background: var(--bg);
+        outline: 1px solid var(--line);
+      }
+      .tile.paper {
+        background: var(--paper);
+      }
+      .tile.acc {
+        background: var(--accent);
+        --mk-a: var(--accent-on);
+        --mk-b: var(--accent-on);
+        --mk-box: var(--accent-on);
+        --mk-neg: var(--accent);
+      }
+      .tile span {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        font-size: 10px;
+        color: var(--muted);
+      }
+      .tile.acc span {
+        color: var(--accent-on);
+      }
+      svg.m {
+        display: block;
+      }
+      .a {
+        fill: none;
+        stroke: var(--mk-a);
+        stroke-width: 4.5;
+      }
+      .b {
+        fill: var(--mk-b);
+      }
+      .box {
+        fill: var(--mk-box);
+      }
+      .neg {
+        fill: none;
+        stroke: var(--mk-neg);
+        stroke-width: 4.5;
+      }
+    </style>
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <defs>
+        <!-- A: a seguido do cursor-bloco, como no terminal -->
+        <symbol id="sym-a" viewBox="0 0 48 48">
+          <circle class="a" cx="19" cy="28" r="8.75" />
+          <path class="a" d="M27.75 19v18.5" />
+          <rect class="b" x="33.5" y="19" width="9.5" height="18.5" rx="1.5" />
+        </symbol>
+        <!-- B: o próprio bloco é o recipiente, a em negativo -->
+        <symbol id="sym-b" viewBox="0 0 48 48">
+          <rect class="box" x="3" y="3" width="42" height="42" rx="11" />
+          <circle class="neg" cx="22.5" cy="25.5" r="8.75" />
+          <path class="neg" d="M31.25 16.5v18.5" />
+        </symbol>
+        <!-- C: a com o bloco no lugar do underscore (a_) -->
+        <symbol id="sym-c" viewBox="0 0 48 48">
+          <circle class="a" cx="16" cy="24" r="8.75" />
+          <path class="a" d="M24.75 15v18.5" />
+          <rect class="b" x="30" y="29" width="12" height="6.5" rx="1.5" />
+        </symbol>
+      </defs>
+    </svg>
+
+    <main>
+      <h1>anymark: três opções de logo</h1>
+      <p>
+        Conceito: cursor de Markdown, bloco sólido junto de um <code>a</code> minúsculo. Cada opção
+        aparece em horizontal, empilhada e só o símbolo, depois em 16, 32 e 128 px sobre
+        <code>--bg</code>, <code>--paper</code> e <code>--accent</code>, no claro e no escuro. O
+        texto "anymark" aqui é fonte (Inter); no arquivo final vira caminho. Escolha uma letra: A, B
+        ou C.
+      </p>
+
+      <div id="opts"></div>
+    </main>
+
+    <script>
+      const OPTS = [
+        {
+          id: 'a',
+          title: 'A. a + cursor',
+          text: 'O cursor-bloco vem depois do a, na altura do x, como no terminal. É a ideia mais literal: a palavra sendo escrita. Risco: a 16 px o bloco e o a competem pelo mesmo espaço.',
+          word: 'anymark<span class="blk"></span>',
+        },
+        {
+          id: 'b',
+          title: 'B. a em negativo no bloco',
+          text: 'O bloco inteiro é o cursor e o a fica recortado dentro dele. É o que melhor funciona como favicon e ícone de app (forma única, legível pequena). Perde o cursor "à parte".',
+          word: 'anymark<i>_</i>',
+        },
+        {
+          id: 'c',
+          title: 'C. a_ com o bloco no underscore',
+          text: 'O bloco assume o lugar do underscore do wordmark (anymark_) e fecha a linha de base. É a mais discreta e combina com o wordmark da UI. Risco: o bloco baixo lê como sublinhado, não como cursor.',
+          word: 'anymark<span class="und"></span>',
+        },
+      ];
+      const SIZES = [16, 32, 128];
+      const BG = ['bg', 'paper', 'acc'];
+      const BGLABEL = { bg: '--bg', paper: '--paper', acc: '--accent' };
+      const sym = (id, px) =>
+        `<svg class="m" width="${px}" height="${px}" viewBox="0 0 48 48" aria-hidden="true"><use href="#sym-${id}"/></svg>`;
+
+      document.getElementById('opts').innerHTML = OPTS.map(
+        (o) => `
+        <h2>${o.title}</h2>
+        <p>${o.text}</p>
+        <div class="opt">
+          <div class="lockups">
+            <div class="lk"><div><div class="h">${sym(o.id, 56)}<span class="word">${o.word}</span></div><small>horizontal</small></div></div>
+            <div class="lk"><div><div class="s">${sym(o.id, 72)}<span class="word">${o.word}</span></div><small>empilhado</small></div></div>
+            <div class="lk"><div>${sym(o.id, 96)}<small>símbolo</small></div></div>
+          </div>
+          <div class="themes">
+            ${['t-light', 't-dark']
+              .map(
+                (t) => `<div class="theme ${t}"><b>${t === 't-light' ? 'claro' : 'escuro'}</b>
+              ${BG.map(
+                (b) =>
+                  `<div class="tile ${b}">${SIZES.map((s) => `<span>${sym(o.id, s)}${s}</span>`).join('')}<span style="margin-left:auto">${BGLABEL[b]}</span></div>`,
+              ).join('')}
+            </div>`,
+              )
+              .join('')}
+          </div>
+        </div>`,
+      ).join('');
+    </script>
+  </body>
+</html>
