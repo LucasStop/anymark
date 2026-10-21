@@ -1,6 +1,6 @@
 // Builds design/brand/illustrations/ (one SVG per scene and a review sheet) from the scenes below.
 // 240x160 canvas, stroke 1.5, round caps and joins. Lines use currentColor, the accent comes from
-// --ill-accent (falls back to the DESIGN.md accent, light and dark). Run:
+// --ill-accent (use through <img> only: the classes and `svg{}` rule are global when inlined; falls back to the DESIGN.md accent, light and dark). Run:
 // node scripts/build-illustrations.mjs && yarn prettier --write design/brand/illustrations
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -46,7 +46,7 @@ const SCENES = {
   // Result: the page became Markdown, with a check.
   result:
     page(56, 24, 72, 96) +
-    `<path class="l" d="M68 46h20"/><path class="l" d="M68 46v0"/>` +
+    `<path class="l" d="M68 46h20"/>` +
     `<path class="l" d="M68 62h44M68 72h36M68 82h44M68 92h20"/>` +
     cursor(92, 89, 8, 6) +
     `<circle class="a" cx="164" cy="84" r="26"/><path class="a" d="M152 85l9 9 17-19"/>` +
@@ -57,7 +57,7 @@ const SCENES = {
     page(60, 24, 72, 96) +
     lines(72, 50, [40, 32, 40]) +
     `<path class="l d" d="M66 98l14-8 10 10 14-12 14 8"/>` +
-    `<path class="a" d="M162 56l30 52h-60z"/><path class="a" d="M162 74v16M162 99h.01"/>` +
+    `<path class="a" d="M172 56l30 52h-60z"/><path class="a" d="M172 74v16M172 99h.01"/>` +
     `<path class="l s" d="M20 136h200"/>`,
 
   // Many formats, one Markdown.
