@@ -12,16 +12,22 @@ const args = process.argv.slice(2);
 const files = args.filter((a) => !a.startsWith('--'));
 const langPath = process.env.ANYMARK_LANG_PATH;
 const lang = args.find((a) => a.startsWith('--lang='))?.slice('--lang='.length);
-// --pdf=<layout>[,rotation=<n|auto>][,binding=<left|right>]
+// --pdf=<layout>[,rotation=<n|auto>][,binding=<left|right>][,trim][,dehyphenate]
 const pdfArg = args.find((a) => a.startsWith('--pdf='))?.slice('--pdf='.length);
+const pdfParts =
+  pdfArg
+    ?.split(',')
+    .slice(1)
+    .map((kv) => kv.split('=')) ?? [];
 const pdf = pdfArg && {
   layout: pdfArg.split(',')[0],
   ...Object.fromEntries(
-    pdfArg
-      .split(',')
-      .slice(1)
-      .map((kv) => kv.split('='))
+    pdfParts
+      .filter(([k]) => k !== 'trim' && k !== 'dehyphenate')
       .map(([k, v]) => [k, k === 'rotation' && v !== 'auto' ? Number(v) : v]),
+  ),
+  cleanup: Object.fromEntries(
+    pdfParts.filter(([k]) => k === 'trim' || k === 'dehyphenate').map(([k]) => [k, true]),
   ),
 };
 const options = {

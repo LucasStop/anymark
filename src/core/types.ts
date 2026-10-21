@@ -27,6 +27,13 @@ export interface PdfOptions {
   readonly rotation?: 0 | 90 | 180 | 270 | 'auto';
   /** Which printed page of a spread comes first. Default `left`. */
   readonly binding?: 'left' | 'right';
+  /** Opt-in cleanups of the scan and of its OCR text; each is off by default. */
+  readonly cleanup?: {
+    /** Drop the dark frame and gutter shadow a flatbed leaves, before the OCR. */
+    readonly trim?: boolean;
+    /** Join words the print broke at the end of a line (also joins a split compound). */
+    readonly dehyphenate?: boolean;
+  };
 }
 
 export interface ConvertOptions {
