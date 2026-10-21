@@ -1,15 +1,15 @@
 # Design do anymark
 
-Identidade visual da interface de teste (`examples/nextjs`), do README e do vídeo. Decisões: [issue #104](https://github.com/LucasStop/anymark/issues/104). O protótipo em HTML (`design/prototype/`) e a implementação em Tailwind + shadcn seguem este documento; se divergirem, este vence.
+Identidade visual da interface de teste (`examples/nextjs`), do README e do vídeo. Decisões: [issue #104](https://github.com/LucasStop/anymark/issues/104). O protótipo em HTML (`design/prototype/`, a criar na issue #105) e a implementação em Tailwind + shadcn seguem este documento; se divergirem, este vence.
 
-A referência é um vídeo de componente de formulário ("Lectora", moxen.studio): card claro sobre fundo escuro, dropzone, campos que se preenchem em sequência, aviso em âmbar, stepper. Aproveitamos o padrão de interação, não a marca: paleta, tipografia, textos e nome são do anymark.
+A referência é um vídeo de componente de formulário de outro estúdio: card claro sobre fundo escuro, dropzone, campos que se preenchem em sequência, aviso em âmbar, stepper. Aproveitamos o padrão de interação, não a marca: paleta, tipografia, textos e nome são do anymark.
 
 ## Princípios
 
 1. **O arquivo é o protagonista.** A tela mostra o documento entrando e o Markdown saindo; o resto some.
 2. **Aviso é informação, não alarme.** O `warnings` da lib aparece em âmbar, com o que fazer. Erro (vermelho) é só para falha que impede o resultado.
 3. **Calmo e legível.** Muito espaço, uma cor de destaque, texto mono para o que é Markdown.
-4. **Movimento explica estado.** Toda animação mostra uma mudança (soltou, leu, extraiu, terminou) e some com `prefers-reduced-motion`.
+4. **Movimento explica estado.** Toda animação mostra uma mudança (soltou, leu, extraiu, terminou) e some com `prefers-reduced-motion`; o chip de estado continua visível para carregar a informação.
 5. **Claro e escuro com o mesmo peso.** Os dois temas são de primeira classe, ambos com contraste AA.
 
 ## Cor
@@ -26,14 +26,14 @@ Neutros levemente frios, destaque verde-azulado ("tinta"), âmbar para atenção
 | `--muted` | `#566271` | `#9aa7b5` | texto secundário (6,2:1 / 7,0:1) |
 | `--accent` | `#0b7a6b` | `#3ccfb7` | ação principal, foco, passo atual (5,2:1 / 8,8:1) |
 | `--accent-on` | `#ffffff` | `#04201c` | texto sobre `--accent` |
-| `--accent-soft` | `#dff3ef` | `#12302c` | fundo de drag-over e seleção |
+| `--accent-soft` | `#eaf7f4` | `#12302c` | fundo de drag-over e seleção |
 | `--warn` | `#8a4b00` | `#f2c46d` | texto de aviso |
 | `--warn-bg` | `#fff4dc` | `#33290f` | fundo de aviso |
-| `--error` | `#b3261e` | `#ff8f86` | falha |
+| `--error` | `#b3261e` | `#ff8f86` | falha (6,5:1 / 7,8:1 sobre `--paper`) |
 | `--ok` | `#1b6b3a` | `#7fdc9c` | texto de sucesso |
 | `--ok-bg` | `#e6f5ea` | `#12301e` | fundo de sucesso |
 
-Regras: um único `--accent` por tela; cor nunca é o único sinal (aviso leva ícone e texto, passo concluído leva check); `--warn` só sobre `--warn-bg` ou `--paper`.
+Regras: um único `--accent` por tela; cor nunca é o único sinal (aviso leva ícone e texto, passo concluído leva check); `--accent` sobre `--accent-soft` fica perto do mínimo (4,5:1 ou pouco mais): recalcular ao mudar qualquer um dos dois.
 
 ## Tipografia
 
@@ -71,7 +71,7 @@ Easing `cubic-bezier(0.2, 0, 0, 1)` para entrar, `ease-in` curto para sair. Com 
 
 ## Layout
 
-Card único, duas colunas (esquerda: arquivo e opções; direita: resultado), largura máxima de 992 px. Abaixo de 800 px as colunas empilham. Stepper no topo: Enviar, Converter, Revisar.
+Card único, duas colunas (esquerda: arquivo e opções; direita: resultado), largura máxima de 992 px. Abaixo de 800 px as colunas empilham. Stepper no topo: Enviar, Converter, Revisar (chaves `upload`, `convert`, `review`; a demo está em inglês até a issue #108).
 
 Estados da tela: vazio, arrastando, lendo, resultado com avisos, resultado limpo, erro.
 
@@ -79,7 +79,7 @@ Estados da tela: vazio, arrastando, lendo, resultado com avisos, resultado limpo
 
 - Interface em **português do Brasil** por padrão, com inglês disponível (issue #108). Termos técnicos ficam como estão: Markdown, OCR, `spread`, `trim`.
 - Frases curtas, verbo no infinitivo nos botões ("Converter", "Baixar .md").
-- Aviso diz o que aconteceu e o que fazer: "Texto pouco legível na página 3. Confira com o original."
+- Aviso diz o que aconteceu e o que fazer: "Texto pouco legível na página 3. Confira com o original." A UI mapeia o `code` do `ConversionWarning` para o texto localizado; sem tradução para o `code`, mostra o `message` da lib como veio.
 - Erro não ecoa conteúdo do arquivo nem caminho (mesma regra da lib).
 - Sem emoji.
 
@@ -87,12 +87,16 @@ Estados da tela: vazio, arrastando, lendo, resultado com avisos, resultado limpo
 
 Wordmark em texto: `anymark` em minúsculas, Inter 700, com um cursor/underscore em `--accent` depois da palavra (`anymark_`), referência ao Markdown sendo escrito. Sem ícone separado nesta etapa; favicon é o `a_` no mesmo estilo.
 
+## Mapeamento para o shadcn
+
+Os nomes deste documento são semânticos; no tema do shadcn viram: `--bg` para `--background`, `--paper` para `--card` e `--popover`, `--ink` para `--foreground`, `--accent` para `--primary` e `--ring`, `--accent-on` para `--primary-foreground`, `--sunken` para `--muted`, `--muted` para `--muted-foreground` (no shadcn `--muted` é fundo, aqui é texto), `--line` para `--border` e `--input`, `--error` para `--destructive`. `--warn`, `--warn-bg`, `--ok` e `--ok-bg` não existem no shadcn e entram como tokens extras no `@theme`.
+
 ## Mapa de componentes
 
 | Componente | Estados | Origem na lib |
 |---|---|---|
 | Card | padrão | n/a |
-| Stepper | Enviar, Converter, Revisar | estado da conversão (`idle`, `pending`, `ok`) |
+| Stepper | Enviar, Converter, Revisar | estado da conversão (`idle`, `pending`, `ok`, `error`) |
 | Dropzone | vazia, arrastando, com arquivo, arquivo grande | `MAX_BYTES` |
 | Campo e seletor | padrão, foco, desabilitado | `ConvertOptions` |
 | Chip de estado | lendo, avisos (N), pronto | `pending`, `warnings` |
