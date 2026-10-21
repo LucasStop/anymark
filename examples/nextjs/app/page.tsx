@@ -10,12 +10,14 @@ export default async function Page() {
   const locale = await getLocale();
   const t = messages[locale];
   return (
-    <main>
-      <div className="top">
-        <h1>anymark</h1>
+    <main className="mx-auto max-w-248">
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-[28px] font-bold tracking-tight">
+          anymark<span className="text-primary">_</span>
+        </h1>
         <LocaleSwitch locale={locale} label={t.language} />
       </div>
-      <p>{t.tagline}</p>
+      <p className="mt-1 text-muted-foreground">{t.tagline}</p>
       <Converter t={t} />
     </main>
   );

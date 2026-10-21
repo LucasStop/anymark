@@ -1,8 +1,12 @@
 'use client';
 
 import { startTransition, useActionState, useRef, useState } from 'react';
+import { Check } from 'lucide-react';
+import { Button } from '../components/ui/button';
+import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs';
 import type { Messages } from '../lib/i18n';
 import { MAX_BYTES } from '../lib/limits';
+import { cn } from '../lib/utils';
 import { convertFile, type ConvertState } from './actions';
 
 const initial: ConvertState = { status: 'idle' };
@@ -51,9 +55,16 @@ export function Converter({ t }: { t: Messages }) {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
+  const field =
+    'min-h-10 rounded-lg border border-border bg-muted px-2 text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
+  const row = 'mt-3 flex items-center justify-between gap-2 text-sm';
+  const check = 'mt-3 flex min-h-10 items-center gap-2 text-sm';
+  const blocks = state.status === 'ok' ? state.markdown.split(/\n{2,}/) : [];
+  const chip = pending ? t.reading : state.status === 'ok' ? t.done : null;
+
   return (
     <form
-      className="card"
+      className="mt-6 rounded-2xl border border-border bg-card p-5 shadow-card"
       // `action={fn}` would reset the form afterwards, wiping the options and the chosen file.
       onSubmit={(e) => {
         e.preventDefault();
@@ -62,20 +73,37 @@ export function Converter({ t }: { t: Messages }) {
         startTransition(() => action(data));
       }}
     >
-      <ol className="steps" aria-label={t.steps.join(', ')}>
-        {t.steps.map((label, i) => (
-          <li key={label} data-state={i < step ? 'done' : i === step ? 'current' : 'todo'}>
-            <span>{i + 1}</span>
-            {label}
-          </li>
-        ))}
+      <ol className="m-0 flex list-none flex-wrap gap-6 p-0" aria-label={t.stepsLabel}>
+        {t.steps.map((label, i) => {
+          const s = i < step ? 'done' : i === step ? 'current' : 'todo';
+          return (
+            <li
+              key={label}
+              data-state={s}
+              className={cn(
+                'flex items-center gap-2',
+                s === 'todo' ? 'text-muted-foreground' : 'text-foreground',
+              )}
+            >
+              <span
+                className={cn(
+                  'grid size-6 place-items-center rounded-full border border-border text-xs transition-colors',
+                  s !== 'todo' && 'border-primary bg-primary text-primary-foreground',
+                )}
+              >
+                {s === 'done' ? <Check className="size-3.5" aria-hidden /> : i + 1}
+              </span>
+              {label}
+            </li>
+          );
+        })}
       </ol>
 
-      <div className="grid">
-        <section className="left">
+      <div className="mt-5 grid gap-5 md:grid-cols-[1fr_1.4fr]">
+        <section className="flex flex-col gap-4">
           <div
-            className="drop"
             data-dragging={dragging}
+            className="relative flex flex-col items-center gap-1.5 overflow-hidden rounded-xl border-2 border-dashed border-border bg-muted px-4 py-8 text-center transition-colors duration-150 data-[dragging=true]:border-solid data-[dragging=true]:border-primary data-[dragging=true]:bg-accent-soft"
             onDragOver={(e) => {
               e.preventDefault();
               setDragging(true);
@@ -87,6 +115,12 @@ export function Converter({ t }: { t: Messages }) {
               pickFile(e.dataTransfer.files[0]);
             }}
           >
+            {pending && (
+              <div
+                aria-hidden
+                className="absolute inset-x-0 h-0.5 animate-scan bg-primary motion-reduce:hidden"
+              />
+            )}
             <input
               ref={input}
               type="file"
@@ -96,39 +130,42 @@ export function Converter({ t }: { t: Messages }) {
               hidden
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             />
-            <p className="drop-title">{file ? file.name : t.dropTitle}</p>
-            <p className="muted">{file ? `${(file.size / 1024).toFixed(1)} KB` : t.dropHint}</p>
-            <button type="button" className="ghost" onClick={() => input.current?.click()}>
+            <p className="m-0 font-semibold wrap-anywhere">{file ? file.name : t.dropTitle}</p>
+            <p className="m-0 text-sm text-muted-foreground">
+              {file ? `${(file.size / 1024).toFixed(1)} KB` : t.dropHint}
+            </p>
+            <Button type="button" variant="ghost" onClick={() => input.current?.click()}>
               {t.chooseFile}
-            </button>
+            </Button>
           </div>
           {tooBig && (
-            <p role="alert" className="error">
+            <p role="alert" className="m-0 text-destructive">
               {t.errors.tooBig}
             </p>
           )}
 
-          <details className="options">
-            <summary>{t.options}</summary>
-            <label>
+          <details className="rounded-xl border border-border px-3 py-2">
+            <summary className="min-h-10 cursor-pointer py-2 font-semibold">{t.options}</summary>
+            <label className={row}>
               {t.langHint}
-              <input name="lang" placeholder="pt" maxLength={3} />
+              <input name="lang" placeholder="pt" maxLength={3} className={cn(field, 'w-20')} />
             </label>
-            <label className="check">
-              <input type="checkbox" name="includeHidden" /> {t.includeHidden}
+            <label className={check}>
+              <input type="checkbox" name="includeHidden" className="size-4 accent-primary" />
+              {t.includeHidden}
             </label>
-            <fieldset>
-              <legend>{t.scannedPdf}</legend>
-              <label>
+            <fieldset className="mt-3 rounded-lg border border-border px-3 pb-3">
+              <legend className="px-1 text-sm">{t.scannedPdf}</legend>
+              <label className={row}>
                 {t.layout}
-                <select name="layout" defaultValue="single">
+                <select name="layout" defaultValue="single" className={field}>
                   <option value="single">single</option>
                   <option value="spread">spread</option>
                 </select>
               </label>
-              <label>
+              <label className={row}>
                 {t.rotation}
-                <select name="rotation" defaultValue="auto">
+                <select name="rotation" defaultValue="auto" className={field}>
                   <option value="auto">auto</option>
                   <option value="0">0</option>
                   <option value="90">90</option>
@@ -136,78 +173,105 @@ export function Converter({ t }: { t: Messages }) {
                   <option value="270">270</option>
                 </select>
               </label>
-              <label>
+              <label className={row}>
                 {t.binding}
-                <select name="binding" defaultValue="left">
+                <select name="binding" defaultValue="left" className={field}>
                   <option value="left">left</option>
                   <option value="right">right</option>
                 </select>
               </label>
-              <label className="check">
-                <input type="checkbox" name="trim" /> {t.trim}
+              <label className={check}>
+                <input type="checkbox" name="trim" className="size-4 accent-primary" /> {t.trim}
               </label>
-              <label className="check">
-                <input type="checkbox" name="dehyphenate" /> {t.dehyphenate}
+              <label className={check}>
+                <input type="checkbox" name="dehyphenate" className="size-4 accent-primary" />{' '}
+                {t.dehyphenate}
               </label>
             </fieldset>
           </details>
 
-          <button type="submit" className="primary" disabled={pending || tooBig || !file}>
+          <Button type="submit" disabled={pending || tooBig || !file}>
             {pending ? t.converting : t.convert}
-          </button>
+          </Button>
         </section>
 
-        <section className="right" aria-live="polite">
+        <section aria-live="polite" className="min-w-0">
+          {chip && (
+            <p
+              role="status"
+              className={cn(
+                'mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold',
+                pending ? 'bg-accent-soft text-primary' : 'bg-ok-bg text-ok',
+              )}
+            >
+              {chip}
+            </p>
+          )}
           {state.status === 'error' && !pending && (
-            <p role="alert" className="error">
+            <p role="alert" className="m-0 text-destructive">
               {state.code === 'lib' ? state.message : t.errors[state.code]}
             </p>
           )}
-          {state.status === 'idle' && !pending && <p className="muted empty">{t.empty}</p>}
-          {pending && <p className="muted empty">{t.reading}</p>}
+          {state.status === 'idle' && !pending && (
+            <p className="m-0 py-12 text-center text-sm text-muted-foreground">{t.empty}</p>
+          )}
+          {pending && (
+            <p className="m-0 py-12 text-center text-sm text-muted-foreground">{t.reading}</p>
+          )}
           {state.status === 'ok' && !pending && (
-            <>
-              <div className="tabs" role="tablist">
+            <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
+              <TabsList>
                 {(['markdown', 'metadata', 'warnings'] as const).map((name) => (
-                  <button
-                    key={name}
-                    type="button"
-                    role="tab"
-                    aria-selected={tab === name}
-                    onClick={() => setTab(name)}
-                  >
+                  <TabsTrigger key={name} value={name}>
                     {t.tabs[name]}
                     {name === 'warnings' &&
                       state.warnings.length > 0 &&
                       ` (${state.warnings.length})`}
-                  </button>
+                  </TabsTrigger>
                 ))}
-                <button type="button" className="ghost" onClick={download}>
+                <Button type="button" variant="ghost" className="ml-auto" onClick={download}>
                   {t.download.replace('{name}', () => state.name)}
-                </button>
+                </Button>
+              </TabsList>
+              <div className="mt-3">
+                {tab === 'markdown' && (
+                  <div className="max-h-128 overflow-auto rounded-lg bg-muted p-4 font-mono text-[13px] leading-relaxed">
+                    {blocks.map((b, i) => (
+                      <pre
+                        key={i}
+                        style={{ animationDelay: `${Math.min(i, 8) * 120}ms` }}
+                        className="m-0 mb-3 animate-block whitespace-pre-wrap last:mb-0 motion-reduce:animate-none"
+                      >
+                        {b}
+                      </pre>
+                    ))}
+                  </div>
+                )}
+                {tab === 'metadata' && (
+                  <dl className="m-0 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2">
+                    <dt className="text-muted-foreground">{t.metaMime}</dt>
+                    <dd className="m-0 wrap-anywhere">{state.mime}</dd>
+                    <dt className="text-muted-foreground">{t.metaSource}</dt>
+                    <dd className="m-0 wrap-anywhere">{state.sourceId}</dd>
+                    <dt className="text-muted-foreground">{t.metaChars}</dt>
+                    <dd className="m-0">{state.markdown.length}</dd>
+                  </dl>
+                )}
+                {tab === 'warnings' &&
+                  (state.warnings.length === 0 ? (
+                    <p className="m-0 text-sm text-muted-foreground">{t.noWarnings}</p>
+                  ) : (
+                    state.warnings.map((w, i) => (
+                      <p
+                        key={`${i}-${w.code}`}
+                        className="m-0 mb-2 rounded-lg bg-warn-bg px-3 py-2 text-warn"
+                      >
+                        {warningText(t, w)}
+                      </p>
+                    ))
+                  ))}
               </div>
-              {tab === 'markdown' && <pre>{state.markdown}</pre>}
-              {tab === 'metadata' && (
-                <dl>
-                  <dt>{t.metaMime}</dt>
-                  <dd>{state.mime}</dd>
-                  <dt>{t.metaSource}</dt>
-                  <dd>{state.sourceId}</dd>
-                  <dt>{t.metaChars}</dt>
-                  <dd>{state.markdown.length}</dd>
-                </dl>
-              )}
-              {tab === 'warnings' &&
-                (state.warnings.length === 0 ? (
-                  <p className="muted">{t.noWarnings}</p>
-                ) : (
-                  state.warnings.map((w, i) => (
-                    <p key={`${i}-${w.code}`} className="warning">
-                      {warningText(t, w)}
-                    </p>
-                  ))
-                ))}
-            </>
+            </Tabs>
           )}
         </section>
       </div>
