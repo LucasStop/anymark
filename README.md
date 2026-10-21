@@ -98,7 +98,7 @@ O plugin `.srt` em `examples/plugins/srt/index.ts` é o exemplo completo. Guia p
 
 ## Exemplo Next.js
 
-`examples/nextjs` é um consumidor de demonstração: upload, preview e download do Markdown, com o plugin `.srt`. Não é um backend nem a entrega do trabalho, e não tem deploy. Veja [examples/nextjs/README.md](examples/nextjs/README.md).
+`examples/nextjs` é um consumidor de demonstração: upload, preview e download do Markdown, com o plugin `.srt`. Não é um backend nem a entrega do trabalho, e não tem deploy. Veja [examples/nextjs/README.md](examples/nextjs/README.md). A identidade visual da interface está em [docs/DESIGN.md](docs/DESIGN.md).
 
 ## Padrões de projeto
 

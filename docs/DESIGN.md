@@ -1,6 +1,6 @@
 # Design do anymark
 
-Identidade visual da interface de teste (`examples/nextjs`), do README e do vídeo. Decisões: [issue #104](https://github.com/LucasStop/anymark/issues/104). O protótipo em HTML (`design/prototype/`, a criar na issue #105) e a implementação em Tailwind + shadcn seguem este documento; se divergirem, este vence.
+Identidade visual da interface de teste (`examples/nextjs`), do README e do vídeo. Decisões: [issue #104](https://github.com/LucasStop/anymark/issues/104). O protótipo em HTML ([design/prototype/](../design/prototype/index.html)) e a implementação em Tailwind + shadcn ([examples/nextjs](../examples/nextjs/README.md)) seguem este documento; se divergirem, este vence.
 
 A referência é um vídeo de componente de formulário de outro estúdio: card claro sobre fundo escuro, dropzone, campos que se preenchem em sequência, aviso em âmbar, stepper. Aproveitamos o padrão de interação, não a marca: paleta, tipografia, textos e nome são do anymark.
 
@@ -71,13 +71,13 @@ Easing `cubic-bezier(0.2, 0, 0, 1)` para entrar, `ease-in` curto para sair. Com 
 
 ## Layout
 
-Card único, duas colunas (esquerda: arquivo e opções; direita: resultado), largura máxima de 992 px. Abaixo de 800 px as colunas empilham. Stepper no topo: Enviar, Converter, Revisar (chaves `upload`, `convert`, `review`; a demo está em inglês até a issue #108).
+Card único, duas colunas (esquerda: arquivo e opções; direita: resultado), largura máxima de 992 px. Abaixo de 800 px as colunas empilham. Stepper no topo: Enviar, Converter, Revisar (chaves `upload`, `convert`, `review` no dicionário da demo).
 
 Estados da tela: vazio, arrastando, lendo, resultado com avisos, resultado limpo, erro.
 
 ## Voz e texto
 
-- Interface em **português do Brasil** por padrão, com inglês disponível (issue #108). Termos técnicos ficam como estão: Markdown, OCR, `spread`, `trim`.
+- Interface em **português do Brasil** por padrão, com inglês disponível: dicionário em `examples/nextjs/lib/i18n.ts`, escolha guardada no cookie `locale`. Termos técnicos ficam como estão: Markdown, OCR, `spread`, `trim`.
 - Frases curtas, verbo no infinitivo nos botões ("Converter", "Baixar .md").
 - Aviso diz o que aconteceu e o que fazer: "Texto pouco legível na página 3. Confira com o original." A UI mapeia o `code` do `ConversionWarning` para o texto localizado; sem tradução para o `code`, mostra o `message` da lib como veio.
 - Erro não ecoa conteúdo do arquivo nem caminho (mesma regra da lib).
@@ -103,6 +103,34 @@ Os nomes deste documento são semânticos; no tema do shadcn viram: `--bg` para 
 | Aviso | âmbar com ícone | `ConversionWarning` |
 | Abas | Markdown, Metadata, Avisos | `ConversionResult` |
 | Botão | primário, secundário, desabilitado | n/a |
+
+## Onde está cada coisa
+
+| O quê | Arquivo |
+|---|---|
+| Tokens (fonte de verdade) | tabela "Cor" acima |
+| Tokens no protótipo | `design/prototype/tokens.css` |
+| Tokens na demo, mapeados para o shadcn | `examples/nextjs/app/globals.css` (`:root` e `@theme inline`) |
+| Componentes base | `examples/nextjs/components/ui/` (`button.tsx`, `tabs.tsx`) |
+| Fluxo (stepper, dropzone, chip, blocos) | `examples/nextjs/app/Converter.tsx` |
+| Textos pt-BR e en | `examples/nextjs/lib/i18n.ts` |
+| Capturas para README e vídeo | `docs/assets/design/` |
+
+## Como estender
+
+1. **Token novo ou valor novo:** altere a tabela "Cor" primeiro, recalcule o contraste (mínimo 4,5:1 para texto) e depois espelhe em `tokens.css` e em `globals.css`, no claro e no escuro. Sem valor solto em componente: use a classe do token (`bg-primary`, `text-warn`).
+2. **Componente novo:** crie em `components/ui/` no padrão shadcn (`cva` para variantes, `cn` de `lib/utils.ts`, foco visível e alvo de 40 px) e acrescente a linha em "Mapa de componentes".
+3. **Texto novo:** entra nos dois idiomas em `lib/i18n.ts`; o tipo `Messages` faz o typecheck falhar se faltar em um deles.
+4. **Movimento novo:** registre na tabela "Movimento" e desligue com `motion-reduce:`.
+5. **Verificação:** abra a demo (`yarn dev` em `examples/nextjs`), confira claro e escuro e teclado, e atualize as capturas se a tela mudou.
+
+## Capturas
+
+Em `docs/assets/design/`, geradas da demo rodando em `localhost:3000` no tema escuro:
+
+- `01-empty.jpg`: estado vazio.
+- `02-result-pt.jpg`: resultado com aviso, em português.
+- `03-result-en.jpg`: o mesmo resultado em inglês.
 
 ## Anexo: análise do vídeo de referência
 

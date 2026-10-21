@@ -12,6 +12,10 @@ ANYMARK_LANG_PATH="$PWD/node_modules/@tesseract.js-data/eng/4.0.0_best_int" \
 
 `scripts/manual-run.mjs` converte cada arquivo, grava o Markdown em `manual-out/<id>.md` (ignorado pelo git) e imprime uma linha por arquivo: id, extensão, tamanho, tempo e resultado. `--hidden` liga `includeHidden` (issues #48 e #68). Ler o `.md` gerado faz parte do teste: conferir, não presumir.
 
+## Revisão visual da interface
+
+A demo (`examples/nextjs`) tem verificação à mão, sem teste automático: abrir em `localhost:3000`, conferir claro e escuro, teclado (Tab percorre dropzone, opções, Converter, abas) e `prefers-reduced-motion`. Os critérios estão em [DESIGN.md](DESIGN.md) e as capturas de referência em `docs/assets/design/`.
+
 ## Rodada 1: 16/10/2026, Lucas Stopinski, arquivos reais do Desktop
 
 Node 22, `main` em 17bbca6. 39 arquivos de uso próprio (faculdade e estudo), 3 a 5 por formato. Resultado: 37 convertidos, 2 `CONVERSION_FAILED` esperados (docx e pdf de 0 bytes), nenhuma exceção não tratada.
