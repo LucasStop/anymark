@@ -1,6 +1,6 @@
 'use client';
 
-import { startTransition, useActionState, useRef, useState } from 'react';
+import { startTransition, useActionState, useEffect, useRef, useState } from 'react';
 import { Check } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
@@ -32,7 +32,19 @@ export function Converter({ t }: { t: Messages }) {
   const [file, setFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
   const [tab, setTab] = useState<Tab>('markdown');
+  const [elapsed, setElapsed] = useState(0);
   const input = useRef<HTMLInputElement>(null);
+
+  // The lib reports no progress yet (issue #121), so the bar is indeterminate and the clock is the only honest signal.
+  useEffect(() => {
+    if (!pending) return;
+    const start = Date.now();
+    const id = setInterval(() => setElapsed(Math.floor((Date.now() - start) / 1000)), 1000);
+    return () => {
+      clearInterval(id);
+      setElapsed(0);
+    };
+  }, [pending]);
 
   const tooBig = (file?.size ?? 0) > MAX_BYTES;
   const step = state.status === 'ok' ? 2 : pending ? 1 : 0;
@@ -221,9 +233,18 @@ export function Converter({ t }: { t: Messages }) {
             <p className="m-0 py-12 text-center text-sm text-muted-foreground">{t.empty}</p>
           )}
           {pending && (
-            <p aria-hidden className="m-0 py-12 text-center text-sm text-muted-foreground">
-              {t.reading}
-            </p>
+            <div className="py-12">
+              <div
+                role="progressbar"
+                aria-label={t.reading}
+                className="relative h-1.5 overflow-hidden rounded-full bg-muted"
+              >
+                <div className="absolute inset-y-0 w-2/5 animate-indeterminate rounded-full bg-primary motion-reduce:left-0 motion-reduce:animate-none" />
+              </div>
+              <p aria-hidden className="m-0 mt-3 text-center text-sm text-muted-foreground">
+                {t.reading} {elapsed}s
+              </p>
+            </div>
           )}
           {state.status === 'ok' && !pending && (
             <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>

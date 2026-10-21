@@ -57,6 +57,7 @@
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
   --animate-scan: scan 1.2s cubic-bezier(0.2, 0, 0, 1) infinite alternate;
+  --animate-indeterminate: indeterminate 1.4s cubic-bezier(0.2, 0, 0, 1) infinite;
   --animate-block: block 300ms cubic-bezier(0.2, 0, 0, 1) both;
 }
 
@@ -66,6 +67,14 @@
   }
   to {
     top: 92%;
+  }
+}
+@keyframes indeterminate {
+  from {
+    left: -40%;
+  }
+  to {
+    left: 100%;
   }
 }
 @keyframes block {
