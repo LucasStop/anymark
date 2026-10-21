@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>anymark: ilustrações</title>
+    <link rel="stylesheet" href="../../prototype/tokens.css" />
+    <style>
+      body {
+        margin: 0;
+        padding: 32px 16px 64px;
+        background: var(--bg);
+        color: var(--ink);
+        font: 15px/1.55 var(--font-sans);
+      }
+      main {
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+        letter-spacing: -0.02em;
+      }
+      p {
+        margin: 0 0 24px;
+        color: var(--muted);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 16px;
+      }
+      figure {
+        margin: 0;
+        padding: 16px;
+        text-align: center;
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: var(--r-lg);
+      }
+      figure img {
+        max-width: 100%;
+        height: auto;
+      }
+      figcaption {
+        margin-top: 8px;
+        font: 12px var(--font-mono);
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>anymark: ilustrações</h1>
+      <p>
+        Cinco cenas de linha em 240x160, traço de 1,5 px, cor de destaque só no que importa. Cada
+        arquivo traz a paleta e segue o esquema claro ou escuro do sistema. Gerado por
+        <code>scripts/build-illustrations.mjs</code>.
+      </p>
+      <div class="grid">
+        <figure>
+          <img src="empty.svg" width="240" height="160" alt="Solte um arquivo" />
+          <figcaption>empty</figcaption>
+        </figure>
+        <figure>
+          <img src="reading.svg" width="240" height="160" alt="Lendo o documento" />
+          <figcaption>reading</figcaption>
+        </figure>
+        <figure>
+          <img src="result.svg" width="240" height="160" alt="Markdown pronto" />
+          <figcaption>result</figcaption>
+        </figure>
+        <figure>
+          <img src="error.svg" width="240" height="160" alt="Algo deu errado" />
+          <figcaption>error</figcaption>
+        </figure>
+        <figure>
+          <img src="converge.svg" width="240" height="160" alt="Vários formatos, um Markdown" />
+          <figcaption>converge</figcaption>
+        </figure>
+      </div>
+    </main>
+  </body>
+</html>
