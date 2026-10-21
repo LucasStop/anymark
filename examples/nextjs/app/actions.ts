@@ -17,11 +17,13 @@ export type ConvertState =
       status: 'ok';
       name: string;
       markdown: string;
-      warnings: string[];
+      warnings: { code: string; message: string }[];
       mime: string;
       sourceId: string;
     }
-  | { status: 'error'; message: string };
+  // `lib` carries the library's own generic message; the rest are codes the client translates.
+  | { status: 'error'; code: 'chooseFile' | 'tooBig' | 'failed' }
+  | { status: 'error'; code: 'lib'; message: string };
 
 const TIMEOUT_MS = 30_000;
 
@@ -53,9 +55,9 @@ function readOptions(form: FormData): ConvertOptions {
 export async function convertFile(_prev: ConvertState, form: FormData): Promise<ConvertState> {
   const file = form.get('file');
   if (!(file instanceof File) || file.size === 0) {
-    return { status: 'error', message: 'Choose a file.' };
+    return { status: 'error', code: 'chooseFile' };
   }
-  if (file.size > MAX_BYTES) return { status: 'error', message: 'File larger than 10 MB.' };
+  if (file.size > MAX_BYTES) return { status: 'error', code: 'tooBig' };
   try {
     // The name is only a hint for detection; the library keeps just its base name.
     const result = await anymark.convert(
@@ -69,7 +71,7 @@ export async function convertFile(_prev: ConvertState, form: FormData): Promise<
       status: 'ok',
       name: file.name.replace(/\.[^.]+$/, '') || 'document',
       markdown: result.markdown,
-      warnings: result.warnings.map((w) => w.message),
+      warnings: result.warnings.map((w) => ({ code: w.code, message: w.message })),
       mime: result.metadata.mime,
       sourceId: result.metadata.sourceId,
     };
@@ -80,6 +82,8 @@ export async function convertFile(_prev: ConvertState, form: FormData): Promise<
       error instanceof UnsupportedFormatError ||
       error instanceof OptInRequiredError ||
       error instanceof NoBackendError;
-    return { status: 'error', message: known ? error.message : 'Conversion failed.' };
+    return known
+      ? { status: 'error', code: 'lib', message: error.message }
+      : { status: 'error', code: 'failed' };
   }
 }
