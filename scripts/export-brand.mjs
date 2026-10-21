@@ -2,7 +2,7 @@
 // Needs rsvg-convert and magick on PATH (PNG and ICO only); the SVGs need nothing.
 // Run: node scripts/export-brand.mjs
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import process from 'node:process';
@@ -54,7 +54,7 @@ const word = (x, baseline) => {
 function horizontal(mono) {
   const w = word(60, 33);
   const body = mono
-    ? `<mask id="n"><rect width="48" height="48" fill="#fff"/><circle cx="24" cy="24" r="8.75" fill="none" stroke="#000" stroke-width="4.5"/><path d="M32.75 13v22" stroke="#000" stroke-width="4.5"/></mask><rect x="3" y="3" width="42" height="42" rx="11" fill="currentColor" mask="url(#n)"/><path d="${w.d}" fill="currentColor"/><rect x="${w.cursor.x}" y="${w.cursor.y}" width="${w.cursor.w}" height="${w.cursor.h}" rx="1.5" fill="currentColor"/>`
+    ? `<mask id="anymark-knockout"><rect width="48" height="48" fill="#fff"/><circle cx="24" cy="24" r="8.75" fill="none" stroke="#000" stroke-width="4.5"/><path d="M32.75 13v22" stroke="#000" stroke-width="4.5"/></mask><rect x="3" y="3" width="42" height="42" rx="11" fill="currentColor" mask="url(#anymark-knockout)"/><path d="${w.d}" fill="currentColor"/><rect x="${w.cursor.x}" y="${w.cursor.y}" width="${w.cursor.w}" height="${w.cursor.h}" rx="1.5" fill="currentColor"/>`
     : `${symbol()}<path class="ink" d="${w.d}"/><rect class="cur" x="${w.cursor.x}" y="${w.cursor.y}" width="${w.cursor.w}" height="${w.cursor.h}" rx="1.5"/>`;
   return svg(Math.ceil(w.end + 3), 48, body, 'anymark');
 }
@@ -88,4 +88,5 @@ const sizes = [16, 32, 48].map((s) => {
   return f;
 });
 execFileSync('magick', [...sizes, join(OUT, 'favicon.ico')]);
+rmSync(tmp, { recursive: true });
 process.stdout.write(`brand assets written to ${OUT}\n`);
