@@ -138,17 +138,22 @@ describe('pdf converter', () => {
       }
     }, 240_000);
 
-    it.each([{ layout: 'triple' }, { rotation: 45 }, { binding: 'top' }])(
-      'rejects the unknown option %j without echoing it',
-      async (pdfOptions) => {
-        const error = await createAnymark()
-          .convert(pdf(), { pdf: pdfOptions as never })
-          .catch((e: unknown) => e);
+    it.each([
+      { layout: 'triple' },
+      { rotation: 45 },
+      { binding: 'top' },
+      { cleanup: { trim: 'yes' } },
+      { cleanup: { dehyphenate: 1 } },
+      { cleanup: null },
+      { cleanup: [] },
+    ])('rejects the unknown option %j without echoing it', async (pdfOptions) => {
+      const error = await createAnymark()
+        .convert(pdf(), { pdf: pdfOptions as never })
+        .catch((e: unknown) => e);
 
-        expect(error).toBeInstanceOf(ConversionError);
-        expect(String((error as Error).message)).not.toMatch(/triple|45|top|yes/);
-      },
-    );
+      expect(error).toBeInstanceOf(ConversionError);
+      expect(String((error as Error).message)).not.toMatch(/triple|45|top|yes/);
+    });
   });
 
   it('passes the converter contract', async () => {

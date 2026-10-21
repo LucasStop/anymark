@@ -19,7 +19,7 @@ function columns(image: Raster, from: number, to: number): Raster {
 }
 
 /** Column to cut a two-page sheet at: the middle of the widest blank run near the center. */
-function gutterAt(image: Raster): number {
+function gutterAt(image: Raster, darkGutter: boolean): number {
   const { data, width, height, channels } = image;
   const lo = Math.floor(width * GUTTER_BAND[0]);
   const hi = Math.ceil(width * GUTTER_BAND[1]);
@@ -34,7 +34,7 @@ function gutterAt(image: Raster): number {
     ink.push(dark);
   }
   // A shadow down the middle (dark columns) is the gutter itself: cut through its center.
-  const first = ink.findIndex((dark) => dark > height * DARK_EDGE);
+  const first = darkGutter ? ink.findIndex((dark) => dark > height * DARK_EDGE) : -1;
   if (first >= 0) {
     let last = first;
     while (last + 1 < ink.length && ink[last + 1]! > height * DARK_EDGE) last += 1;
@@ -57,10 +57,15 @@ function gutterAt(image: Raster): number {
 
 /**
  * The two printed pages of a sheet scanned open, upright, in reading order: `left` binding reads the
- * left page first, `right` (right-to-left books) the right page.
+ * left page first, `right` (right-to-left books) the right page. With `darkGutter`, a dark band in the
+ * middle band (a scanner shadow) is cut through its center instead of the blank run.
  */
-export function splitSpread(image: Raster, binding: 'left' | 'right'): [Raster, Raster] {
-  const cut = gutterAt(image);
+export function splitSpread(
+  image: Raster,
+  binding: 'left' | 'right',
+  darkGutter = false,
+): [Raster, Raster] {
+  const cut = gutterAt(image, darkGutter);
   const pages: [Raster, Raster] = [columns(image, 0, cut), columns(image, cut, image.width)];
   return binding === 'left' ? pages : [pages[1], pages[0]];
 }

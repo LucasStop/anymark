@@ -50,6 +50,17 @@ describe('splitSpread', () => {
   });
 });
 
+describe('splitSpread with a dark gutter', () => {
+  it('cuts through the center of a shadow off the middle, only when asked', () => {
+    // content on both sides leaves no blank run, and the shadow sits at columns 470-489
+    const image = sheet(1000, 40, (x) => (x >= 470 && x < 490) || (x % 3 === 0 && x < 300));
+    for (let y = 0; y < 40; y += 1) image.data.fill(0, y * 1000 + 470, y * 1000 + 490);
+
+    expect(splitSpread(image, 'left', true)[0].width).toBe(480);
+    expect(splitSpread(image, 'left')[0].width).not.toBe(480);
+  });
+});
+
 describe('trimBorders', () => {
   it('drops the dark frame of a scan and keeps the content', () => {
     const image = sheet(200, 100, (x) => x < 12 || x >= 188 || (x > 60 && x < 140 && x % 2 === 0));

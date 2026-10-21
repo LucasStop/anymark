@@ -118,7 +118,8 @@ function scanKind(declared: ConvertOptions['pdf']): ScanKind {
     if (declared !== undefined && (typeof declared !== 'object' || declared === null))
       throw new Error('not an object');
     const { layout = 'single', rotation = 'auto', binding = 'left', cleanup = {} } = declared ?? {};
-    if (typeof cleanup !== 'object' || cleanup === null) throw new Error('not an object');
+    if (typeof cleanup !== 'object' || cleanup === null || Array.isArray(cleanup))
+      throw new Error('not an object');
     const { trim = false, dehyphenate = false } = cleanup;
     if (
       !['single', 'spread'].includes(layout) ||
@@ -156,13 +157,11 @@ async function readSheet(
     const png = encodePng(page.data, page.width, page.height, page.channels);
     return (await ctx.backends.run<Uint8Array, string>('ocr', png)).trim();
   };
-  // the scanner frame is dark on all four sides and fools the axis detection, so it goes first
-  const sheet = kind.trim ? trimBorders(image) : image;
   const pagesTurned = (degrees: number): Raster[] => {
-    const turned = rotateClockwise(sheet, degrees);
+    const turned = rotateClockwise(image, degrees);
     const pages =
       kind.layout === 'spread' && turned.width >= MIN_SPREAD_WIDTH
-        ? splitSpread(turned, kind.binding)
+        ? splitSpread(turned, kind.binding, kind.trim)
         : [turned];
     return kind.trim ? pages.map(trimBorders) : pages;
   };
@@ -173,7 +172,8 @@ async function readSheet(
   if (kind.rotation !== 'auto') return readAll(pagesTurned(kind.rotation), out);
 
   const turns =
-    textRuns(sheet) === 'horizontal'
+    // the scanner frame is dark on all four sides, so with trim the axis is judged without it
+    textRuns(kind.trim ? trimBorders(image) : image) === 'horizontal'
       ? rotate === 180
         ? [180, 0]
         : [0, 180]
