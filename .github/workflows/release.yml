@@ -22,7 +22,7 @@ jobs:
         with:
           node-version: 22
 
-      - run: yarn install
+      - run: yarn install --ignore-scripts
 
       - run: yarn typecheck
 
