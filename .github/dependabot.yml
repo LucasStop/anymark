@@ -6,15 +6,35 @@ updates:
       interval: weekly
     cooldown:
       default-days: 7
+    groups:
+      all:
+        patterns:
+          - "*"
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
     cooldown:
       default-days: 7
+    groups:
+      all:
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
   - package-ecosystem: npm
     directory: /examples/nextjs
     schedule:
       interval: weekly
     cooldown:
       default-days: 7
+    groups:
+      all:
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
