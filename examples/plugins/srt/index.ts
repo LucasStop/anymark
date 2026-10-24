@@ -8,9 +8,18 @@ const CUE_TIME = /^(\d{2}:\d{2}:\d{2})[,.]\d{3}\s*-->/;
 // Cue text is untrusted: drop tags (<i>, <font>, raw HTML) and defuse link and image syntax.
 // `[^<>]*` keeps the scan linear (`[^>]*` rescans to the end for every unclosed '<'), and a '<' left
 // over is escaped so it cannot start raw HTML.
+// Tags are stripped until the text stops changing, so '<<b>b>' cannot rebuild a tag after one pass.
+const stripTags = (text: string) => {
+  let prev: string;
+  do {
+    prev = text;
+    text = text.replace(/<[^<>]*>/g, '');
+  } while (text !== prev);
+  return text;
+};
+
 const plain = (text: string) =>
-  text
-    .replace(/<[^<>]*>/g, '')
+  stripTags(text)
     .replace(/[[\]!\\]/g, '\\$&')
     .replace(/</g, '\\<');
 
