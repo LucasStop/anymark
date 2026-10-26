@@ -30,8 +30,13 @@ jobs:
 
       - run: yarn test
 
+      - run: yarn build
+
       - name: Pack
         run: yarn pack
+
+      - name: Check the tarball ships dist
+        run: tar -tzf ./*.tgz | grep -qx 'package/dist/index.js'
 
       - name: Create release
         env:
