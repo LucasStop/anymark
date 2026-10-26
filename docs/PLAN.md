@@ -108,7 +108,7 @@ Reconferir com `npm view` ao instalar. Versões conferidas em 14/10/2026: read-e
 | Marco | 29/10 | Apresentação parcial: caso padrão, extensão `.srt` sem tocar a lib, fallback de backend, padrões no código. |
 | 4 | 29/10 a 06/11 | Imagem e áudio (02/11 é feriado). Decorators (front matter, chunking). Observer (`addSink`). RAG opcional se sobrar. |
 | 5 | 06 a 09/11 | Vídeo (ffmpeg para áudio), URL e YouTube. Gravar o vídeo depois de congelar. |
-| 6 | 09 a 12/11 | Polimento, `docs/PATTERNS.md`, "Uso de IA", tag 0.1.0, vídeo de defesa. Entrega até cerca de 20h do dia 12. |
+| 6 | 09 a 12/11 | Polimento, `docs/PATTERNS.md`, "Uso de IA", tag v1.0.0, vídeo de defesa. Entrega até cerca de 20h do dia 12. |
 
 ## Esboço de issues
 
@@ -159,7 +159,7 @@ README e vídeo de defesa não se cortam.
 3. ~~Duração máxima do vídeo~~: sem teto fixo na conversão (lotes, ver Decisões). Vídeo de defesa: duração ainda a definir, define 4 ou 6 padrões defendidos (default: 4, citando as reservas).
 4. ~~O professor aceita Chain, Registry e Facade?~~ Aceita (confirmado por Lucas Stopinski em 14/10/2026). Mínimo de padrões para dupla: 4 (decidido em 16/10/2026), os já distribuídos.
 5. Node 22 na máquina de cada um (`nvm install 22`).
-6. ~~Publicar no npm?~~ Decidido em 14/10/2026: `0.1.0` depois do parcial de 29/10 e `1.0.0` na entrega final. O login com 2FA é do Lucas. Roteiro na task do ClickUp "Publicar anymark 0.1.0 no npm" (30/10).
+6. ~~Publicar no npm?~~ Decidido em 14/10/2026 e revisto em 26/10/2026: `0.1.0` sai antes do parcial de 29/10 (o Lucas recuperou a conta), `0.x.y` a cada issue concluída, verificada e estável na `main` (minor para feature, patch para correção) e `1.0.0` na entrega final. O login com 2FA e o `yarn publish` são do Lucas. Antes de cada publicação: `yarn build`, conferir o tarball e instalá-lo numa pasta vazia.
 7. ~~Spike dos CLIs de IA~~ feito em 14/10/2026, ver "Backends de IA".
 8. ~~Significado de "vincular" no RAG~~: agir sobre um lote de documentos (decidido em 14/10/2026). Em 16/10/2026 o RAG ficou como adicional se sobrar tempo. Falta escolher a forma do vínculo (wikilinks, `related:` no front matter ou backlinks) e se é plugin de exemplo ou pacote próprio, antes de começar a #27.
 9. Prettier e ESLint ou Biome (default: Prettier e ESLint). Licença (default: MIT).
