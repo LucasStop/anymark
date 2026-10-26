@@ -108,7 +108,7 @@ Reconferir com `npm view` ao instalar. Versões conferidas em 14/10/2026: read-e
 | Marco | 29/10 | Apresentação parcial: caso padrão, extensão `.srt` sem tocar a lib, fallback de backend, padrões no código. |
 | 4 | 29/10 a 06/11 | Imagem e áudio (02/11 é feriado). Decorators (front matter, chunking). Observer (`addSink`). RAG opcional se sobrar. |
 | 5 | 06 a 09/11 | Vídeo (ffmpeg para áudio), URL e YouTube. Gravar o vídeo depois de congelar. |
-| 6 | 09 a 12/11 | Polimento, `docs/PATTERNS.md`, "Uso de IA", tag 0.1.0, vídeo de defesa. Entrega até cerca de 20h do dia 12. |
+| 6 | 09 a 12/11 | Polimento, `docs/PATTERNS.md`, "Uso de IA", tag v1.0.0, vídeo de defesa. Entrega até cerca de 20h do dia 12. |
 
 ## Esboço de issues
 
