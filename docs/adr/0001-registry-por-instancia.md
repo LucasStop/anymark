@@ -1,6 +1,6 @@
 # 0001. Registry por instância, sem global
 
-Status: proposta (14/10/2026). Dono: Lucas Bruno.
+Status: aceita (implementada; proposta em 14/10/2026). Dono: Lucas Bruno.
 
 ## Contexto
 

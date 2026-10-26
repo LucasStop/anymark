@@ -38,6 +38,15 @@ export class TesseractBackend implements Backend<Uint8Array, string> {
   readonly locality = 'local' as const;
 ```
 
+O Adapter está em `run`: a chamada do `tesseract.js` (`createWorker`, `recognize`) vira o contrato `Backend`.
+
+```ts
+// src/backends/TesseractBackend.ts
+  async run(input: Uint8Array, ctx: BackendContext): Promise<string> {
+    const { createWorker } = await import('tesseract.js');
+      const { data } = await worker.recognize(Buffer.from(input));
+```
+
 **Alternativa descartada.** Um `if/else` por provedor dentro do converter de imagem. Menos tipos no começo, mas cada provedor novo obriga a editar o converter (viola aberto/fechado) e mistura duas razões para mudar.
 
 **Por que Adapter.** O converter de imagem pede `ocr` e recebe texto; trocar tesseract por Gemini não toca nele. `locality` (`local`, `cli`, `remote`) deixa a lib negar CLI e rede por padrão.
@@ -70,6 +79,24 @@ export interface FormatHandler {
 }
 ```
 
+Um handler decide "trato ou passo adiante": responde com o mime ou chama `next()`.
+
+```ts
+// src/detection/handlers.ts
+export class SignatureHandler implements FormatHandler {
+  handle(input: DetectionInput, next: () => string | undefined): string | undefined {
+    const known = SIGNATURES.find((signature) => startsWith(input.data, signature.bytes));
+    if (known !== undefined) return known.mime;
+```
+
+```ts
+// src/detection/FormatDetectorChain.ts
+    const from = (index: number): string | undefined => {
+      const handler = this.#handlers[index];
+      return handler?.handle(input, () => from(index + 1));
+    };
+```
+
 **Alternativa descartada.** Um laço `for` sobre um array com `if` dentro, ou a lista clássica de sucessores em que cada elo guarda uma referência ao próximo. O laço é mais curto, mas deixa de ser extensível sem editar o laço, e a decisão de quem trata fica fora de quem conhece o caso. A cadeia aqui nunca inspeciona o elo: cada handler decide e, se não trata, chama `next()`. O encadeamento por closure (`() => from(index + 1)`) é a forma "middleware" do mesmo padrão.
 
 **Por que Chain.** Cada elo conhece só a própria regra (opt-in, disponibilidade, falha) e o próximo. Acrescentar um backend ou um detector é acrescentar um elo.
@@ -87,6 +114,19 @@ export interface Converter {
   readonly mimes: readonly string[];
   convert(source: Source, ctx: ConverterContext): Promise<ConversionResult>;
 }
+```
+
+Cada formato é uma estratégia; o `Anymark` escolhe uma em tempo de execução, pelo mime, e a usa sem saber qual é.
+
+```ts
+// src/converters/PdfConverter.ts
+export class PdfConverter implements Converter {
+```
+
+```ts
+// src/Anymark.ts
+const converter = mime === undefined ? undefined : await this.registry.resolve(mime);
+const result = await converter.convert(source, { sourceId, options, backends });
 ```
 
 **Alternativa descartada.** `switch (mime)` numa função. Funciona para três formatos; para dez, cada formato novo edita a função e todos os testes passam por ela.
@@ -134,7 +174,7 @@ export const srtPlugin: Plugin = {
 
 **Problema.** Escapar pipe em célula de tabela, aninhar listas e separar blocos é frágil se cada converter concatena strings de Markdown.
 
-**Onde.** `MarkdownBuilder` em `src/core/MarkdownBuilder.ts`. Converters descrevem estrutura (`heading`, `paragraph`, `list`, `table`, `code`); só o builder sabe escapar.
+**Onde.** `MarkdownBuilder` em `src/core/MarkdownBuilder.ts`. Os converters que montam Markdown à mão (csv, xlsx, pptx, json, xml, pdf, imagem) descrevem estrutura (`heading`, `paragraph`, `list`, `table`, `code`); só o builder sabe escapar. Docx e html passam por mammoth e turndown, sem o builder.
 
 ```ts
 // src/core/MarkdownBuilder.ts
@@ -153,6 +193,7 @@ const cell = (text: string): string =>
   text
     .replace(/\\/g, '\\\\')
     .replace(/\|/g, '\\|')
+    .replace(/\r\n|\r|\n/g, '<br>');
 ```
 
 **Alternativa descartada.** Concatenação de string em cada converter. Zero abstração, mas o escape de `|` e `\` se repete em dez lugares e um esquecido vira tabela quebrada.
@@ -173,6 +214,13 @@ async convert(input: Input, options: ConvertOptions = {}): Promise<ConversionRes
 ```ts
 // src/Anymark.ts
 const converter = mime === undefined ? undefined : await this.registry.resolve(mime);
+```
+
+```ts
+// src/Anymark.ts
+const mime = this.#detector.detect({ data, ...hints, ...(name === undefined ? {} : { name }) });
+const backends = new BackendChain(options.backends ?? this.#backends, options);
+const result = await converter.convert(source, { sourceId, options, backends });
 ```
 
 Uma chamada (`createAnymark().convert(bytes)`) esconde detecção, resolução do converter, cadeia de backends e identidade do resultado (`sourceId` é o hash do conteúdo, nunca vem do plugin).

@@ -46,7 +46,7 @@ Formato não reconhecido lança `UnsupportedFormatError`; arquivo ilegível lan�
 
 ### Imagem (OCR)
 
-`createAnymark()` já traz OCR local (tesseract.js, inglês, dados embutidos), sem rede:
+`createAnymark()` já traz OCR local (tesseract.js, inglês e português, dados embutidos), sem rede:
 
 ```ts
 const { markdown } = await createAnymark().convert({ data: pngBytes, name: 'pagina.png' });
@@ -71,7 +71,7 @@ No xlsx, abas `hidden` e `veryHidden`, linhas e colunas ocultas ficam fora do Ma
 
 ### PDF escaneado
 
-Página sem camada de texto é lida por OCR a partir da imagem embutida nela (a mesma cadeia de backends da seção anterior); página com texto nunca chama o backend. Sem imagem embutida, ou sem backend utilizável, a página fica vazia e o warning `PDF_NO_TEXT` avisa. Limites: 100 páginas, 4 imagens por página e 64 MB por imagem decodificada; o que passar disso vira o warning `PDF_OCR_SKIPPED` com a contagem.
+Página sem camada de texto é lida por OCR a partir da imagem embutida nela (a mesma cadeia de backends da seção anterior); página com texto nunca chama o backend. Sem imagem embutida, ou sem backend utilizável, a página fica vazia e o warning `PDF_NO_TEXT` avisa. Limites: 100 páginas escaneadas (sem camada de texto), 4 imagens por página e 64 MB por imagem decodificada; o que passar disso vira o warning `PDF_OCR_SKIPPED` com a contagem.
 
 Livro escaneado em folhas duplas (duas páginas impressas por página do PDF) e com rotação conhecida: declare o tipo e a lib aplica a correção, em vez de adivinhar.
 
