@@ -72,6 +72,12 @@ Node 22, `main` em 17bbca6. 39 arquivos de uso próprio (faculdade e estudo), 3 
 
 1.210 arquivos do Desktop (sem as pastas de faculdade e trabalho), conversão em lote com `scripts/manual-run.mjs`. Achado principal: célula de docx com mais de um parágrafo quebrava a linha da tabela em 17 de 29 docx (#85, corrigido: o `<br>` dentro de `td` e `th` sai literal). Lição em [PROBLEMAS.md](PROBLEMAS.md).
 
+## Rodada 3: 26/10/2026, Lucas Stopinski, ensaio do tarball (#98)
+
+`yarn pack` na `main`, tarball instalado com `yarn add file:` num projeto vazio fora do repositório, Node 22. Rodados pela API pública do pacote instalado: txt, csv, docx, pdf com texto, png (OCR) e `pdf: { layout: 'spread' }` (`specs/pdf/scanned-spread.pdf`, `lang: 'pt'`). Todos convertem, sem warnings, com o Markdown esperado; o spread leva cerca de 2,5 s. Tipos: um `.ts` com `createAnymark`, `ConversionResult`, `TesseractBackend`, as opções de `pdf` e `anymark/testing` passa no `tsc --strict` com `moduleResolution: nodenext`. `anymark/nope` falha com `ERR_PACKAGE_PATH_NOT_EXPORTED`, ou seja, `exports` só abre `.` e `./testing`.
+
+Conteúdo do tarball (109 entradas): `dist/`, `package.json`, `README.md`, `LICENSE` e `.env.example` (só nomes de variável). Dois achados sem efeito na lib: um `dist/.DS_Store` entra quando o `dist/` local tem o arquivo (o `dist/` do CI nasce limpo), e o `package.json` ainda diz `0.0.0` até a publicação de 0.1.0.
+
 ## Cenários ainda não rodados à mão
 
 Marcar data, responsável e resultado ao rodar.
