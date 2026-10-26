@@ -12,7 +12,13 @@ txt, md, csv, json, xml, html, docx, pptx, xlsx, pdf e, por OCR, png, jpg, gif e
 
 ## Instalação
 
-Requer Node 22 ou superior. A lib é só ESM. Ainda não está publicada no npm (prevista para depois de 29/10); por enquanto, gere o pacote a partir de um clone e instale o `.tgz` no seu projeto:
+Requer Node 22 ou superior. A lib é só ESM.
+
+```sh
+yarn add anymark
+```
+
+Para testar uma mudança local, gere o pacote a partir de um clone e instale o `.tgz` no seu projeto:
 
 ```sh
 git clone https://github.com/LucasStop/anymark.git
