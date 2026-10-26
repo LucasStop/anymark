@@ -18,7 +18,7 @@ Requer Node 22 ou superior. A lib é só ESM. Ainda não está publicada no npm 
 git clone https://github.com/LucasStop/anymark.git
 cd anymark
 yarn install
-yarn pack --filename anymark.tgz   # compila antes e gera anymark.tgz
+yarn build && yarn pack --filename anymark.tgz   # o pack não compila sozinho
 cd /caminho/do/seu/projeto
 yarn add file:/caminho/para/anymark/anymark.tgz
 ```
