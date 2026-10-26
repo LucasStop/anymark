@@ -1,6 +1,6 @@
 {
   "name": "anymark",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Convert any file to Markdown. Pluggable converters and AI backends with fallback.",
   "license": "MIT",
   "author": "Lucas Stopinski da Silva",
