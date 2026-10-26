@@ -1,6 +1,6 @@
 # 0006. Converter carregado sob demanda e extensão por plugin
 
-Status: proposta (14/10/2026). Dono: Lucas Bruno.
+Status: aceita (implementada; proposta em 14/10/2026). Dono: Lucas Bruno.
 
 ## Contexto
 
@@ -14,7 +14,7 @@ O registry guarda `ConverterEntry` com `load()` assíncrono, resolvido na primei
 
 - Import dinâmico por converter, e o resultado é guardado após o primeiro carregamento.
 - O kit `anymark/testing` valida converter de fábrica e plugin pelo mesmo contrato.
-- No Next.js, `serverExternalPackages` para `anymark` e `tesseract.js` (conferir na versão instalada).
+- No Next.js, `serverExternalPackages` para `anymark`, `tesseract.js`, `mammoth`, `unpdf` e `read-excel-file` (conferido em `examples/nextjs/next.config.mjs`).
 - Dois plugins com o mesmo mime: vale o último instalado (`use()` em ordem). Assim um plugin também substitui um converter embutido, e a regra é uma só, testada em `test/plugin.test.ts`.
 - `load()` lazy cobre o que uma Factory faria. Factory não é defendida como padrão.
 

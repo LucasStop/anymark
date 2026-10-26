@@ -1,6 +1,6 @@
 # 0009. O chamador declara o tipo do PDF escaneado
 
-Status: aceita (20/10/2026). Dono: Lucas Stopinski. Altera o contrato `ConvertOptions` em `src/core/types.ts` (campo `pdf`, aval do Bruno pendente no PR da #94).
+Status: aceita (20/10/2026). Dono: Lucas Stopinski. Altera o contrato `ConvertOptions` em `src/core/types.ts` (campo `pdf`, mergeado no PR #95 sem review do Bruno; aval ainda a registrar).
 
 ## Contexto
 

@@ -1,6 +1,6 @@
 # PRD: anymark
 
-Rascunho de 14/10/2026. Contexto e decisões: [PLAN.md](PLAN.md). Exigências do trabalho: [ENUNCIADO.md](ENUNCIADO.md).
+Rascunho de 14/10/2026, conferido contra o código em 26/10/2026. Contexto e decisões: [PLAN.md](PLAN.md). Exigências do trabalho: [ENUNCIADO.md](ENUNCIADO.md).
 
 ## Problema
 
@@ -8,7 +8,7 @@ Quem alimenta um LLM, um índice de RAG ou um vault do Obsidian recebe arquivos 
 
 ## Solução
 
-Biblioteca TypeScript `anymark`: `convert(input)` devolve Markdown e metadados para qualquer formato suportado. Formatos de texto, dados, Office e PDF funcionam de fábrica. Imagem, áudio, vídeo e URL entram depois, por backends de IA plugáveis com fallback (CLI já logado, chave de API ou ferramenta local). Quem quiser um formato novo escreve um plugin e registra na própria instância, sem tocar a lib.
+Biblioteca TypeScript `anymark`: `convert(input)` devolve Markdown e metadados para qualquer formato suportado. Formatos de texto, dados, Office e PDF funcionam de fábrica. Imagem (OCR) já funciona de fábrica; áudio, vídeo e URL entram depois, por backends de IA plugáveis com fallback (CLI já logado, chave de API ou ferramenta local). Quem quiser um formato novo escreve um plugin e registra na própria instância, sem tocar a lib.
 
 ## Histórias de usuário
 
@@ -32,14 +32,14 @@ Biblioteca TypeScript `anymark`: `convert(input)` devolve Markdown e metadados p
 - Fachada única (`Anymark`, criada por `createAnymark()`): detecta o formato, resolve o converter, aplica decorators, repassa aos sinks.
 - Registry por instância, nunca global. Converters entram como entradas com `load()` lazy. Plugin é um objeto que registra entradas.
 - `Converter` (Strategy) e `Backend` (Adapter) são contratos distintos, em classes distintas. Sem Template Method, sem Singleton.
-- Detecção em cadeia: cada handler decide "trato ou passo adiante" (assinatura, ZIP/OOXML, sniff de texto, extensão).
+- Detecção em cadeia: cada handler decide "trato ou passo adiante" (dica, assinatura, ZIP/OOXML, extensão, texto estruturado, texto puro).
 - `BackendChain`: ordem configurável, pula indisponível, exige opt-in por localidade, erro de backend vira warning sem chave nem caminho, todos falhando lança `NoBackendError`.
 - Execução de processo filho concentrada em um único ponto, sem shell, com timeout, `signal`, limite de buffer, ambiente em allowlist e entrada copiada para diretório temporário.
 - Metadados com `schemaVersion` e `sourceId` igual ao hash do conteúdo. Nada de caminho absoluto, chave ou dado do usuário em metadata ou log.
 - Conteúdo de documento e saída de CLI ou modelo são dado não confiável: nunca vão para shell nem viram instrução.
 - Contratos ficam congelados cedo e só mudam com aval dos dois.
-- MVP de 29/10: txt, md, csv, json, xml, html, docx, pptx, xlsx, pdf. Até 12/11: imagem (OCR), áudio (transcrição), vídeo, URL e YouTube.
-- Distribuição: ESM-only, Node >=22, TypeScript `~6.0`, licença MIT. Publicação no npm é corte nº 3.
+- MVP de 29/10: txt, md, csv, json, xml, html, docx, pptx, xlsx, pdf e imagem (OCR, já pronto). Até 12/11: áudio (transcrição), vídeo, URL e YouTube.
+- Distribuição: ESM-only, Node >=22, TypeScript `~6.0`, licença MIT. Publicado no npm em 26/10/2026 (0.1.0 manual, 0.1.1 por tag `v*`).
 
 ## Decisões de teste
 
@@ -49,7 +49,7 @@ Seams propostos, a confirmar:
 
 - `convert()` na fachada: fluxo ponta a ponta com fixtures pequenas, golden files em `specs/`.
 - Contrato `Converter`: o kit `anymark/testing` roda em todo converter, de fábrica ou plugin.
-- Contrato `Backend`: o mesmo kit, mais CLI falso em `fixtures/bin/`. Chamada real só com `ANYMARK_LIVE=1`.
+- Contrato `Backend`: o mesmo kit, mais CLI falso em `fixtures/bin/`. Chamada real só com `ANYMARK_LIVE=1` (convenção, ainda sem teste live).
 - `FormatDetectorChain`: bytes entram, formato sai, um caso por handler.
 - `BackendChain`: backends falsos provam ordem, pulo, opt-in e `NoBackendError`.
 - Plugin externo: o exemplo `.srt` registra sem alterar `src/`, e um teste prova isso.
@@ -69,5 +69,5 @@ Teste primeiro (casos definidos por uma pessoa): parsing, detecção de formato,
 ## Notas
 
 - Prazos: escopo do MVP congelado em 28/10, parcial apresentado em 29/10 (30% da nota), entrega em 12/11 às 23:59 BRT, alvo interno 20h.
-- Padrões defendidos (4 de dupla, proporcional ao mínimo de 8 por grupo de 4): Adapter e Chain (Stopinski), Strategy/Registry e Builder (Bruno). Decorator e Observer são reservas.
-- Pendências abertas que afetam este PRD: significado de "vincular" no RAG, aceitação de Chain, Registry e Facade pelo professor.
+- Padrões defendidos (4 de dupla, proporcional ao mínimo de 8 por grupo de 4): Adapter e Chain (Stopinski), Strategy/Registry e Builder (Bruno). Decorator e Observer são planejados (#23, #24) e ainda sem código; valem como reserva.
+- Pendências abertas que afetam este PRD: significado de "vincular" no RAG.

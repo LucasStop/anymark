@@ -1,6 +1,6 @@
 # 0002. `Converter` e `Backend` são interfaces distintas
 
-Status: proposta (14/10/2026). Dono: Lucas Stopinski.
+Status: aceita (implementada; proposta em 14/10/2026). Dono: Lucas Stopinski.
 
 ## Contexto
 
@@ -13,7 +13,7 @@ Dois eixos de variação: o formato do arquivo (docx, pdf, csv) e o provedor que
 ## Consequências
 
 - Trocar o OCR não toca o converter de imagem. Adicionar um formato não toca nenhum backend.
-- `Backend` tem vários adapters reais, então o seam se paga. `Converter` idem.
+- `Converter` tem vários adapters reais (um por formato). `Backend` tem só o `TesseractBackend` hoje; os demais são as issues #20 a #22, então esse seam ainda é hipotético até o segundo adapter.
 - A defesa de cada padrão fica em um lugar só, sem mistura.
 
 ## Alternativa descartada

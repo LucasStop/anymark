@@ -1,6 +1,6 @@
 # anymark
 
-Biblioteca TypeScript que converte qualquer arquivo em Markdown. O núcleo cobre texto, dados, Office e PDF; imagem, áudio, vídeo e URL entram depois, por backends de IA plugáveis com fallback. É o trabalho final de Design Patterns (PUCPR, 2026/2), em dupla. A nota avalia a justificativa da arquitetura e dos padrões, não a quantidade de formatos.
+Biblioteca TypeScript que converte qualquer arquivo em Markdown. O núcleo cobre texto, dados, Office e PDF; imagem (OCR, já pronta), áudio, vídeo e URL por backends de IA plugáveis com fallback. É o trabalho final de Design Patterns (PUCPR, 2026/2), em dupla. A nota avalia a justificativa da arquitetura e dos padrões, não a quantidade de formatos.
 
 Este arquivo é o contexto de qualquer agente (Claude Code, Codex, Gemini) que trabalhe aqui. O roteiro completo está em [docs/PLAN.md](docs/PLAN.md) e as exigências do trabalho em [docs/ENUNCIADO.md](docs/ENUNCIADO.md).
 
@@ -19,8 +19,8 @@ Este arquivo é o contexto de qualquer agente (Claude Code, Codex, Gemini) que t
 
 ## Escopo
 
-- MVP (29/10): txt, md, csv, json, xml, html, docx, pptx, xlsx, pdf.
-- Até 12/11: imagem (OCR), áudio (transcrição), vídeo, URL e YouTube.
+- MVP (29/10): txt, md, csv, json, xml, html, docx, pptx, xlsx, pdf e imagem (OCR).
+- Até 12/11: áudio (transcrição), vídeo, URL e YouTube.
 - Saída pensada para três usos: contexto de LLM/RAG, Obsidian e leitura humana.
 - Fora do core: RAG para vincular os `.md` de um repositório. Componente opcional, segunda entrega.
 - A entrega é só a lib. O exemplo em `examples/nextjs` é um consumidor de demonstração: não é backend e não tem deploy.
@@ -36,7 +36,7 @@ Este arquivo é o contexto de qualquer agente (Claude Code, Codex, Gemini) que t
 | Strategy e Registry/Plugin | Lucas Bruno | `Converter` por mime, `ConverterRegistry` |
 | Builder | Lucas Bruno | `MarkdownBuilder` |
 
-Extras no código: Decorator (Stopinski), Observer (Bruno) e Facade (`Anymark.convert()`). Problema resolvido, alternativa descartada e evidência de cada padrão: seção "Padrões e defesa" de [docs/PLAN.md](docs/PLAN.md).
+Facade (`Anymark.convert()`) está no código. Decorator (Stopinski, #23) e Observer (Bruno, #24) são planejados e ainda sem código. Problema resolvido, alternativa descartada e evidência de cada padrão: seção "Padrões e defesa" de [docs/PLAN.md](docs/PLAN.md).
 
 Regras de design:
 
@@ -54,7 +54,7 @@ Formato novo é um `Converter` dentro de um `Plugin` (`createAnymark().use(plugi
 
 ## Fluxo
 
-`convert(input)` entra em `Anymark` (Facade) e passa pelo `FormatDetectorChain`. O `ConverterRegistry` devolve o `Converter`, carregado sob demanda e envolto em Decorators. Imagem e áudio passam pela `BackendChain`. O resultado vai para os `ResultSink` (Observer). Os contratos ficam em `src/core/types.ts`, congelados cedo e alterados só com aval dos dois.
+`convert(input)` entra em `Anymark` (Facade) e passa pelo `FormatDetectorChain`. O `ConverterRegistry` devolve o `Converter`, carregado sob demanda (Decorators planejados, #23). Imagem e áudio passam pela `BackendChain`. `ResultSink` (Observer) é planejado, #24. Os contratos ficam em `src/core/types.ts`, congelados cedo e alterados só com aval dos dois.
 
 ## Convenções
 

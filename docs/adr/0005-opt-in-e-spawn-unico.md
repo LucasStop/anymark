@@ -1,6 +1,6 @@
 # 0005. Opt-in de CLI e rede, e `spawn` único
 
-Status: proposta (14/10/2026). Dono: Lucas Stopinski.
+Status: aceita (implementada; proposta em 14/10/2026). Dono: Lucas Stopinski.
 
 ## Contexto
 
@@ -16,7 +16,7 @@ Backends chamam CLIs de IA já logados e APIs remotas. O conteúdo do documento 
 ## Consequências
 
 - Uma falha de segurança é corrigida em um lugar. `spawn` e os backends passam por `/security-review` antes do merge.
-- Teste não gasta quota: CLI falso em `fixtures/bin/`, chamada real só com `ANYMARK_LIVE=1`.
+- Teste não gasta quota: CLI falso em `fixtures/bin/`, chamada real só com `ANYMARK_LIVE=1` (convenção; ainda não há teste live).
 - O custo é um módulo a mais que todo adapter de CLI precisa usar.
 
 ## Alternativa descartada
