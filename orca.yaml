@@ -1,0 +1,5 @@
+scripts:
+  setup: |
+    # .env é gitignored: copia do checkout principal em vez de commitar
+    if [ -f "$ORCA_ROOT_PATH/.env" ] && [ ! -f .env ]; then cp "$ORCA_ROOT_PATH/.env" .env; fi
+    yarn install
