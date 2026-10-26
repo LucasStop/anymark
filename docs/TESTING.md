@@ -76,9 +76,9 @@ Node 22, `main` em 17bbca6. 39 arquivos de uso próprio (faculdade e estudo), 3 
 
 `yarn pack` na `main`, tarball instalado com `yarn add file:` num projeto vazio fora do repositório, Node 22. Rodados pela API pública do pacote instalado: txt, csv, docx, pdf com texto, png (OCR) e `pdf: { layout: 'spread' }` (`specs/pdf/scanned-spread.pdf`, `lang: 'pt'`). Todos convertem, sem warnings, com o Markdown esperado; o spread leva cerca de 2,5 s. Tipos: um `.ts` com `createAnymark`, `ConversionResult`, `TesseractBackend`, as opções de `pdf` e `anymark/testing` passa no `tsc --strict` com `moduleResolution: nodenext`. `anymark/nope` falha com `ERR_PACKAGE_PATH_NOT_EXPORTED`, ou seja, `exports` só abre `.` e `./testing`.
 
-Conteúdo do tarball (109 entradas): `dist/`, `package.json`, `README.md`, `LICENSE` e `.env.example` (só nomes de variável). Achados: o `.env.example` entra sem estar em `files` (o yarn clássico o inclui por conta própria); um `dist/.DS_Store` entra quando o `dist/` local tem o arquivo; o `package.json` ainda diz `0.0.0` até a publicação de 0.1.0.
+Conteúdo do tarball (109 entradas com o `.DS_Store` local, 108 num build limpo): `dist/`, `package.json`, `README.md`, `LICENSE` e `.env.example` (só nomes de variável). Achados: o `.env.example` entra sem estar em `files` (o yarn clássico o inclui por conta própria); um `dist/.DS_Store` entra quando o `dist/` local tem o arquivo; o `package.json` ainda diz `0.0.0` até a publicação de 0.1.0.
 
-Achado que importa (#148): o `yarn pack` do yarn clássico não roda o `prepack`. Com `dist/` apagado, o tarball sai com 5 entradas e sem `dist/`; o ensaio acima usou um `dist/` já compilado. Por isso o README e a publicação passam a rodar `yarn build` antes do `yarn pack` e do `yarn publish`, e o tarball de um `dist/` recém-compilado é conferido antes de publicar.
+Achado que importa (#148): o `.yarnrc` do repositório tem `ignore-scripts true`, então o yarn não roda o `prepack` (`yarn build`) no `yarn pack` nem no `yarn publish`. Com `dist/` apagado, o tarball sai com 5 entradas e sem `dist/`; o ensaio acima usou um `dist/` já compilado. Por isso o README e a publicação rodam `yarn build` antes do `yarn pack` e do `yarn publish`, e o `release.yml` compila e confere o tarball antes de anexá-lo ao Release.
 
 ## Cenários ainda não rodados à mão
 
