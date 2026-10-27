@@ -48,7 +48,7 @@ import { srtPlugin } from './srtPlugin.js';
 const anymark = createAnymark().use(srtPlugin);
 ```
 
-Na demo: enviar um `.srt` no example (o plugin já vem registrado em `examples/nextjs/lib/anymark.ts`). Numa instância sem o plugin, `.srt` lança `UnsupportedFormatError`; com ele sai um parágrafo por legenda. Para mostrar o contraste ao vivo: `createAnymark().convert(...)` falha e `createAnymark().use(srtPlugin).convert(...)` funciona. O conteúdo da legenda é tratado como dado não confiável (o plugin tira tags e neutraliza link e imagem).
+Na demo: enviar um `.srt` no example (o plugin já vem registrado em `examples/nextjs/lib/anymark.ts`). Numa instância sem o plugin, o `.srt` não dá erro: sai como texto simples, com os tempos soltos (`text/plain`); com ele sai um parágrafo por legenda. Para mostrar o contraste ao vivo: `createAnymark().convert(...)` devolve o texto cru e `createAnymark().use(srtPlugin).convert(...)` devolve o Markdown estruturado. O conteúdo da legenda é tratado como dado não confiável (o plugin tira tags e neutraliza link e imagem).
 
 ## 5. Strategy, Registry/Plugin e Builder (Bruno, 3 min)
 
