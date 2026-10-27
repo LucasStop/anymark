@@ -8,7 +8,7 @@ Paráfrase das exigências da disciplina de Design Patterns (PUCPR, 2026/2). Nã
 - Linguagem e tema livres, em grupo de até 4 pessoas. O uso de IA é permitido; a avaliação foca na justificativa da arquitetura.
 - Funcionalidade padrão já pronta (o enunciado cita XML e CSV como exemplo).
 - Extensível sem alterar o código da lib (princípio aberto/fechado).
-- A escolha dos padrões é do grupo. Um grupo de 4 defende 8 padrões diferentes; para uma dupla, o mínimo proporcional é 4 (inferência, confirmar com o professor).
+- A escolha dos padrões é do grupo. Cada aluno apresenta 2 padrões diferentes, então um grupo de 4 defende 8 e uma dupla defende 4.
 - No Canvas, a entrega é só o link do repositório.
 
 ## README
