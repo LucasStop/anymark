@@ -115,7 +115,7 @@ O símbolo vive numa grade de 48 unidades: bloco de 42 por 42 a 3 unidades da bo
 
 ### Aplicações
 
-Geradas por `scripts/export-brand-applications.mjs` em `design/brand/applications/`, sobre os tokens escuros, com texto em contornos de Inter: banner do README (1280x320), social preview (1280x640), thumbnail do vídeo (1280x720) e vinheta de abertura e fechamento (1920x1080). A frase de apoio é "Qualquer arquivo, em Markdown."; na miniatura do vídeo, a contagem de padrões é a do código (oito). Enviar o social preview em Settings do GitHub é ação do dono do repositório. Ainda sem arquivo: template de slides, lower thirds e logo do npm/typedoc (#114).
+Geradas por `scripts/export-brand-applications.mjs` em `design/brand/applications/`, sobre os tokens escuros, com texto em contornos de Inter: banner do README (1280x320), social preview (1280x640), thumbnail do vídeo (1280x720) vinheta de abertura e fechamento (1920x1080), modelo de slides 16:9 (1920x1080: `slide-cover`, `slide-title`, `slide-code`, `slide-diagram`, `slide-closing`, com margem de 120 e cabeçalho com o símbolo) e dois lower thirds com canal alfa (`lower-third-stopinski` e `lower-third-bruno`, canto inferior esquerdo, para pôr por cima do vídeo). A frase de apoio é "Qualquer arquivo, em Markdown."; na miniatura do vídeo, a contagem de padrões é a do código (oito). Enviar o social preview em Settings do GitHub é ação do dono do repositório. A página do npm usa o banner do README como logo; a documentação do typedoc usa `design/brand/logo/favicon.svg` (`favicon` em `typedoc.json`).
 
 ### Inventário
 
