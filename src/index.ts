@@ -43,3 +43,4 @@ export {
   ZipHandler,
 } from './detection/handlers.js';
 export { createDefaultDetector } from './detection/index.js';
+export { FrontMatterDecorator } from './decorators/FrontMatterDecorator.js';

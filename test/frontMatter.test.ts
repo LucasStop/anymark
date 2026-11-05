@@ -17,16 +17,19 @@ const ctx: ConverterContext = {
 const inner = (title?: string): Converter => ({
   name: 'inner',
   mimes: ['text/plain'],
-  convert: async (_source, c) => ({
-    markdown: '# Hello\n\nbody\n',
-    metadata: {
-      schemaVersion: 1,
-      sourceId: c.sourceId,
-      mime: 'text/plain',
-      ...(title ? { title } : {}),
-    },
-    warnings: [{ code: 'W', message: 'kept' }],
-  }),
+  convert: async (_source, c) => {
+    c.options.signal?.throwIfAborted();
+    return {
+      markdown: '# Hello\n\nbody\n',
+      metadata: {
+        schemaVersion: 1,
+        sourceId: c.sourceId,
+        mime: 'text/plain',
+        ...(title ? { title } : {}),
+      },
+      warnings: [{ code: 'W', message: 'kept' }],
+    };
+  },
 });
 
 describe('FrontMatterDecorator', () => {
