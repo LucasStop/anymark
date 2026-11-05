@@ -1,0 +1,30 @@
+#!/usr/bin/env node
+// Stand-in for yt-dlp so tests never touch the network. It insists on the safe flags, so a call that
+// drops them fails here. The child env is allowlisted, so test control goes through files next to the temp dir
+// (its parent is the test's TMPDIR): ytdlp.log gets the URL argument, a `ytdlp.fail` file makes it leak on stderr.
+import { appendFileSync, existsSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+const args = process.argv.slice(2);
+const beside = (name) => join(process.cwd(), '..', name);
+appendFileSync(beside('ytdlp.log'), `${args.at(-1)}\n`);
+if (existsSync(beside('ytdlp.fail'))) {
+  process.stderr.write('leaked-secret https://www.youtube.com/watch?v=aaaaaaaaaaa');
+  process.exit(1);
+}
+const out = args[args.indexOf('-o') + 1];
+const safe =
+  args.includes('--no-playlist') &&
+  args.includes('-x') &&
+  args.at(-2) === '--' &&
+  /^https:\/\/www\.youtube\.com\/watch\?v=[\w-]{11}$/.test(args.at(-1)) &&
+  out !== undefined;
+if (!safe) {
+  process.stderr.write('unsafe or malformed yt-dlp call');
+  process.exit(2);
+}
+const wav = Buffer.alloc(44);
+wav.write('RIFF', 0);
+wav.writeUInt32LE(36, 4);
+wav.write('WAVEfmt ', 8);
+writeFileSync(out, wav);

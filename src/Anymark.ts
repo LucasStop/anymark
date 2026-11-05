@@ -5,7 +5,7 @@ import { BackendChain } from './backends/BackendChain.js';
 import { TesseractBackend } from './backends/TesseractBackend.js';
 import { builtInEntries } from './converters/index.js';
 import { ConverterRegistry } from './core/ConverterRegistry.js';
-import { UnsupportedFormatError } from './core/errors.js';
+import { ConversionError, UnsupportedFormatError } from './core/errors.js';
 import type {
   Backend,
   ConversionResult,
@@ -21,8 +21,10 @@ import type {
 import { decodeText } from './converters/decodeText.js';
 import { createDefaultDetector } from './detection/index.js';
 import type { FormatDetectorChain } from './detection/FormatDetectorChain.js';
+import { assertOptIn } from './security/optIn.js';
 import { fetchUrl, type UrlOptions } from './security/urlFetch.js';
 import { extractArticle } from './url/article.js';
+import { downloadYoutubeAudio, youtubeId } from './url/youtube.js';
 
 const SINK_FAILED: ConversionWarning = {
   code: 'SINK_FAILED',
@@ -103,6 +105,20 @@ export class Anymark {
             },
           ],
         };
+  }
+
+  /**
+   * Transcribes the sound track of a YouTube video: yt-dlp (`allowCli`) downloads it from the
+   * network (`allowNetwork`) and the audio path does the rest. Only the validated video id reaches yt-dlp.
+   */
+  async convertYoutube(link: string, options: ConvertOptions = {}): Promise<ConversionResult> {
+    assertOptIn('cli', options);
+    assertOptIn('remote', options);
+    options.signal?.throwIfAborted();
+    const id = youtubeId(link);
+    if (id === undefined) throw new ConversionError('YouTube');
+    const wav = await downloadYoutubeAudio(id, options);
+    return this.convert({ data: wav, mime: 'audio/wav' }, options);
   }
 
   async convert(input: Input, options: ConvertOptions = {}): Promise<ConversionResult> {

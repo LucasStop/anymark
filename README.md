@@ -8,7 +8,7 @@ Trabalho final de Design Patterns (PUCPR, 2026/2), feito em dupla por **Lucas St
 
 ## Formatos
 
-txt, md, csv, json, xml, html, docx, pptx, xlsx, pdf e, por OCR, png, jpg, gif e webp. Áudio (wav, mp3, flac e ogg) é transcrito pelo whisper.cpp (veja "Transcrever áudio"). URL entra por `convertUrl` (veja "Converter uma página"). Vídeo (mp4, mov, webm, mkv) tem o áudio extraído pelo ffmpeg e transcrito (veja "Transcrever vídeo"). Os formatos legados `.doc`, `.ppt` e `.xls` (OLE2) não são suportados e geram `UnsupportedFormatError`: salve como `.docx`, `.pptx` ou `.xlsx`. Limites conhecidos estão em [docs/TESTING.md](docs/TESTING.md).
+txt, md, csv, json, xml, html, docx, pptx, xlsx, pdf e, por OCR, png, jpg, gif e webp. Áudio (wav, mp3, flac e ogg) é transcrito pelo whisper.cpp (veja "Transcrever áudio"). URL entra por `convertUrl` (veja "Converter uma página"). Vídeo (mp4, mov, webm, mkv) tem o áudio extraído pelo ffmpeg e transcrito (veja "Transcrever vídeo"). Link do YouTube entra por `convertYoutube` (veja "Transcrever um vídeo do YouTube"). Os formatos legados `.doc`, `.ppt` e `.xls` (OLE2) não são suportados e geram `UnsupportedFormatError`: salve como `.docx`, `.pptx` ou `.xlsx`. Limites conhecidos estão em [docs/TESTING.md](docs/TESTING.md).
 
 ## Instalação
 
@@ -154,6 +154,18 @@ const result = await createAnymark().convert(
 ```
 
 O ffmpeg roda com `-protocol_whitelist file`: o contêiner não consegue mandá-lo ler playlist, URL ou outro arquivo local. Sem lotes: o vídeo inteiro vai numa passada (teto de 10 min de ffmpeg e 200 MB de áudio).
+
+### Transcrever um vídeo do YouTube
+
+```ts
+const result = await createAnymark().convertYoutube('https://youtu.be/dQw4w9WgXcQ', {
+  backends: [new WhisperBackend()],
+  allowCli: true,
+  allowNetwork: true,
+});
+```
+
+Precisa dos dois opt-ins: `allowCli` (yt-dlp) e `allowNetwork` (o download). Só o id de 11 caracteres, validado, chega ao `yt-dlp`, que recebe sempre `https://www.youtube.com/watch?v=<id>` depois de `--` e com `--no-playlist`: playlist, host parecido ou valor em forma de flag são recusados antes de iniciar o processo. `ANYMARK_YTDLP` troca o caminho do binário. O áudio baixado segue o caminho do áudio; erro do yt-dlp não leva stderr, link nem caminho.
 
 ### Converter uma página
 

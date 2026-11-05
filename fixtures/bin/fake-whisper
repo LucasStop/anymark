@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 // Stand-in for whisper-cli so tests never need a model. Prints what it was asked to do, so a test can
-// check the flags. `FAKE_WHISPER_MODE=fail` exits non-zero and leaks a secret on stderr.
+// check the flags. The child env is allowlisted, so a `whisper.fail` file next to the temp dir (the test's TMPDIR)
+// makes it exit non-zero and leak a secret on stderr.
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 const args = process.argv.slice(2);
-if (process.env.FAKE_WHISPER_MODE === 'fail') {
+if (existsSync(join(process.cwd(), '..', 'whisper.fail'))) {
   process.stderr.write('leaked-secret /Users/me/key');
   process.exit(3);
 }
