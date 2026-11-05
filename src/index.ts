@@ -8,6 +8,8 @@ export { GeminiBackend } from './backends/GeminiBackend.js';
 export type { GeminiOptions } from './backends/GeminiBackend.js';
 export { OpenAiBackend } from './backends/OpenAiBackend.js';
 export type { OpenAiOptions } from './backends/OpenAiBackend.js';
+export { UrlFetchError } from './security/urlFetch.js';
+export type { UrlOptions } from './security/urlFetch.js';
 export { ConverterRegistry } from './core/ConverterRegistry.js';
 export { MarkdownBuilder } from './core/MarkdownBuilder.js';
 export type { ListItem } from './core/MarkdownBuilder.js';
