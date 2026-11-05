@@ -1,0 +1,10 @@
+#!/usr/bin/env node
+// Stand-in for whisper-cli so tests never need a model. Prints what it was asked to do, so a test can
+// check the flags. `FAKE_WHISPER_MODE=fail` exits non-zero and leaks a secret on stderr.
+const args = process.argv.slice(2);
+if (process.env.FAKE_WHISPER_MODE === 'fail') {
+  process.stderr.write('leaked-secret /Users/me/key');
+  process.exit(3);
+}
+const value = (flag) => args[args.indexOf(flag) + 1];
+process.stdout.write(`\n heard lang=${value('-l')} ctx=${value('-mc')} nt=${args.includes('-nt')}\n`);
