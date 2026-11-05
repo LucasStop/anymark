@@ -40,6 +40,6 @@ No máximo 10 minutos no total (conferido no Canvas em 05/11/2026). Cada aluno d
 - [ ] Repositório público, com a `main` verde no CI.
 - [ ] README com nomes completos, link do vídeo, uso e "Uso de IA".
 - [ ] Caso padrão e caso de extensão funcionando a partir do README.
-- [ ] Cada padrão defendido tem trecho de código que o prova (`docs/PATTERNS.md`).
+- [x] Cada padrão defendido tem trecho de código que o prova (`docs/PATTERNS.md`; `test/docs-references.test.ts` confere que cada trecho existe no arquivo citado).
 - [ ] Vídeo publicado, cobrindo os três blocos.
 - [ ] Link entregue no Canvas (confirmar se cada aluno entrega o seu).
