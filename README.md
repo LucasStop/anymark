@@ -104,6 +104,14 @@ Cada chunk traz `index`, `headingPath` e `text`. Padrão: `maxChars` 2000, `over
 
 `addSink` registra um `ResultSink` (Observer) que recebe o progresso e o resultado de cada conversão, por instância. Os dois ganchos são opcionais; um sink que lança é pulado e o resultado ganha o warning `SINK_FAILED`. Exemplos prontos em `examples/sinks/index.ts`.
 
+Para acompanhar só uma chamada, passe `onProgress` nas opções. PDF escaneado emite um evento `ocr` por página lida, com o total conhecido de início (`{ stage: 'ocr', current: 3, total: 40 }`); toda conversão emite `convert` de 0 para 1.
+
+```ts
+await anymark.convert(input, {
+  onProgress: ({ stage, current, total }) => console.log(`${stage} ${current}/${total}`),
+});
+```
+
 ```ts
 const anymark = createAnymark().addSink({
   onProgress: ({ stage, current, total }) => console.log(stage, current, total),

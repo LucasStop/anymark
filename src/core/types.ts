@@ -50,6 +50,8 @@ export interface ConvertOptions {
   readonly includeHidden?: boolean;
   /** Scanned PDFs only. Without it: `single` pages, `auto` rotation. */
   readonly pdf?: PdfOptions;
+  /** Progress of this call only, like a sink with just `onProgress`. A throw is skipped, never fatal. */
+  readonly onProgress?: (event: ProgressEvent) => void | Promise<void>;
 }
 
 /** A non-fatal problem. Never carries keys, absolute paths or user data. */
@@ -108,6 +110,8 @@ export interface ConverterContext {
   readonly sourceId: string;
   readonly options: ConvertOptions;
   readonly backends: BackendRunner;
+  /** Tells the sinks how far along the converter is. Absent in a bare context; await it. */
+  readonly progress?: (event: ProgressEvent) => Promise<void>;
 }
 
 /** Strategy: turns one format into Markdown. Never talks to a provider directly. */

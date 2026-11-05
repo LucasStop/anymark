@@ -218,6 +218,9 @@ async function ocrScans(
   const pages = [...texts];
   let skipped = 0;
   let looked = 0;
+  // Pages past the OCR cap are skipped, so they are not part of the total the caller waits for.
+  const total = Math.min(texts.filter((text) => text.trim() === '').length, MAX_OCR_PAGES);
+  const tick = () => ctx.progress?.({ stage: 'ocr', current: looked, total });
   for (const [index, text] of texts.entries()) {
     if (text.trim() !== '') continue;
     ctx.options.signal?.throwIfAborted();
@@ -231,6 +234,7 @@ async function ocrScans(
     try {
       ({ images, rotate } = await pageImages(pdf, index + 1));
     } catch {
+      await tick();
       continue; // an image pdf.js cannot decode: the page stays empty
     }
     const found: string[] = [];
@@ -252,6 +256,7 @@ async function ocrScans(
       }
     }
     pages[index] = joinTexts(found, kind);
+    await tick();
   }
   return { pages, skipped, failed: false };
 }
