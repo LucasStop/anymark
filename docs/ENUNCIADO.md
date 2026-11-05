@@ -20,6 +20,8 @@ Paráfrase das exigências da disciplina de Design Patterns (PUCPR, 2026/2). Nã
 
 ## Vídeo
 
+No máximo 10 minutos no total (conferido no Canvas em 05/11/2026). Cada aluno defende 2 padrões, então uma dupla cobre 4 padrões em cerca de 6 minutos, com 4 de visão geral e uso.
+
 1. Visão geral da lib.
 2. Uso prático: caso padrão e caso com extensão (plugin sem tocar a lib).
 3. Defesa arquitetural. Para cada padrão: qual é, onde está no código (com trecho), qual problema de design resolve e por que é adequado. Levar também a alternativa descartada, com prós e contras.
@@ -30,8 +32,8 @@ Paráfrase das exigências da disciplina de Design Patterns (PUCPR, 2026/2). Nã
 |---|---|
 | 28/10/2026 | congelar o escopo do MVP |
 | 29/10/2026 | apresentação do estado parcial, vale 30% da nota |
-| 12/11/2026, 23:59 (Brasília) | entrega final |
-| 17 a 19/11/2026 | apresentação em aula, conforme o cronograma da disciplina (confirmar) |
+| 18/11/2026, 23:59 (Brasília) | entrega final |
+| 17 a 19/11/2026 | apresentação em sala (RA2), conforme o ClickUp; faz parte desta mesma entrega |
 
 ## Checklist final
 
