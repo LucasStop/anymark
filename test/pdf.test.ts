@@ -14,7 +14,8 @@ describe('pdf converter', () => {
 
     expect(result.markdown).toBe(spec('pdf/simple.md').toString('utf8'));
     expect(result.metadata.mime).toBe('application/pdf');
-  });
+    // First load of pdfjs in a cold CI runner can pass the 5 s default.
+  }, 30_000);
 
   it('warns, without naming anything, when no page has a text layer', async () => {
     const data = new Uint8Array(spec('pdf/no-text.pdf'));

@@ -17,9 +17,9 @@ Cada padrão abaixo traz o problema que resolve, onde está no código, um trech
 
 ## Adapter (Lucas Stopinski)
 
-**Problema.** Provedores de IA têm interfaces incompatíveis: tesseract.js é WASM com `createWorker`, `claude -p` é um CLI com flags, Gemini é uma API HTTP. O restante da lib não pode saber disso. Hoje só o adapter do tesseract existe; os de Gemini e `claude -p` são as issues #21 e #22.
+**Problema.** Provedores de IA têm interfaces incompatíveis: tesseract.js é WASM com `createWorker`, `claude -p` é um CLI com flags, Gemini é uma API HTTP. O restante da lib não pode saber disso. Existem quatro adapters: tesseract (WASM), whisper.cpp (CLI), Gemini e OpenAI (APIs); os de CLI de conta (`claude -p`) ficaram fora do escopo.
 
-**Onde.** `Backend` em `src/core/types.ts` é o contrato; cada provedor é um adapter. O primeiro é o `TesseractBackend` em `src/backends/TesseractBackend.ts`.
+**Onde.** `Backend` em `src/core/types.ts` é o contrato; cada provedor é um adapter. O primeiro é o `TesseractBackend` em `src/backends/TesseractBackend.ts`; o mesmo contrato cobre `WhisperBackend` (CLI), `GeminiBackend` e `OpenAiBackend` (remotos), cada um com a sua `locality`.
 
 ```ts
 // src/core/types.ts
@@ -38,6 +38,16 @@ export class TesseractBackend implements Backend<Uint8Array, string> {
   readonly name = 'tesseract';
   readonly capability = 'ocr' as const;
   readonly locality = 'local' as const;
+```
+
+Outro provedor, outra `locality`, mesmo contrato:
+
+```ts
+// src/backends/WhisperBackend.ts
+export class WhisperBackend implements Backend<Uint8Array, string> {
+  readonly name = 'whisper-cli';
+  readonly capability = 'transcription' as const;
+  readonly locality = 'cli' as const;
 ```
 
 O Adapter está em `run`: a chamada do `tesseract.js` (`createWorker`, `recognize`) vira o contrato `Backend`.
