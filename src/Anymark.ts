@@ -18,8 +18,11 @@ import type {
   ResultSink,
   Source,
 } from './core/types.js';
+import { decodeText } from './converters/decodeText.js';
 import { createDefaultDetector } from './detection/index.js';
 import type { FormatDetectorChain } from './detection/FormatDetectorChain.js';
+import { fetchUrl, type UrlOptions } from './security/urlFetch.js';
+import { extractArticle } from './url/article.js';
 
 const SINK_FAILED: ConversionWarning = {
   code: 'SINK_FAILED',
@@ -66,6 +69,40 @@ export class Anymark {
   addSink(sink: ResultSink): this {
     this.#sinks.push(sink);
     return this;
+  }
+
+  /**
+   * Fetches a public web page and converts it. HTML is reduced to its article first; any other
+   * content type goes to its own converter. Needs `allowNetwork`; private hosts need `allowPrivateHosts`.
+   */
+  async convertUrl(url: string, options: UrlOptions = {}): Promise<ConversionResult> {
+    const page = await fetchUrl(url, options);
+    if (page.mime !== 'text/html' && page.mime !== 'application/xhtml+xml') {
+      return this.convert(
+        page.mime === undefined ? page.data : { data: page.data, mime: page.mime },
+        options,
+      );
+    }
+    const article = await extractArticle(decodeText(page.data));
+    const result = await this.convert(
+      {
+        data: article === undefined ? page.data : new TextEncoder().encode(article),
+        mime: 'text/html',
+      },
+      options,
+    );
+    return article !== undefined
+      ? result
+      : {
+          ...result,
+          warnings: [
+            ...result.warnings,
+            {
+              code: 'URL_NOT_ARTICLE',
+              message: 'No article was found; the whole page was converted.',
+            },
+          ],
+        };
   }
 
   async convert(input: Input, options: ConvertOptions = {}): Promise<ConversionResult> {

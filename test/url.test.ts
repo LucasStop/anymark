@@ -14,7 +14,7 @@ beforeEach(async () => {
   routes = {};
   server = createServer((req, res) => {
     hits.push(req.url ?? '');
-    const route = routes[req.url ?? ''];
+    const route = routes[(req.url ?? '').split('?')[0]!];
     if (route === undefined) {
       res.writeHead(404).end();
       return;
