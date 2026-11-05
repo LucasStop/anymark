@@ -1,0 +1,31 @@
+#!/usr/bin/env node
+// Stand-in for ffmpeg so tests never need the real binary. It insists on the safe flags, so a
+// call that drops them fails here. FAKE_FFMPEG_LOG appends one line per run; FAKE_FFMPEG_MODE=fail leaks on stderr.
+import { appendFileSync, existsSync, writeFileSync } from 'node:fs';
+
+const args = process.argv.slice(2);
+if (process.env.FAKE_FFMPEG_LOG) appendFileSync(process.env.FAKE_FFMPEG_LOG, 'run\n');
+if (process.env.FAKE_FFMPEG_MODE === 'fail') {
+  process.stderr.write('leaked-secret /Users/me/video.mp4');
+  process.exit(1);
+}
+const at = (flag) => args[args.indexOf(flag) + 1];
+const out = args[args.length - 1];
+const safe =
+  args.includes('-nostdin') &&
+  args.includes('-vn') &&
+  args.indexOf('-protocol_whitelist') >= 0 &&
+  args.indexOf('-protocol_whitelist') < args.indexOf('-i') &&
+  at('-protocol_whitelist') === 'file' &&
+  at('-ar') === '16000' &&
+  at('-ac') === '1' &&
+  existsSync(at('-i'));
+if (!safe) {
+  process.stderr.write('unsafe or malformed ffmpeg call');
+  process.exit(2);
+}
+const wav = Buffer.alloc(44);
+wav.write('RIFF', 0);
+wav.writeUInt32LE(36, 4);
+wav.write('WAVEfmt ', 8);
+writeFileSync(out, wav);
