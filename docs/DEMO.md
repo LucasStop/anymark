@@ -25,7 +25,7 @@ Os dois aparecem no vídeo. São três trilhas gravadas separadas e juntadas na 
 **Tela, gravada por script (Stopinski).**
 
 1. Uma vez: `yarn install`, `yarn build`. Libere a gravação de tela para o VS Code em Ajustes do Sistema, Privacidade e Segurança, Gravação de Tela.
-2. Arrume a tela: VS Code com o editor em cima e o terminal integrado embaixo, fonte a partir de 18 pt, tema escuro. Feche as outras janelas e o que for pessoal: a gravação pega a tela inteira.
+2. Arrume a tela: VS Code com o editor em cima e o terminal integrado embaixo, fonte a partir de 18 pt, tema escuro. Feche as outras janelas e o que for pessoal: a gravação pega a tela principal inteira, ou só um retângulo com `ANYMARK_GRAVAR_REGIAO="x,y,w,h"` (útil quando a janela está em outro monitor).
 3. No terminal integrado do VS Code: `node scripts/demo.mjs gravar`. Ele prepara o plugin, roda as cenas de 1 a 7 sozinho, com uma pausa de 5 segundos entre os passos (`--pausa=N` muda), e grava cada uma em `gravacoes/cena-N.mov` (a pasta não vai para o git). Não mexa no mouse nem no teclado enquanto ele roda. `node scripts/demo.mjs gravar 4` refaz só a cena 4.
 4. Veja cada `.mov`. As cenas saem um pouco longas de propósito: a voz manda no tempo e o corte é na edição.
 5. A página do pacote no npm da cena 1 (https://www.npmjs.com/package/anymark) é gravada à mão, em separado.

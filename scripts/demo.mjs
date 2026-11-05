@@ -118,10 +118,15 @@ function prepare() {
 
 const sleep = (seconds) => wait(seconds * 1000);
 
-/** Records the whole screen to `file` until `stop()`; no audio, the voices are recorded apart. */
+/**
+ * Records to `file` until `stop()`; no audio, the voices are recorded apart. The whole main screen,
+ * or only the rectangle in ANYMARK_GRAVAR_REGIAO="x,y,w,h" (the window may sit on another display).
+ */
 async function startRecording(file) {
   mkdirSync('gravacoes', { recursive: true });
-  const child = spawn('screencapture', ['-v', '-x', file], { stdio: 'ignore' });
+  const region = process.env.ANYMARK_GRAVAR_REGIAO;
+  const args = ['-v', '-x', ...(region ? [`-R${region}`] : []), file];
+  const child = spawn('screencapture', args, { stdio: 'ignore' });
   let died = false;
   child.on('exit', () => (died = true));
   await sleep(3);
