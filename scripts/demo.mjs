@@ -1,12 +1,13 @@
 // Screen scenes of the video, one per block of docs/DEMO.md, so the recording needs no improvised command.
-// Usage: node scripts/demo.mjs preparar | <1..7> [--sem-pausa]   (list: node scripts/demo.mjs)
-// Each step waits for Enter, so the pace follows the recording. `abrir` steps jump the editor to the line.
-import { execFileSync, spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+// Usage: node scripts/demo.mjs preparar | gravar [n] | <1..7> [--auto] [--pausa=5] [--sem-pausa]
+// Each step waits for Enter (or a timer with --auto), so the pace follows the recording. `gravar` films the screen. `abrir` steps jump the editor to the line.
+import { execFileSync, spawn, spawnSync } from 'node:child_process';
+import { mkdirSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import process from 'node:process';
+import { setTimeout as wait } from 'node:timers/promises';
 
 const log = (text = '') => process.stdout.write(`${text}\n`);
 
@@ -115,20 +116,36 @@ function prepare() {
   log('pronto: dist/ e .demo/ atualizados');
 }
 
-const [, , arg, ...flags] = process.argv;
-if (arg === 'preparar') {
-  prepare();
-} else if (scenes[arg] === undefined) {
-  log('node scripts/demo.mjs preparar   (uma vez, antes de gravar)');
-  for (const [id, scene] of Object.entries(scenes))
-    log(`node scripts/demo.mjs ${id}   ${scene.title}`);
-} else {
-  const scene = scenes[arg];
-  const pause = !flags.includes('--sem-pausa');
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  log(`\nCena ${arg}: ${scene.title}\n`);
+const sleep = (seconds) => wait(seconds * 1000);
+
+/** Records the whole screen to `file` until `stop()`; no audio, the voices are recorded apart. */
+async function startRecording(file) {
+  mkdirSync('gravacoes', { recursive: true });
+  const child = spawn('screencapture', ['-v', '-x', file], { stdio: 'ignore' });
+  let died = false;
+  child.on('exit', () => (died = true));
+  await sleep(3);
+  if (died) {
+    throw new Error(
+      'screencapture parou: libere o terminal ou o VS Code em Ajustes > Privacidade e Segurança > Gravação de Tela',
+    );
+  }
+  return async () => {
+    await sleep(2);
+    const closed = new Promise((done) => child.on('exit', done));
+    child.kill('SIGINT');
+    await closed;
+  };
+}
+
+// mode: 'enter' waits for Enter, 'auto' holds `hold` seconds, 'none' never waits.
+async function play(id, { mode, hold }) {
+  const scene = scenes[id];
+  const rl =
+    mode === 'enter' ? createInterface({ input: process.stdin, output: process.stdout }) : null;
+  log(`\nCena ${id}: ${scene.title}\n`);
   for (const step of scene.steps) {
-    if (pause) await rl.question('[Enter] ');
+    if (rl !== null) await rl.question('[Enter] ');
     if (step.abrir !== undefined) {
       const [file, anchor] = step.abrir;
       const line =
@@ -142,6 +159,36 @@ if (arg === 'preparar') {
       log(`$ ${step.run.filter((p) => !p.startsWith('ANYMARK_WHISPER_MODEL=')).join(' ')}`);
       spawnSync(step.run[0], step.run.slice(1), { stdio: 'inherit' });
     }
+    if (mode === 'auto') await sleep(hold);
   }
-  rl.close();
+  rl?.close();
+}
+
+const [, , arg, ...rest] = process.argv;
+const flags = rest.filter((a) => a.startsWith('--'));
+const hold = Number(flags.find((f) => f.startsWith('--pausa='))?.slice('--pausa='.length) ?? 5);
+if (arg === 'preparar') {
+  prepare();
+} else if (arg === 'gravar') {
+  // Every scene recorded to gravacoes/cena-N.mov, paced by timers. `gravar <n>` redoes one scene.
+  const ids =
+    rest[0] !== undefined && scenes[rest[0]] !== undefined ? [rest[0]] : Object.keys(scenes);
+  prepare();
+  for (const id of ids) {
+    const stop = await startRecording(`gravacoes/cena-${id}.mov`);
+    try {
+      await play(id, { mode: 'auto', hold });
+    } finally {
+      await stop();
+    }
+    log(`gravado: gravacoes/cena-${id}.mov`);
+  }
+} else if (scenes[arg] === undefined) {
+  log('node scripts/demo.mjs preparar   (uma vez, antes de gravar)');
+  log('node scripts/demo.mjs gravar     (todas as cenas, tela gravada em gravacoes/cena-N.mov)');
+  for (const [id, scene] of Object.entries(scenes))
+    log(`node scripts/demo.mjs ${id}   ${scene.title}   [--auto] [--pausa=5] [--sem-pausa]`);
+} else {
+  const mode = flags.includes('--auto') ? 'auto' : flags.includes('--sem-pausa') ? 'none' : 'enter';
+  await play(arg, { mode, hold });
 }

@@ -1,6 +1,6 @@
 # Roteiro do vídeo de defesa
 
-Entrega final de 18/11/2026. O vídeo tem no máximo 10 minutos (Canvas) e cobre os três blocos do [ENUNCIADO](ENUNCIADO.md): visão geral, uso com extensão e defesa por padrão. Cada aluno defende 2 padrões. O vídeo é montado em duas trilhas gravadas separadas: a **tela** (código, terminal, testes), gravada uma vez com as cenas de `scripts/demo.mjs`, e a **voz** de cada um, gravada à parte com as falas exatas deste arquivo. O código é a prova de cada padrão (ver [PATTERNS.md](PATTERNS.md)). Marca, slides 16:9, lower thirds e miniatura: `design/brand/applications/`.
+Entrega final de 18/11/2026. O vídeo tem no máximo 10 minutos (Canvas) e cobre os três blocos do [ENUNCIADO](ENUNCIADO.md): visão geral, uso com extensão e defesa por padrão. Cada aluno defende 2 padrões. O vídeo mostra o rosto dos dois e é montado a partir de três trilhas gravadas separadas: a **tela** (código, terminal, testes), gravada por script no computador do Stopinski, e o **rosto e a voz** de cada um, com as falas exatas deste arquivo (ver "Como gravar"). O código é a prova de cada padrão (ver [PATTERNS.md](PATTERNS.md)). Marca, slides 16:9, lower thirds e miniatura: `design/brand/applications/`.
 
 Estado mostrado: pacote no npm, `main` verde, texto, dados, Office, PDF, imagem por OCR, áudio por whisper.cpp ou API, vídeo por ffmpeg, página da web e YouTube, extensão `.srt` por plugin. Só citar como pronto o que tem teste na `main`; limites conhecidos estão em [DEFESA.md](DEFESA.md).
 
@@ -18,17 +18,27 @@ Total: 10:00 de teto. A voz soma cerca de 1.120 palavras (uns 7:30 a 150 palavra
 
 ## Como gravar
 
-**Antes de tudo, uma vez:** `yarn install`, `yarn build` e `node scripts/demo.mjs preparar` (compila o plugin `.srt` e os sinks, que ficam em TypeScript fora de `src/`).
+Os dois aparecem no vídeo. São três trilhas gravadas separadas e juntadas na edição: a **tela** (código, terminal, testes), gravada só no computador do Stopinski, onde está o projeto; o **rosto e a voz do Stopinski**; e o **rosto e a voz do Bruno**, gravados por ele no computador dele.
 
-**Tela.** `node scripts/demo.mjs` lista as cenas; `node scripts/demo.mjs <n>` roda a cena `n`. Cada passo espera a tecla Enter, então o ritmo é de quem grava. Passos "abrir" levam o VS Code direto à linha do código (`code -g`), passos "$" rodam o comando de verdade. Grave cada cena em um arquivo (`cena-1.mov`, `cena-2.mov` e assim por diante), com tema escuro e fonte grande (a partir de 18 pt no editor e no terminal). A cena 1 também mostra a página do pacote em https://www.npmjs.com/package/anymark e o README no GitHub.
+**Layout.** Blocos 1 e 7: rosto de quem fala em tela cheia (no 7, o slide `slide-closing.png` entra no fim). Blocos 2 a 6: a tela ocupa o quadro e o rosto de quem fala fica num círculo no canto inferior direito, longe do terminal. O lower thirds (`lower-third-stopinski.png` e `lower-third-bruno.png`, de `design/brand/applications/`) entra nos 4 primeiros segundos de cada fala de cada pessoa. Abertura com `vignette.png` por 3 segundos.
 
-**Voz.** Cada um grava sozinho, em sala silenciosa, lendo as falas abaixo exatamente como estão, um arquivo por bloco (`1-stopinski.wav`, `3-bruno.wav`, `6a-stopinski.wav`, `6b-bruno.wav` e assim por diante). As falas já têm o tamanho do bloco (cerca de 150 palavras por minuto): não acrescente, não improvise. Errou uma frase, repita a frase. Termos em inglês (Adapter, Chain of Responsibility, Backend) se leem como se escrevem.
+**Tela, gravada por script (Stopinski).**
 
-**Montagem.** A voz manda no tempo: ajuste a tela a cada bloco, acelerando ou cortando pausa do terminal, e não o contrário. Lower thirds (`lower-third-stopinski.png` e `lower-third-bruno.png`) entram nos 4 primeiros segundos de cada trecho de voz de cada pessoa. Abertura com `vignette.png` por 3 segundos, fechamento com `slide-closing.png` durante a fala do bloco 7.
+1. Uma vez: `yarn install`, `yarn build`. Libere a gravação de tela para o VS Code em Ajustes do Sistema, Privacidade e Segurança, Gravação de Tela.
+2. Arrume a tela: VS Code com o editor em cima e o terminal integrado embaixo, fonte a partir de 18 pt, tema escuro. Feche as outras janelas e o que for pessoal: a gravação pega a tela inteira.
+3. No terminal integrado do VS Code: `node scripts/demo.mjs gravar`. Ele prepara o plugin, roda as cenas de 1 a 7 sozinho, com uma pausa de 5 segundos entre os passos (`--pausa=N` muda), e grava cada uma em `gravacoes/cena-N.mov` (a pasta não vai para o git). Não mexa no mouse nem no teclado enquanto ele roda. `node scripts/demo.mjs gravar 4` refaz só a cena 4.
+4. Veja cada `.mov`. As cenas saem um pouco longas de propósito: a voz manda no tempo e o corte é na edição.
+5. A página do pacote no npm da cena 1 (https://www.npmjs.com/package/anymark) é gravada à mão, em separado.
+
+Ensaio sem gravar: `node scripts/demo.mjs <n>` (avança por Enter), com `--auto` (pausas por tempo) ou `--sem-pausa`. `node scripts/demo.mjs` lista as cenas. Os passos "abrir" levam o VS Code direto à linha do código (`code -g`); os passos "$" rodam o comando de verdade.
+
+**Rosto e voz (cada um, no seu computador).** Câmera na altura dos olhos, luz de frente, sala silenciosa, microfone próximo. Leia as falas abaixo exatamente como estão, um arquivo por bloco (`1-stopinski.mov`, `3-bruno.mov`, `6a-stopinski.mov`, `6b-bruno.mov` e assim por diante), olhando para a câmera. As falas já têm o tamanho do bloco (cerca de 150 palavras por minuto): não acrescente, não improvise. Errou uma frase, repita a frase. Termos em inglês (Adapter, Chain of Responsibility, Backend) se leem como se escrevem.
+
+**Montagem.** A voz manda no tempo: ajuste a tela a cada bloco, acelerando ou cortando as pausas do terminal, e não o contrário.
 
 ## 1. O que é a lib (Stopinski, 1:00)
 
-**Tela, cena 1.** Slide de abertura, depois a página do pacote no npm e `yarn info anymark version` (mostra `1.0.0`).
+**Tela, cena 1.** Rosto em tela cheia na abertura (com a vinheta antes), depois a página do pacote no npm e `yarn info anymark version` (mostra `1.0.0`).
 
 > **Stopinski:** Olá. Nós somos o Lucas Stopinski e o Lucas Bruno, e este é o trabalho final de Design Patterns. Apresentamos o anymark, uma biblioteca TypeScript que converte qualquer arquivo em Markdown. Com uma única chamada, você entrega o arquivo e recebe o texto em Markdown, pronto para três usos: contexto de um modelo de linguagem ou de um sistema de RAG, notas no Obsidian, ou simplesmente leitura humana. A biblioteca já está publicada no npm, na versão um ponto zero. O núcleo lê texto, dados, Office e PDF. Imagem, áudio, vídeo, páginas da web e YouTube entram por backends de inteligência artificial que podem ser trocados e têm fallback. O que vamos defender aqui não é a quantidade de formatos, e sim a arquitetura: oito padrões de projeto, cada um com o problema que resolve, o trecho de código que prova e a alternativa que descartamos.
 
@@ -76,7 +86,7 @@ Total: 10:00 de teto. A voz soma cerca de 1.120 palavras (uns 7:30 a 150 palavra
 
 Marcar cada item só depois de rodar de fato.
 
-- [ ] `node scripts/demo.mjs preparar` e depois as cenas de 1 a 7, uma a uma, sem erro (a cena 7 usa o modelo `ggml-medium.bin` em `~/whisper-models`, ou `ANYMARK_WHISPER_MODEL`).
+- [ ] `node scripts/demo.mjs gravar` roda as 7 cenas sem erro e gera `gravacoes/cena-1.mov` a `cena-7.mov`, todos abrindo e legíveis (a cena 7 usa o modelo `ggml-medium.bin` em `~/whisper-models`, ou `ANYMARK_WHISPER_MODEL`).
 - [ ] Ler cada fala em voz alta com cronômetro: cada bloco dentro do tempo da tabela, total de até 10:00.
 - [ ] Demo do example do zero em máquina limpa: `yarn install`, `yarn setup`, `yarn dev`, os quatro arquivos do caso padrão mais um `.srt`.
 - [ ] `yarn add anymark` num projeto vazio com a versão publicada e rodar o plano B do bloco 2.
