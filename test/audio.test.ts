@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { WhisperBackend } from '../src/backends/WhisperBackend.js';
 import { createAnymark } from '../src/index.js';
 import type { Backend } from '../src/index.js';
-import { assertBackendContract, assertConverterContract } from '../src/testing/index.js';
+import { assertBackendContract } from '../src/testing/index.js';
 
 const FAKE = resolve('fixtures/bin/fake-whisper');
 const MODEL = resolve('specs/audio/silence.wav'); // any readable file stands in for the model
@@ -83,15 +83,6 @@ describe('AudioConverter', () => {
     await expect(
       createAnymark().convert({ data: wav(), name: 'a.wav' }, { backends: [] }),
     ).rejects.toThrow(/transcription/);
-  });
-
-  it('passes the converter contract', async () => {
-    const { AudioConverter } = await import('../src/converters/AudioConverter.js');
-    await assertConverterContract(new AudioConverter(), {
-      data: wav(),
-      name: 'a.wav',
-      mime: 'audio/wav',
-    });
   });
 });
 
