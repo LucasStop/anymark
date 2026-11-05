@@ -102,7 +102,7 @@ Ações até 18/11 (pendentes): o Bruno comenta o aval do `src/core/types.ts` na
 
 ### Segurança
 
-Defesa de desenho. A lib não usa shell: `execFile` com array de argumentos, entrada copiada para diretório temporário, `timeout`, `maxBuffer`. Chamada de CLI e de rede só com opt-in (`allowCli`, `allowNetwork`). Conteúdo de documento é dado não confiável. Ver `src/security/spawn.ts` e [ADR 0005](adr/0005-opt-in-e-spawn-unico.md). `WhisperBackend` usa `runCli`, e o ffmpeg do vídeo e o yt-dlp do YouTube usam `runCliFile`; os testes rodam com CLIs falsos em `fixtures/bin/`, e nenhum binário real foi exercitado.
+Defesa de desenho. A lib não usa shell: `execFile` com array de argumentos, entrada copiada para diretório temporário, `timeout`, `maxBuffer`. Chamada de CLI e de rede só com opt-in (`allowCli`, `allowNetwork`). Conteúdo de documento é dado não confiável. Ver `src/security/spawn.ts` e [ADR 0005](adr/0005-opt-in-e-spawn-unico.md). `WhisperBackend` usa `runCli`, e o ffmpeg do vídeo e o yt-dlp do YouTube usam `runCliFile`; `yarn test` roda com CLIs falsos em `fixtures/bin/`, e `test/live.test.ts` exercita os binários reais (whisper-cli 1.9.5, ffmpeg 9.0.2 e yt-dlp 2026.10.26) só com `ANYMARK_LIVE=1`; resultado e limites em [TESTING.md](TESTING.md).
 
 ### Fallback
 
