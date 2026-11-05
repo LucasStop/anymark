@@ -37,7 +37,7 @@ No máximo 10 minutos no total (conferido no Canvas em 05/11/2026). Cada aluno d
 
 ## Checklist final
 
-- [ ] Repositório público, com a `main` verde no CI.
+- [x] Repositório público, com a `main` verde no CI.
 - [ ] README com nomes completos, link do vídeo, uso e "Uso de IA".
 - [ ] Caso padrão e caso de extensão funcionando a partir do README.
 - [x] Cada padrão defendido tem trecho de código que o prova (`docs/PATTERNS.md`; `test/docs-references.test.ts` confere que cada trecho existe no arquivo citado).
