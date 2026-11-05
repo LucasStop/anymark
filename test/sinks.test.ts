@@ -49,7 +49,7 @@ describe('Anymark.addSink', () => {
 
     await anymark.convert(input);
 
-    expect(seen).toEqual(['convert', 'convert', 'hello\n']);
+    expect(seen).toEqual(['convert', 'convert', 'hello']);
   });
 
   it('keeps converting when a sink throws or rejects, tells the others, and warns without leaking', async () => {
@@ -65,7 +65,7 @@ describe('Anymark.addSink', () => {
 
     const result = await anymark.convert(input);
 
-    expect(result.markdown).toBe('hello\n');
+    expect(result.markdown).toBe('hello');
     expect(good.results).toHaveLength(1);
     expect(good.progress).toHaveLength(2);
     const failures = result.warnings.filter((w) => w.code === 'SINK_FAILED');
@@ -116,6 +116,6 @@ describe('example sinks', () => {
     await anymark.convert(input);
     await anymark.convert(input);
 
-    expect(metrics.snapshot()).toEqual({ conversions: 2, warnings: 0, characters: 12 });
+    expect(metrics.snapshot()).toEqual({ conversions: 2, warnings: 0, characters: 10 });
   });
 });

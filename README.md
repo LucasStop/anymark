@@ -100,6 +100,17 @@ const { markdown, chunks } = await anymark.convert({ data: bytes, name: 'relator
 
 Cada chunk traz `index`, `headingPath` e `text`. Padrão: `maxChars` 2000, `overlap` 200. Veja [Decorator em PATTERNS](docs/PATTERNS.md).
 
+### Observar a conversão
+
+`addSink` registra um `ResultSink` (Observer) que recebe o progresso e o resultado de cada conversão, por instância. Os dois ganchos são opcionais; um sink que lança é pulado e o resultado ganha o warning `SINK_FAILED`. Exemplos prontos em `examples/sinks/index.ts`.
+
+```ts
+const anymark = createAnymark().addSink({
+  onProgress: ({ stage, current, total }) => console.log(stage, current, total),
+  onResult: (result) => console.log(result.markdown.length, 'caracteres'),
+});
+```
+
 ### Cancelamento
 
 ```ts
