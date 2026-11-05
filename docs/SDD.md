@@ -66,4 +66,4 @@ Seams de teste confirmados em 14/10: `convert()` ponta a ponta, kit de contrato 
 ## Aberto
 
 - Quantos decorators entram de fato: front matter e chunking entraram (#23); retry e timeout ficam de fora.
-- Sink de progresso da UI do exemplo, que depende do #121.
+- Sink de progresso da UI do exemplo (Route Handler com stream ndjson): o lado da lib do #121 está pronto (`onProgress`, `ctx.progress`), falta a tela, que precisa de protótipo aprovado.

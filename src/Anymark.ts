@@ -14,6 +14,7 @@ import type {
   Converter,
   Input,
   Plugin,
+  ProgressEvent,
   ResultSink,
   Source,
 } from './core/types.js';
@@ -83,9 +84,13 @@ export class Anymark {
     // One chain per call: it carries this call's opt-in flags, signal and absorbed failures.
     const backends = new BackendChain(options.backends ?? this.#backends, options);
     let sinkFailed = false;
+    const sinks: readonly ResultSink[] =
+      options.onProgress === undefined
+        ? this.#sinks
+        : [...this.#sinks, { onProgress: options.onProgress }];
     // A sink never stops a conversion or another sink; the failure only shows up as one generic warning.
     const notify = async (call: (sink: ResultSink) => void | Promise<void> | undefined) => {
-      for (const sink of this.#sinks) {
+      for (const sink of sinks) {
         try {
           await call(sink);
         } catch {
@@ -93,9 +98,10 @@ export class Anymark {
         }
       }
     };
-    await notify((sink) => sink.onProgress?.({ stage: 'convert', current: 0, total: 1 }));
-    const result = await converter.convert(source, { sourceId, options, backends });
-    await notify((sink) => sink.onProgress?.({ stage: 'convert', current: 1, total: 1 }));
+    const progress = (event: ProgressEvent) => notify((sink) => sink.onProgress?.(event));
+    await progress({ stage: 'convert', current: 0, total: 1 });
+    const result = await converter.convert(source, { sourceId, options, backends, progress });
+    await progress({ stage: 'convert', current: 1, total: 1 });
     // The facade owns identity: a plugin cannot spoof the hash or smuggle a path in the name.
     const { name: _ignored, ...metadata } = result.metadata;
     const final: ConversionResult = {

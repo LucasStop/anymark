@@ -128,7 +128,7 @@ export class PdfConverter implements Converter {
 ```ts
 // src/Anymark.ts
 const resolved = mime === undefined ? undefined : await this.registry.resolve(mime);
-const result = await converter.convert(source, { sourceId, options, backends });
+const result = await converter.convert(source, { sourceId, options, backends, progress });
 ```
 
 **Alternativa descartada.** `switch (mime)` numa função. Funciona para três formatos; para dez, cada formato novo edita a função e todos os testes passam por ela.
@@ -256,11 +256,11 @@ addSink(sink: ResultSink): this {
 
 ```ts
 // src/Anymark.ts
-await notify((sink) => sink.onProgress?.({ stage: 'convert', current: 0, total: 1 }));
+await progress({ stage: 'convert', current: 0, total: 1 });
 await notify((sink) => sink.onResult?.(final));
 ```
 
-Os dois ganchos são opcionais. Um sink que lança ou rejeita é pulado: a conversão segue, os outros sinks são avisados e o resultado ganha o warning genérico `SINK_FAILED`, sem a mensagem do erro (que poderia carregar caminho ou chave).
+O converter também avisa o progresso por `ctx.progress` (o `PdfConverter` emite um evento `ocr` por página escaneada), e `ConvertOptions.onProgress` é um sink só de progresso para uma chamada. Os dois ganchos são opcionais. Um sink que lança ou rejeita é pulado: a conversão segue, os outros sinks são avisados e o resultado ganha o warning genérico `SINK_FAILED`, sem a mensagem do erro (que poderia carregar caminho ou chave).
 
 **Alternativa descartada.** Um callback único em `ConvertOptions` (`onProgress`). É menos código, mas aceita um só observador por chamada, não separa progresso de resultado e obriga cada chamador a repetir a ligação. Eventos do `EventEmitter` do Node também servem, mas perdem a tipagem dos eventos e o tratamento uniforme de sink com falha.
 
@@ -286,7 +286,7 @@ const resolved = mime === undefined ? undefined : await this.registry.resolve(mi
 // src/Anymark.ts
 const mime = this.#detector.detect({ data, ...hints, ...(name === undefined ? {} : { name }) });
 const backends = new BackendChain(options.backends ?? this.#backends, options);
-const result = await converter.convert(source, { sourceId, options, backends });
+const result = await converter.convert(source, { sourceId, options, backends, progress });
 ```
 
 Uma chamada (`createAnymark().convert(bytes)`) esconde detecção, resolução do converter, cadeia de backends e identidade do resultado (`sourceId` é o hash do conteúdo, nunca vem do plugin).
