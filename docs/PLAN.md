@@ -25,7 +25,7 @@ Prazos: 28/10 congela o escopo do MVP. 29/10 é a apresentação do parcial (30%
 | Idioma | PT-BR em README, docs e vídeo. Identificadores, commits e PRs em inglês. |
 | Padrões | Stopinski: Adapter e Chain of Responsibility. Bruno: Strategy/Registry e Builder. Facade no código; Decorator e Observer no código (#23, #24), ainda sem código. |
 | RAG | Opcional, fora do core, segunda entrega: vincular em lote os `.md` dos repositórios que usam a lib. |
-| Mídia longa | Sem duração máxima fixa para áudio e vídeo. Acima de um limiar configurável (10, 20 ou 30 min) a mídia é dividida em lotes e cada lote é convertido separadamente (decidido em 16/10/2026; vale para #20 e #25). |
+| Mídia longa | Sem duração máxima fixa para áudio e vídeo. Acima de um limiar configurável (10, 20 ou 30 min) a mídia é dividida em lotes e cada lote é convertido separadamente (decidido em 16/10/2026; vale para #25). Em 05/11/2026 o #20 ficou sem lotes: o `WhisperBackend` manda o arquivo inteiro numa passada só, com timeout de 10 min e teto de 200 MB; segmentar entra junto do ffmpeg, no #25. |
 | OCR padrão | `createAnymark()` traz `TesseractBackend` na cadeia, com traineddata local e download só por opt-in (decidido em 16/10/2026, issue #46). |
 | Planilha oculta | Abas ocultas ficam fora do Markdown por padrão, com warning; `includeHidden: true` as inclui, e também linhas e colunas ocultas (16/10/2026, issues #48 e #68; [ADR 0008](adr/0008-include-hidden-flag-unico.md)). |
 | Fine-tuning | Não usar. Modelo ajustado de terceiro entra como `Backend`. |
@@ -62,7 +62,7 @@ Regras: `Converter` (Strategy) e `Backend` (Adapter) ficam em interfaces distint
 ## Arquitetura mínima para 29/10
 
 - Contratos em `src/core/types.ts`: `Input`, `ConvertOptions` (`signal`, `allowCli`, `allowNetwork`, `backends`, `lang`), `Source`, `Metadata` (com `schemaVersion: 1` e `sourceId` igual ao sha256 do conteúdo), `ConversionResult`, `Converter`, `ConverterEntry` (`load()` lazy), `Backend<In, Out>` (`capability`, `locality`, `isAvailable`, `run`) e `Plugin`.
-- Fluxo: `convert(input)` entra no `Anymark` (Facade), passa pelo `FormatDetectorChain`, o `ConverterRegistry` devolve o `Converter`, e imagem e áudio passam pela `BackendChain`. Planejados: Decorators em volta do `Converter` (#23) e `ResultSink` para o resultado (#24).
+- Fluxo: `convert(input)` entra no `Anymark` (Facade), passa pelo `FormatDetectorChain`, o `ConverterRegistry` devolve o `Converter`, e imagem e áudio passam pela `BackendChain`. Decorators em volta do `Converter` (#23) e `ResultSink` para o resultado (#24) já estão no código. Áudio: `WhisperBackend` (#20).
 - Extensão sem tocar a lib: `examples/plugins/srt/index.ts` exporta um `Plugin` que registra `.srt`, e `examples/nextjs/lib/anymark.ts` faz `createAnymark().use(srtPlugin)`. Nenhum arquivo de `src/` muda.
 - Kit `anymark/testing`: `assertConverterContract` e `assertBackendContract`, funções que lançam erro, sem importar Vitest. `assertConverterContract` checa nome, mimes, `schemaVersion`, rejeição com `signal` abortado e saída determinística; `assertBackendContract`, nome, capability, locality, `isAvailable` e rejeição com `signal` abortado. O opt-in é testado em `test/BackendChain.test.ts` e `test/spawn.test.ts`.
 - Arquivos críticos: `src/core/types.ts`, `src/core/ConverterRegistry.ts`, `src/detection/FormatDetectorChain.ts`, `src/backends/BackendChain.ts`, `src/security/spawn.ts`, `src/Anymark.ts`, `src/index.ts`, `package.json`.

@@ -8,7 +8,7 @@ Trabalho final de Design Patterns (PUCPR, 2026/2), feito em dupla por **Lucas St
 
 ## Formatos
 
-txt, md, csv, json, xml, html, docx, pptx, xlsx, pdf e, por OCR, png, jpg, gif e webp. Áudio, vídeo e URL entram na entrega final (18/11). Os formatos legados `.doc`, `.ppt` e `.xls` (OLE2) não são suportados e geram `UnsupportedFormatError`: salve como `.docx`, `.pptx` ou `.xlsx`. Limites conhecidos estão em [docs/TESTING.md](docs/TESTING.md).
+txt, md, csv, json, xml, html, docx, pptx, xlsx, pdf e, por OCR, png, jpg, gif e webp. Áudio (wav, mp3, flac e ogg) é transcrito pelo whisper.cpp (veja "Transcrever áudio"). Vídeo e URL entram na entrega final (18/11). Os formatos legados `.doc`, `.ppt` e `.xls` (OLE2) não são suportados e geram `UnsupportedFormatError`: salve como `.docx`, `.pptx` ou `.xlsx`. Limites conhecidos estão em [docs/TESTING.md](docs/TESTING.md).
 
 ## Instalação
 
@@ -124,6 +124,21 @@ const anymark = createAnymark().addSink({
 ```ts
 await anymark.convert(input, { signal: AbortSignal.timeout(30_000) });
 ```
+
+### Transcrever áudio
+
+Áudio passa pelo `WhisperBackend` (whisper.cpp), que roda um CLI local e por isso exige `allowCli`. Instale o `whisper-cli` e baixe um modelo ggml; o caminho vai em `ANYMARK_WHISPER_MODEL` (sem caminho fixo).
+
+```ts
+import { createAnymark, WhisperBackend } from 'anymark';
+
+const result = await createAnymark().convert(
+  { data: await readFile('aula.wav'), name: 'aula.wav' },
+  { backends: [new WhisperBackend()], allowCli: true, lang: 'pt' },
+);
+```
+
+Sem `allowCli`, sem modelo ou sem o comando no `PATH`, o backend é pulado e a conversão falha com "transcription". O áudio inteiro vai numa passada só (timeout de 10 min, teto de 200 MB).
 
 ## Estendendo: um formato novo sem tocar a lib
 
