@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -22,13 +22,13 @@ const transcriber = (text = 'spoken in the video'): Backend => ({
 });
 
 let scratch: string;
+const LOG = () => join(scratch, 'ffmpeg.log');
 const saved = { tmp: process.env.TMPDIR, ffmpeg: process.env.ANYMARK_FFMPEG };
 
 beforeEach(() => {
   scratch = mkdtempSync(join(tmpdir(), 'video-test-'));
   process.env.TMPDIR = scratch;
   process.env.ANYMARK_FFMPEG = FFMPEG;
-  process.env.FAKE_FFMPEG_LOG = join(scratch, 'ffmpeg.log');
 });
 
 afterEach(() => {
@@ -39,8 +39,6 @@ afterEach(() => {
     if (value === undefined) delete process.env[key];
     else process.env[key] = value;
   }
-  delete process.env.FAKE_FFMPEG_LOG;
-  delete process.env.FAKE_FFMPEG_MODE;
   rmSync(scratch, { recursive: true, force: true });
 });
 
@@ -72,11 +70,12 @@ describe('VideoConverter', () => {
 
     expect(markdown).toBe('spoken in the video\n');
     expect(warnings).toEqual([]);
+    expect(existsSync(LOG())).toBe(true);
   });
 
   it('does nothing without allowCli: ffmpeg is never started', async () => {
     await expect(convert(mp4, { allowCli: false })).rejects.toThrow(/allowCli/);
-    expect(existsSync(process.env.FAKE_FFMPEG_LOG!)).toBe(false);
+    expect(existsSync(LOG())).toBe(false);
   });
 
   it('fails with the transcription capability named when no backend can listen', async () => {
@@ -88,13 +87,17 @@ describe('VideoConverter', () => {
     controller.abort();
 
     await expect(convert(mp4, { signal: controller.signal })).rejects.toThrow();
-    expect(existsSync(process.env.FAKE_FFMPEG_LOG!)).toBe(false);
+    expect(existsSync(LOG())).toBe(false);
   });
 
   it('fails generically when ffmpeg fails: no stderr, no path', async () => {
-    process.env.FAKE_FFMPEG_MODE = 'fail';
+    writeFileSync(join(scratch, 'ffmpeg.fail'), '');
 
-    const error = await convert(mp4).catch((e: unknown) => e);
+    const error = await convert(mp4).then(
+      () => undefined,
+      (e: unknown) => e,
+    );
+    expect(error).toBeInstanceOf(Error);
     const text = `${(error as Error).name} ${(error as Error).message}`;
 
     expect(text).not.toContain('leaked-secret');

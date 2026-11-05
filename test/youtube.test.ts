@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -17,13 +17,13 @@ const transcriber = (text = 'said in the video'): Backend => ({
 });
 
 let scratch: string;
+const LOG = () => join(scratch, 'ytdlp.log');
 const saved = { tmp: process.env.TMPDIR, ytdlp: process.env.ANYMARK_YTDLP };
 
 beforeEach(() => {
   scratch = mkdtempSync(join(tmpdir(), 'youtube-test-'));
   process.env.TMPDIR = scratch;
   process.env.ANYMARK_YTDLP = YTDLP;
-  process.env.FAKE_YTDLP_LOG = join(scratch, 'ytdlp.log');
 });
 
 afterEach(() => {
@@ -34,8 +34,6 @@ afterEach(() => {
     if (value === undefined) delete process.env[key];
     else process.env[key] = value;
   }
-  delete process.env.FAKE_YTDLP_LOG;
-  delete process.env.FAKE_YTDLP_MODE;
   rmSync(scratch, { recursive: true, force: true });
 });
 
@@ -69,9 +67,7 @@ describe('convertYoutube', () => {
   it('hands yt-dlp one canonical URL, never the caller string', async () => {
     await youtube(`https://youtu.be/${VIDEO}?si=abc&list=PL1`);
 
-    expect(readFileSync(process.env.FAKE_YTDLP_LOG!, 'utf8')).toBe(
-      `https://www.youtube.com/watch?v=${VIDEO}\n`,
-    );
+    expect(readFileSync(LOG(), 'utf8')).toBe(`https://www.youtube.com/watch?v=${VIDEO}\n`);
   });
 
   it.each([
@@ -85,7 +81,7 @@ describe('convertYoutube', () => {
     ['not a URL', 'not a url'],
   ])('refuses %s without starting yt-dlp', async (_label, url) => {
     await expect(youtube(url)).rejects.toThrow(/YouTube/);
-    expect(existsSync(process.env.FAKE_YTDLP_LOG!)).toBe(false);
+    expect(existsSync(LOG())).toBe(false);
   });
 
   it.each([
@@ -93,7 +89,7 @@ describe('convertYoutube', () => {
     ['allowNetwork', { allowNetwork: false }, /allowNetwork/],
   ])('does nothing without %s', async (_name, extra, message) => {
     await expect(youtube(`https://youtu.be/${VIDEO}`, extra)).rejects.toThrow(message);
-    expect(existsSync(process.env.FAKE_YTDLP_LOG!)).toBe(false);
+    expect(existsSync(LOG())).toBe(false);
   });
 
   it('fails with the transcription capability named when no backend can listen', async () => {
@@ -109,13 +105,17 @@ describe('convertYoutube', () => {
     await expect(
       youtube(`https://youtu.be/${VIDEO}`, { signal: controller.signal }),
     ).rejects.toThrow();
-    expect(existsSync(process.env.FAKE_YTDLP_LOG!)).toBe(false);
+    expect(existsSync(LOG())).toBe(false);
   });
 
   it('fails generically when yt-dlp fails: no stderr, no URL', async () => {
-    process.env.FAKE_YTDLP_MODE = 'fail';
+    writeFileSync(join(scratch, 'ytdlp.fail'), '');
 
-    const error = await youtube(`https://youtu.be/${VIDEO}`).catch((e: unknown) => e);
+    const error = await youtube(`https://youtu.be/${VIDEO}`).then(
+      () => undefined,
+      (e: unknown) => e,
+    );
+    expect(error).toBeInstanceOf(Error);
     const text = `${(error as Error).name} ${(error as Error).message}`;
 
     expect(text).not.toContain('leaked-secret');

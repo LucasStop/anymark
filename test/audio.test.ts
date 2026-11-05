@@ -1,9 +1,10 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { WhisperBackend } from '../src/backends/WhisperBackend.js';
 import { createAnymark } from '../src/index.js';
-import type { Backend } from '../src/index.js';
+import type { Backend, BackendContext } from '../src/index.js';
 import { assertBackendContract } from '../src/testing/index.js';
 
 const FAKE = resolve('fixtures/bin/fake-whisper');
@@ -140,16 +141,26 @@ describe('WhisperBackend', () => {
   });
 
   it('fails generically: neither the CLI output nor the model path reach the error', async () => {
-    process.env.FAKE_WHISPER_MODE = 'fail';
+    // The child env is allowlisted, so the fake learns it must fail from a file beside its temp dir.
+    const scratch = mkdtempSync(join(tmpdir(), 'whisper-test-'));
+    const saved = process.env.TMPDIR;
+    process.env.TMPDIR = scratch;
+    writeFileSync(join(scratch, 'whisper.fail'), '');
     try {
       const error = await whisper()
-        .run(wav(), {})
-        .catch((e: unknown) => e);
+        .run(wav(), { allowCli: true } as BackendContext)
+        .then(
+          () => undefined,
+          (e: unknown) => e,
+        );
+      expect(error).toBeInstanceOf(Error);
       const text = `${(error as Error).name} ${(error as Error).message}`;
       expect(text).not.toContain('leaked-secret');
       expect(text).not.toContain(MODEL);
     } finally {
-      delete process.env.FAKE_WHISPER_MODE;
+      if (saved === undefined) delete process.env.TMPDIR;
+      else process.env.TMPDIR = saved;
+      rmSync(scratch, { recursive: true, force: true });
     }
   });
 

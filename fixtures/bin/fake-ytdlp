@@ -1,11 +1,14 @@
 #!/usr/bin/env node
 // Stand-in for yt-dlp so tests never touch the network. It insists on the safe flags, so a call that
-// drops them fails here. FAKE_YTDLP_LOG appends the URL argument; FAKE_YTDLP_MODE=fail leaks on stderr.
-import { appendFileSync, writeFileSync } from 'node:fs';
+// drops them fails here. The child env is allowlisted, so test control goes through files next to the temp dir
+// (its parent is the test's TMPDIR): ytdlp.log gets the URL argument, a `ytdlp.fail` file makes it leak on stderr.
+import { appendFileSync, existsSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 const args = process.argv.slice(2);
-if (process.env.FAKE_YTDLP_LOG) appendFileSync(process.env.FAKE_YTDLP_LOG, `${args.at(-1)}\n`);
-if (process.env.FAKE_YTDLP_MODE === 'fail') {
+const beside = (name) => join(process.cwd(), '..', name);
+appendFileSync(beside('ytdlp.log'), `${args.at(-1)}\n`);
+if (existsSync(beside('ytdlp.fail'))) {
   process.stderr.write('leaked-secret https://www.youtube.com/watch?v=aaaaaaaaaaa');
   process.exit(1);
 }
