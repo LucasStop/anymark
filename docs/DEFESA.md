@@ -67,7 +67,7 @@ Resposta pronta: "formato sem assinatura depende do nome ou do mime passado como
 
 - **Chain of Responsibility:** vários elos em fila; cada um decide "eu trato ou passo adiante". No detector (`src/detection/FormatDetectorChain.ts`) o elo responde "reconheço este formato?" e devolve o mime, ou chama `next()`; quem converte é o converter, depois. Na `BackendChain` a pergunta é "posso rodar este backend (opt-in, disponível)?"; se não ou se falhar, passa ao próximo.
 - **Registry/Plugin:** o registry não converte. É a tabela mime para converter, por instância, que carrega o converter na primeira vez que é pedido. O plugin cadastra um formato novo nessa tabela. Quem descobre o formato é o detector, que usa a tabela de extensões que o plugin alimentou.
-- **Adapter:** cada provedor de IA (Gemini, Claude, Codex) precisa do seu adapter, que traduz a API dele para o contrato `Backend`. O que se evita é editar o converter de imagem, que só conhece `Backend`. Hoje só existe o adapter do tesseract (os outros são #21 e #22).
+- **Adapter:** cada provedor de IA (Gemini, Claude, Codex) precisa do seu adapter, que traduz a API dele para o contrato `Backend`. O que se evita é editar o converter de imagem, que só conhece `Backend`. Existem adapters do tesseract, do whisper.cpp, do Gemini e da OpenAI; os de CLI de conta (#22) ficaram fora do escopo.
 - **Strategy:** cada formato tem o seu algoritmo atrás da interface `Converter`, intercambiáveis e modulares. Escolher o tipo do arquivo é trabalho do detector; a Strategy é o fato de os converters serem trocáveis.
 - **Builder:** `MarkdownBuilder` monta o Markdown por etapas (`heading`, `paragraph`, `list`, `table`, `code`) e é o único ponto de escape. Docx e html não passam por ele: `mammoth` (docx para HTML) e `turndown` (HTML para Markdown) já entregam Markdown.
 - **Facade:** `Anymark.convert()` esconde detecção, registry, backends e `sourceId` atrás de uma chamada. Não concatena nem divide nada: só esconde as etapas.
@@ -80,7 +80,7 @@ Os dois estão no código: `src/decorators/` com `Anymark.decorate()`, e `Anymar
 
 ### Quantos padrões
 
-O Canvas pede que cada aluno apresente 2 padrões; para uma dupla são 4. Há 5 defendidos (Adapter e Chain com Stopinski; Strategy, Registry/Plugin e Builder com Bruno), mais a Facade no código. O mínimo está coberto.
+O Canvas pede que cada aluno apresente 2 padrões; para uma dupla são 4. Há 5 defendidos a fundo (Adapter e Chain com Stopinski; Strategy, Registry/Plugin e Builder com Bruno), mais Facade, Decorator e Observer no código, citados numa passada. O mínimo está coberto.
 
 ### O que garante que a documentação não mente
 
@@ -98,11 +98,11 @@ Cerca de 95% das palavras impressas certas (94,7%, intervalo de 92 a 96%) e 85 a
 
 Verdade conferida no GitHub em 27/10/2026: dos 71 PRs mergeados, 69 foram abertos por Lucas Stopinski e 2 pelo Dependabot; nenhum foi aberto nem revisado pelo Bruno. As reviews registradas (58) são do `copilot-pull-request-reviewer`; a revisão independente foi feita por agente de IA e o merge passou pelas checagens obrigatórias do CI. Nos commits, 58 de 268 na `main` são do Bruno (cerca de 22%), dentro de PRs abertos pelo Stopinski. Dizer isso como está: a divisão de commits existe, mas a revisão humana cruzada foi pouca. Não afirmar "todo PR teve review do outro".
 
-Ações até 18/11: o Bruno comenta o aval do `src/core/types.ts` na #101; os PRs dele (a partir da #24) são abertos por ele e revisados pelo Stopinski, e vice-versa; antes de 29/10 ele revisa PRs já mergeados dos padrões que defende (Strategy, Registry/Plugin, Builder) e deixa comentário.
+Ações até 18/11 (pendentes): o Bruno comenta o aval do `src/core/types.ts` na #101; os PRs dele (a partir da #24) são abertos por ele e revisados pelo Stopinski, e vice-versa; antes de 29/10 ele revisa PRs já mergeados dos padrões que defende (Strategy, Registry/Plugin, Builder) e deixa comentário.
 
 ### Segurança
 
-Defesa de desenho. A lib não usa shell: `execFile` com array de argumentos, entrada copiada para diretório temporário, `timeout`, `maxBuffer`. Chamada de CLI e de rede só com opt-in (`allowCli`, `allowNetwork`). Conteúdo de documento é dado não confiável. Ver `src/security/spawn.ts` e [ADR 0005](adr/0005-opt-in-e-spawn-unico.md). Hoje nenhum backend usa `runCli`, então não há um caso rodando.
+Defesa de desenho. A lib não usa shell: `execFile` com array de argumentos, entrada copiada para diretório temporário, `timeout`, `maxBuffer`. Chamada de CLI e de rede só com opt-in (`allowCli`, `allowNetwork`). Conteúdo de documento é dado não confiável. Ver `src/security/spawn.ts` e [ADR 0005](adr/0005-opt-in-e-spawn-unico.md). `WhisperBackend` usa `runCli`, e o ffmpeg do vídeo e o yt-dlp do YouTube usam `runCliFile`; os testes rodam com CLIs falsos em `fixtures/bin/`, e nenhum binário real foi exercitado.
 
 ### Fallback
 
