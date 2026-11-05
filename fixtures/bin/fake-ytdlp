@@ -1,0 +1,27 @@
+#!/usr/bin/env node
+// Stand-in for yt-dlp so tests never touch the network. It insists on the safe flags, so a call that
+// drops them fails here. FAKE_YTDLP_LOG appends the URL argument; FAKE_YTDLP_MODE=fail leaks on stderr.
+import { appendFileSync, writeFileSync } from 'node:fs';
+
+const args = process.argv.slice(2);
+if (process.env.FAKE_YTDLP_LOG) appendFileSync(process.env.FAKE_YTDLP_LOG, `${args.at(-1)}\n`);
+if (process.env.FAKE_YTDLP_MODE === 'fail') {
+  process.stderr.write('leaked-secret https://www.youtube.com/watch?v=aaaaaaaaaaa');
+  process.exit(1);
+}
+const out = args[args.indexOf('-o') + 1];
+const safe =
+  args.includes('--no-playlist') &&
+  args.includes('-x') &&
+  args.at(-2) === '--' &&
+  /^https:\/\/www\.youtube\.com\/watch\?v=[\w-]{11}$/.test(args.at(-1)) &&
+  out !== undefined;
+if (!safe) {
+  process.stderr.write('unsafe or malformed yt-dlp call');
+  process.exit(2);
+}
+const wav = Buffer.alloc(44);
+wav.write('RIFF', 0);
+wav.writeUInt32LE(36, 4);
+wav.write('WAVEfmt ', 8);
+writeFileSync(out, wav);
