@@ -45,7 +45,7 @@ beforeEach(async () => {
 
 afterEach(() => new Promise<void>((done) => server.close(() => done())));
 
-const gemini = (extra: ConstructorParameters<typeof GeminiBackend>[0] = {}) =>
+const gemini = (extra: Partial<ConstructorParameters<typeof GeminiBackend>[0]> = {}) =>
   new GeminiBackend({ capability: 'ocr', apiKey: KEY, baseUrl: base, ...extra });
 const openai = (extra: ConstructorParameters<typeof OpenAiBackend>[0] = {}) =>
   new OpenAiBackend({ apiKey: KEY, baseUrl: base, ...extra });
