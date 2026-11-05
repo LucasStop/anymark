@@ -5,6 +5,7 @@ export default tseslint.config(
   {
     ignores: [
       'dist',
+      '.demo',
       'coverage',
       'graphify-out',
       'examples/**/node_modules',
