@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Stand-in for an AI CLI so tests never spend quota. Mode comes from argv[2].
-import { readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, readFileSync, writeFileSync } from 'node:fs';
 
-const [, , mode, arg] = process.argv;
+const [, , mode, arg, out] = process.argv;
 
 switch (mode) {
   case 'cat':
@@ -20,6 +20,11 @@ switch (mode) {
   case 'fail':
     process.stderr.write('leaked-secret');
     process.exit(3);
+    break;
+  case 'copy':
+    copyFileSync(arg, out);
+    break;
+  case 'nothing':
     break;
   case 'mark':
     writeFileSync(arg, 'ran');

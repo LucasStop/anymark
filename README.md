@@ -8,7 +8,7 @@ Trabalho final de Design Patterns (PUCPR, 2026/2), feito em dupla por **Lucas St
 
 ## Formatos
 
-txt, md, csv, json, xml, html, docx, pptx, xlsx, pdf e, por OCR, png, jpg, gif e webp. Áudio (wav, mp3, flac e ogg) é transcrito pelo whisper.cpp (veja "Transcrever áudio"). URL entra por `convertUrl` (veja "Converter uma página"). Vídeo entra na entrega final (18/11). Os formatos legados `.doc`, `.ppt` e `.xls` (OLE2) não são suportados e geram `UnsupportedFormatError`: salve como `.docx`, `.pptx` ou `.xlsx`. Limites conhecidos estão em [docs/TESTING.md](docs/TESTING.md).
+txt, md, csv, json, xml, html, docx, pptx, xlsx, pdf e, por OCR, png, jpg, gif e webp. Áudio (wav, mp3, flac e ogg) é transcrito pelo whisper.cpp (veja "Transcrever áudio"). URL entra por `convertUrl` (veja "Converter uma página"). Vídeo (mp4, mov, webm, mkv) tem o áudio extraído pelo ffmpeg e transcrito (veja "Transcrever vídeo"). Os formatos legados `.doc`, `.ppt` e `.xls` (OLE2) não são suportados e geram `UnsupportedFormatError`: salve como `.docx`, `.pptx` ou `.xlsx`. Limites conhecidos estão em [docs/TESTING.md](docs/TESTING.md).
 
 ## Instalação
 
@@ -141,6 +141,19 @@ const result = await createAnymark().convert(
 Os provedores de API são backends `remote` e exigem `allowNetwork`: `new GeminiBackend({ capability: 'ocr' })` (ou `'transcription'`) lê `GEMINI_API_KEY`, `new OpenAiBackend()` lê `OPENAI_API_KEY`. A chave só vem de parâmetro ou variável de ambiente, viaja em header, e nunca aparece em erro, log ou resultado. Limites: Gemini cerca de 20 MB inline, OpenAI 25 MB. Ordem sugerida: `backends: [new WhisperBackend(), new GeminiBackend({ capability: 'transcription' }), new OpenAiBackend()]`.
 
 No whisper, sem `allowCli`, sem modelo ou sem o comando no `PATH`, o backend é pulado e a conversão falha com "transcription". O áudio inteiro vai numa passada só (timeout de 10 min, teto de 200 MB).
+
+### Transcrever vídeo
+
+O `VideoConverter` extrai a trilha de áudio com o `ffmpeg` (16 kHz, mono) e entrega à mesma cadeia de transcrição do áudio. Precisa de `allowCli` (por causa do ffmpeg) e de um backend de transcrição; `ANYMARK_FFMPEG` troca o caminho do binário.
+
+```ts
+const result = await createAnymark().convert(
+  { data: await readFile('aula.mp4'), name: 'aula.mp4' },
+  { backends: [new WhisperBackend()], allowCli: true, lang: 'pt' },
+);
+```
+
+O ffmpeg roda com `-protocol_whitelist file`: o contêiner não consegue mandá-lo ler playlist, URL ou outro arquivo local. Sem lotes: o vídeo inteiro vai numa passada (teto de 10 min de ffmpeg e 200 MB de áudio).
 
 ### Converter uma página
 

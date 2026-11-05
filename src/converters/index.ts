@@ -63,6 +63,12 @@ export const builtInEntries: readonly ConverterEntry[] = [
     load: async () => new (await import('./AudioConverter.js')).AudioConverter(),
   },
   {
+    name: 'video',
+    mimes: ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-matroska'],
+    extensions: ['.mp4', '.m4v', '.mov', '.webm', '.mkv'],
+    load: async () => new (await import('./VideoConverter.js')).VideoConverter(),
+  },
+  {
     name: 'pptx',
     mimes: ['application/vnd.openxmlformats-officedocument.presentationml.presentation'],
     extensions: ['.pptx'],
