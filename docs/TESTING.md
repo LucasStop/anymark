@@ -126,6 +126,28 @@ Marcar data, responsável e resultado ao rodar.
 | Z15 | html com `javascript:` e `data:` em links e imagens | links removidos | |
 | Z16 | arquivo muito grande (acima de 100 MB) | xlsx e docx recusam por teto; html recusa acima de 25 MB (o docx também, se o HTML gerado passar disso); pptx recusa acima de 100 MB descompactados e corta em 2000 slides; xlsx recusa acima de 100.000 linhas e limita em 16.384 colunas; imagem recusa acima de 25 MB no tesseract; demais sem teto (limite) | |
 
+## Binários reais (#181)
+
+Os adapters de áudio, vídeo e YouTube rodam em `yarn test` só com CLIs falsos de `fixtures/bin/`. `test/live.test.ts` roda os binários de verdade e fica pulado sem `ANYMARK_LIVE=1`, então o CI não muda. Nada aqui gasta quota de IA: whisper usa um modelo local e o yt-dlp só usa a rede.
+
+```sh
+ANYMARK_LIVE=1 ANYMARK_WHISPER_MODEL=/caminho/ggml-tiny.bin yarn vitest run test/live.test.ts
+```
+
+Rodada 5: 05/11/2026, Lucas Stopinski (macOS, Homebrew).
+
+| Binário | Versão | Teste | Resultado |
+|---|---|---|---|
+| ffmpeg | 9.0.2 | mp4 de 2 s (seno e quadro preto, gerado na hora) vira WAV 16 kHz mono de cerca de 64 kB e chega ao backend | ok; `-protocol_whitelist file` aceito pela versão real |
+| yt-dlp | 2026.10.26 | `convertYoutube` baixa o áudio de um vídeo público de 3,5 min | ok; `--no-playlist --no-config -x --audio-format wav` aceitos |
+| whisper-cli | whisper.cpp 1.9.5, modelo `ggml-medium.bin` | `silence.wav` converte sem erro; um mp4 falado (macOS `say`) passa por ffmpeg e whisper e sai com "hello world" | ok; `-nt -np -mc 0 -l` aceitos |
+
+Limites achados:
+
+- O link de teste precisa estar no ar: os dois vídeos curtos que tentei primeiro (`jNQXAC9IJRE`, `BaW_jenozKc`) responderam "This video is unavailable" no yt-dlp. O teste usa `dQw4w9WgXcQ`; se ele sair do ar, troque o id em `test/live.test.ts`.
+- O erro de `convertYoutube` é genérico de propósito (`SpawnError: failed`). Para saber a causa de uma falha live, rode o yt-dlp na mão com as mesmas flags.
+- O yt-dlp baixa o áudio inteiro antes de converter: 3,5 min de WAV ocupam cerca de 37 MB no diretório temporário.
+
 ## Limites conhecidos
 
 - html: quebra de linha dentro de célula de tabela sai como `<br>` literal para manter a linha do GFM inteira (#85); entrada acima de 25 MB lança `ConversionError`; sem tempo máximo; tabelas sem cabeçalho ou aninhadas ficam como HTML cru.

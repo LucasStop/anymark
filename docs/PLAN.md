@@ -87,7 +87,7 @@ Reconferir com `npm view` ao instalar. Versões conferidas em 14/10/2026: read-e
 - Whisper: converter antes com `ffmpeg -y -i in -ar 16000 -ac 1 -c:a pcm_s16le out.wav`; modelo por `ANYMARK_WHISPER_MODEL`, sem caminho fixo. OpenAI aceita 25 MB por arquivo (comprimir e segmentar); Gemini aceita cerca de 20 MB inline.
 - `runCli` único (`src/security/spawn.ts`, ainda sem backend que o use): `execFile` com array (sem shell), entrada copiada para `mkdtemp` com nome fixo, `timeout`, `signal`, `maxBuffer`, env em allowlist e `rm` no `finally`.
 - `BackendChain`: ordem configurável; `isAvailable` falso pula; `cli` exige `allowCli`; `remote` exige `allowNetwork`; erro de backend vira warning sem chave nem caminho; todos falhando lança `NoBackendError`. O modo conta ativa vale só para uso pessoal local e fica desligado por padrão. Saída de CLI de IA nunca vai para shell.
-- Testes não gastam quota: CLI falso em `fixtures/bin/` e teste real atrás de `ANYMARK_LIVE=1` (convenção ainda sem teste live). Nunca definir `OPENAI_API_KEY` nem `CODEX_API_KEY` no nível do job.
+- Testes não gastam quota: CLI falso em `fixtures/bin/` e teste real atrás de `ANYMARK_LIVE=1` (`test/live.test.ts`, #181). Nunca definir `OPENAI_API_KEY` nem `CODEX_API_KEY` no nível do job.
 - O spike de 14/10/2026 fez uma chamada real por CLI (o `agy` foram três, com o áudio). Chamada real nos testes só atrás de `ANYMARK_LIVE=1`.
 
 ## TDD, CI/CD, template e RAG

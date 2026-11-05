@@ -16,7 +16,7 @@ Backends chamam CLIs de IA já logados e APIs remotas. O conteúdo do documento 
 ## Consequências
 
 - Uma falha de segurança é corrigida em um lugar. `spawn` e os backends passam por `/security-review` antes do merge.
-- Teste não gasta quota: CLI falso em `fixtures/bin/`, chamada real só com `ANYMARK_LIVE=1` (convenção; ainda não há teste live).
+- Teste não gasta quota: CLI falso em `fixtures/bin/`, chamada real só com `ANYMARK_LIVE=1` (`test/live.test.ts`, #181).
 - `runCliFile` (05/11/2026) devolve o arquivo que o filho escreve (ffmpeg), com as mesmas garantias de `runCli`; o contrato do módulo cresceu, não mudou.
 - O custo é um módulo a mais que todo adapter de CLI precisa usar.
 
