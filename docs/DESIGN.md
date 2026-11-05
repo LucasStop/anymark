@@ -85,7 +85,7 @@ Estados da tela: vazio, arrastando, lendo, resultado com avisos, resultado limpo
 
 ## Nome e marca
 
-Wordmark em texto: `anymark` em minúsculas, Inter 700, com um cursor/underscore em `--accent` depois da palavra (`anymark_`), referência ao Markdown sendo escrito. O símbolo é um bloco arredondado (o cursor do Markdown) com um `a` minúsculo recortado, em `--accent` e `--accent-on`. Arquivos em `design/brand/logo/` (`logo.svg`, `logo-mono.svg`, `symbol.svg`, `favicon.svg`/`.ico`, PNGs), gerados por `scripts/export-brand.mjs`; o capítulo completo da marca fecha na issue #116. O wordmark dos arquivos usa contornos de Inter Bold (OFL-1.1, rsms.me/inter).
+Wordmark em texto: `anymark` em minúsculas, Inter 700, com um cursor/underscore em `--accent` depois da palavra (`anymark_`), referência ao Markdown sendo escrito. O símbolo é um bloco arredondado (o cursor do Markdown) com um `a` minúsculo recortado, em `--accent` e `--accent-on`. Arquivos em `design/brand/logo/` (`logo.svg`, `logo-mono.svg`, `symbol.svg`, `favicon.svg`/`.ico`, PNGs), gerados por `scripts/export-brand.mjs`; o capítulo completo da marca fecha na issue #116. As aplicações fora da UI (banner do README 1280x320, social preview 1280x640, thumbnail 1280x720 e vinheta 1920x1080) saem de `scripts/export-brand-applications.mjs` para `design/brand/applications/`, sobre os tokens escuros; o texto também vai em contornos de Inter. Enviar o social preview em Settings do GitHub é ação do dono do repositório. O wordmark dos arquivos usa contornos de Inter Bold (OFL-1.1, rsms.me/inter).
 
 ## Mapeamento para o shadcn
 
