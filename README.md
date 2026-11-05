@@ -138,7 +138,9 @@ const result = await createAnymark().convert(
 );
 ```
 
-Sem `allowCli`, sem modelo ou sem o comando no `PATH`, o backend é pulado e a conversão falha com "transcription". O áudio inteiro vai numa passada só (timeout de 10 min, teto de 200 MB).
+Os provedores de API são backends `remote` e exigem `allowNetwork`: `new GeminiBackend({ capability: 'ocr' })` (ou `'transcription'`) lê `GEMINI_API_KEY`, `new OpenAiBackend()` lê `OPENAI_API_KEY`. A chave só vem de parâmetro ou variável de ambiente, viaja em header, e nunca aparece em erro, log ou resultado. Limites: Gemini cerca de 20 MB inline, OpenAI 25 MB. Ordem sugerida: `backends: [new WhisperBackend(), new GeminiBackend({ capability: 'transcription' }), new OpenAiBackend()]`.
+
+No whisper, sem `allowCli`, sem modelo ou sem o comando no `PATH`, o backend é pulado e a conversão falha com "transcription". O áudio inteiro vai numa passada só (timeout de 10 min, teto de 200 MB).
 
 ## Estendendo: um formato novo sem tocar a lib
 
