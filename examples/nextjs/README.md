@@ -19,4 +19,4 @@ Abra http://localhost:3000, envie um docx, pdf, xlsx, srt etc. Limite de 10 MB p
 - `public/brand/` e `app/icon.svg`, `app/apple-icon.png`, `app/favicon.ico` são cópias dos assets de `design/brand/` (logo, ilustração, sprite de ícones, favicon). A fonte é `design/brand/`: ao regerar lá, copie de novo.
 - `serverExternalPackages` em [next.config.mjs](next.config.mjs): os conversores carregam WASM e leem arquivos em runtime, então ficam fora do bundle.
 - `runtime = 'nodejs'` em [app/page.tsx](app/page.tsx): as dependências precisam de APIs do Node.
-- Os erros da lib são genéricos de propósito (sem caminho nem conteúdo); a Server Action mostra a mensagem só de erros da lib e `Conversion failed.` para o resto.
+- Os erros da lib são genéricos de propósito (sem caminho nem conteúdo); a rota `/api/convert` (ndjson: linhas de progresso e uma de resultado) mostra a mensagem só de erros da lib e `Conversion failed.` para o resto.

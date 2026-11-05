@@ -1,13 +1,13 @@
 'use client';
 
-import { startTransition, useActionState, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Check } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import type { Messages } from '../lib/i18n';
 import { MAX_BYTES } from '../lib/limits';
 import { cn } from '../lib/utils';
-import { convertFile, type ConvertState } from './actions';
+import type { ConvertState } from '../lib/convert';
 
 const initial: ConvertState = { status: 'idle' };
 const ACCEPT =
@@ -37,14 +37,16 @@ function warningText(t: Messages, w: { code: string; message: string }) {
 }
 
 export function Converter({ t }: { t: Messages }) {
-  const [state, action, pending] = useActionState(convertFile, initial);
+  const [state, setState] = useState<ConvertState>(initial);
+  const [pending, setPending] = useState(false);
+  const [page, setPage] = useState<{ current: number; total?: number } | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
   const [tab, setTab] = useState<Tab>('markdown');
   const [elapsed, setElapsed] = useState(0);
   const input = useRef<HTMLInputElement>(null);
 
-  // The lib reports no progress yet (issue #121), so the bar is indeterminate and the clock is the only honest signal.
+  // Until the first progress event (or for formats that report none) the bar is indeterminate and the clock is the honest signal.
   useEffect(() => {
     if (!pending) return;
     const start = Date.now();
@@ -57,6 +59,37 @@ export function Converter({ t }: { t: Messages }) {
 
   const tooBig = (file?.size ?? 0) > MAX_BYTES;
   const step = state.status === 'ok' ? 2 : pending ? 1 : 0;
+
+  // The route answers in ndjson: progress lines while converting, then one result line.
+  const run = async (data: FormData) => {
+    setPending(true);
+    setPage(null);
+    let next: ConvertState = { status: 'error', code: 'failed' };
+    try {
+      const response = await fetch('/api/convert', { method: 'POST', body: data });
+      const reader = response.body?.pipeThrough(new TextDecoderStream()).getReader();
+      let buffer = '';
+      while (reader) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += value;
+        const lines = buffer.split('\n');
+        buffer = lines.pop() ?? '';
+        for (const line of lines.filter(Boolean)) {
+          const message = JSON.parse(line) as
+            | { type: 'progress'; stage: string; current: number; total?: number }
+            | { type: 'result'; state: ConvertState };
+          if (message.type === 'progress' && message.stage === 'ocr')
+            setPage({ current: message.current, ...(message.total && { total: message.total }) });
+          else if (message.type === 'result') next = message.state;
+        }
+      }
+    } catch {
+      next = { status: 'error', code: 'failed' };
+    }
+    setState(next);
+    setPending(false);
+  };
 
   // A dropped file never reaches the input by itself: copy it in so the form posts it.
   const pickFile = (f: File | undefined) => {
@@ -96,7 +129,7 @@ export function Converter({ t }: { t: Messages }) {
         e.preventDefault();
         const data = new FormData(e.currentTarget);
         setTab('markdown');
-        startTransition(() => action(data));
+        void run(data);
       }}
     >
       <ol className="m-0 flex list-none flex-wrap gap-6 p-0" aria-label={t.stepsLabel}>
@@ -254,12 +287,28 @@ export function Converter({ t }: { t: Messages }) {
               <div
                 role="progressbar"
                 aria-label={t.reading}
+                {...(page?.total && {
+                  'aria-valuemin': 0,
+                  'aria-valuemax': page.total,
+                  'aria-valuenow': page.current,
+                })}
                 className="relative h-1.5 overflow-hidden rounded-full bg-muted"
               >
-                <div className="absolute inset-y-0 w-2/5 animate-indeterminate rounded-full bg-primary motion-reduce:left-0 motion-reduce:animate-none" />
+                {page?.total ? (
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-full bg-primary transition-[width]"
+                    style={{ width: `${Math.min(100, (page.current / page.total) * 100)}%` }}
+                  />
+                ) : (
+                  <div className="absolute inset-y-0 w-2/5 animate-indeterminate rounded-full bg-primary motion-reduce:left-0 motion-reduce:animate-none" />
+                )}
               </div>
               <p aria-hidden className="m-0 mt-3 text-center text-sm text-muted-foreground">
-                {t.reading} {elapsed}s
+                {page?.total
+                  ? t.pageOf
+                      .replace('{n}', String(page.current))
+                      .replace('{total}', String(page.total))
+                  : `${t.reading} ${elapsed}s`}
               </p>
             </div>
           )}
