@@ -39,7 +39,7 @@ Vocabulário: módulo profundo = muito comportamento atrás de interface pequena
 
 ## Fluxo
 
-`convert(input)` entra em `Anymark`. O hash do conteúdo vira `sourceId`. O `FormatDetectorChain` devolve o formato. O `ConverterRegistry` resolve e carrega o `Converter`, (com os decorators registrados em `decorate()`). Imagem e áudio chamam a `BackendChain`, que chama `Backend` (hoje `TesseractBackend`, `WhisperBackend`, `GeminiBackend` e `OpenAiBackend`; o de CLI passa por `runCli`, os remotos por `fetchWithOptIn`). O progresso e o resultado vão para os `ResultSink` registrados em `addSink()`. Falha de backend vira warning no resultado, sem chave nem caminho.
+`convert(input)` entra em `Anymark`. O hash do conteúdo vira `sourceId`. O `FormatDetectorChain` devolve o formato. O `ConverterRegistry` resolve e carrega o `Converter`, (com os decorators registrados em `decorate()`). Imagem e áudio chamam a `BackendChain`, que chama `Backend` (hoje `TesseractBackend`, `WhisperBackend`, `GeminiBackend` e `OpenAiBackend`; o de CLI passa por `runCli`, os remotos por `fetchWithOptIn`). `convertUrl` busca a página por `fetchUrl` (guarda de SSRF) e a entrega ao mesmo fluxo. O progresso e o resultado vão para os `ResultSink` registrados em `addSink()`. Falha de backend vira warning no resultado, sem chave nem caminho.
 
 ## Contratos congelados cedo
 

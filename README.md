@@ -8,7 +8,7 @@ Trabalho final de Design Patterns (PUCPR, 2026/2), feito em dupla por **Lucas St
 
 ## Formatos
 
-txt, md, csv, json, xml, html, docx, pptx, xlsx, pdf e, por OCR, png, jpg, gif e webp. Áudio (wav, mp3, flac e ogg) é transcrito pelo whisper.cpp (veja "Transcrever áudio"). Vídeo e URL entram na entrega final (18/11). Os formatos legados `.doc`, `.ppt` e `.xls` (OLE2) não são suportados e geram `UnsupportedFormatError`: salve como `.docx`, `.pptx` ou `.xlsx`. Limites conhecidos estão em [docs/TESTING.md](docs/TESTING.md).
+txt, md, csv, json, xml, html, docx, pptx, xlsx, pdf e, por OCR, png, jpg, gif e webp. Áudio (wav, mp3, flac e ogg) é transcrito pelo whisper.cpp (veja "Transcrever áudio"). URL entra por `convertUrl` (veja "Converter uma página"). Vídeo entra na entrega final (18/11). Os formatos legados `.doc`, `.ppt` e `.xls` (OLE2) não são suportados e geram `UnsupportedFormatError`: salve como `.docx`, `.pptx` ou `.xlsx`. Limites conhecidos estão em [docs/TESTING.md](docs/TESTING.md).
 
 ## Instalação
 
@@ -141,6 +141,14 @@ const result = await createAnymark().convert(
 Os provedores de API são backends `remote` e exigem `allowNetwork`: `new GeminiBackend({ capability: 'ocr' })` (ou `'transcription'`) lê `GEMINI_API_KEY`, `new OpenAiBackend()` lê `OPENAI_API_KEY`. A chave só vem de parâmetro ou variável de ambiente, viaja em header, e nunca aparece em erro, log ou resultado. Limites: Gemini cerca de 20 MB inline, OpenAI 25 MB. Ordem sugerida: `backends: [new WhisperBackend(), new GeminiBackend({ capability: 'transcription' }), new OpenAiBackend()]`.
 
 No whisper, sem `allowCli`, sem modelo ou sem o comando no `PATH`, o backend é pulado e a conversão falha com "transcription". O áudio inteiro vai numa passada só (timeout de 10 min, teto de 200 MB).
+
+### Converter uma página
+
+```ts
+const result = await createAnymark().convertUrl('https://exemplo.com/artigo', { allowNetwork: true });
+```
+
+Só `http` e `https`, e só com `allowNetwork`. O HTML é reduzido ao artigo (Readability); sem artigo reconhecível, converte a página inteira e avisa `URL_NOT_ARTICLE`. Outros tipos (PDF, texto, JSON) vão para o converter do próprio tipo. Hosts de loopback, rede privada e link-local são recusados, inclusive em redirecionamentos; `allowPrivateHosts: true` abre a guarda para teste ou intranet. Limites: 25 MB, 5 redirecionamentos, 30 s. Desenho em [ADR 0010](docs/adr/0010-url-pela-fachada.md).
 
 ## Estendendo: um formato novo sem tocar a lib
 
