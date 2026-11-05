@@ -1,15 +1,14 @@
-'use server';
-
 import {
   type ConvertOptions,
+  type ProgressEvent,
   type PdfOptions,
   ConversionError,
   NoBackendError,
   OptInRequiredError,
   UnsupportedFormatError,
 } from 'anymark';
-import { anymark } from '../lib/anymark';
-import { MAX_BYTES } from '../lib/limits';
+import { anymark } from './anymark';
+import { MAX_BYTES } from './limits';
 
 export type ConvertState =
   | { status: 'idle' }
@@ -31,7 +30,7 @@ const TIMEOUT_MS = 30_000;
 const pick = <T extends string>(value: FormDataEntryValue | null, allowed: readonly T[]) =>
   allowed.find((a) => a === value);
 
-function readOptions(form: FormData): ConvertOptions {
+function readOptions(form: FormData, onProgress?: (e: ProgressEvent) => void): ConvertOptions {
   const lang = String(form.get('lang') ?? '').toLowerCase();
   const layout = pick(form.get('layout'), ['single', 'spread']);
   const binding = pick(form.get('binding'), ['left', 'right']);
@@ -46,13 +45,17 @@ function readOptions(form: FormData): ConvertOptions {
   };
   return {
     signal: AbortSignal.timeout(TIMEOUT_MS),
+    ...(onProgress && { onProgress }),
     ...(/^[a-z]{2,3}$/.test(lang) && { lang }),
     ...(form.get('includeHidden') === 'on' && { includeHidden: true }),
     pdf,
   };
 }
 
-export async function convertFile(_prev: ConvertState, form: FormData): Promise<ConvertState> {
+export async function convertForm(
+  form: FormData,
+  onProgress?: (e: ProgressEvent) => void,
+): Promise<ConvertState> {
   const file = form.get('file');
   if (!(file instanceof File) || file.size === 0) {
     return { status: 'error', code: 'chooseFile' };
@@ -65,7 +68,7 @@ export async function convertFile(_prev: ConvertState, form: FormData): Promise<
         data: new Uint8Array(await file.arrayBuffer()),
         name: file.name,
       },
-      readOptions(form),
+      readOptions(form, onProgress),
     );
     return {
       status: 'ok',
