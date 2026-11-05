@@ -1,0 +1,29 @@
+name: npm-downloads
+
+on:
+  schedule:
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+env:
+  METRICS_ISSUE: 162
+
+jobs:
+  report:
+    name: report
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comentar downloads na issue de métrica
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # O npm fecha o dia em UTC; "ontem" é o último dia completo.
+          day=$(date -u -d 'yesterday' +%F)
+          start=$(date -u -d '7 days ago' +%F)
+          daily=$(curl -fsS "https://api.npmjs.org/downloads/point/$day:$day/anymark" | jq -r .downloads)
+          week=$(curl -fsS "https://api.npmjs.org/downloads/point/$start:$day/anymark" | jq -r .downloads)
+          gh issue comment "$METRICS_ISSUE" --repo "$GITHUB_REPOSITORY" \
+            --body "$day: $daily downloads. Últimos 7 dias ($start a $day): $week."
