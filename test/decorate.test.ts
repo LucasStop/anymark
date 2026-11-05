@@ -32,7 +32,7 @@ describe('Anymark.decorate', () => {
 
     const { markdown } = await anymark.convert({ data: bytes, name: 'a.txt' });
 
-    expect(markdown).toBe('b(a(hello))');
+    expect(markdown).toBe('a(b(hello))');
   });
 
   it('keeps the facade as owner of the identity even through a decorator', async () => {
