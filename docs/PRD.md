@@ -69,5 +69,5 @@ Teste primeiro (casos definidos por uma pessoa): parsing, detecção de formato,
 ## Notas
 
 - Prazos: escopo do MVP congelado em 28/10, parcial apresentado em 29/10 (30% da nota), entrega em 18/11 às 23:59 BRT, alvo interno 20h.
-- Padrões defendidos (4 de dupla, proporcional ao mínimo de 8 por grupo de 4): Adapter e Chain (Stopinski), Strategy/Registry e Builder (Bruno). Decorator e Observer são planejados (#23, #24) e ainda sem código; valem como reserva.
+- Padrões defendidos (4 de dupla, proporcional ao mínimo de 8 por grupo de 4): Adapter e Chain (Stopinski), Strategy/Registry e Builder (Bruno). Decorator (Stopinski, #23) está no código; Observer (#24) é planejado e ainda sem código, vale como reserva.
 - Pendências abertas que afetam este PRD: significado de "vincular" no RAG.

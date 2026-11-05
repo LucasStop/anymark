@@ -84,6 +84,22 @@ await anymark.convert(input, {
 
 `layout: 'spread'` corta cada folha na lombada antes do OCR e entrega as duas páginas em ordem de leitura (`binding: 'right'` para livros que se leem da direita para a esquerda). `rotation` fixa (0, 90, 180, 270) gira todas as imagens sem segunda passada de OCR; `'auto'`, o padrão, acha o alto pelos pixels. `cleanup: { trim: true }` corta a moldura escura do scanner e o sombreado da lombada antes do OCR; `cleanup: { dehyphenate: true }` cola a palavra quebrada em fim de linha (`respon-` + `sabilidade`). Os dois vêm desligados. Sem `pdf`, nada muda. Decisão em [ADR 0009](docs/adr/0009-pdf-escaneado-declarado.md).
 
+### Front matter e chunks
+
+Decorators envolvem o converter de qualquer formato, por instância. `FrontMatterDecorator` antepõe um bloco YAML (`title`, `source`, `mime`, `sourceId`) para o Obsidian; `ChunkingDecorator` acrescenta `chunks` ao resultado, cortados por heading com `headingPath` e, em seção grande, por tamanho com sobreposição, para indexar em RAG. O primeiro registrado fica por fora.
+
+```ts
+import { createAnymark, ChunkingDecorator, FrontMatterDecorator } from 'anymark';
+
+const anymark = createAnymark()
+  .decorate((converter) => new FrontMatterDecorator(converter))
+  .decorate((converter) => new ChunkingDecorator(converter, { maxChars: 1500, overlap: 150 }));
+
+const { markdown, chunks } = await anymark.convert({ data: bytes, name: 'relatorio.docx' });
+```
+
+Cada chunk traz `index`, `headingPath` e `text`. Padrão: `maxChars` 2000, `overlap` 200. Veja [Decorator em PATTERNS](docs/PATTERNS.md).
+
 ### Cancelamento
 
 ```ts

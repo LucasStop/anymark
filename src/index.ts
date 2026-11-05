@@ -18,6 +18,7 @@ export type {
   BackendContext,
   BackendRunner,
   Capability,
+  Chunk,
   ConversionResult,
   ConversionWarning,
   ConvertOptions,
@@ -44,3 +45,5 @@ export {
 } from './detection/handlers.js';
 export { createDefaultDetector } from './detection/index.js';
 export { FrontMatterDecorator } from './decorators/FrontMatterDecorator.js';
+export { ChunkingDecorator } from './decorators/ChunkingDecorator.js';
+export type { ChunkingOptions } from './decorators/ChunkingDecorator.js';
