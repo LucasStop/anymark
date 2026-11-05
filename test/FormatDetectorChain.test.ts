@@ -69,6 +69,7 @@ describe('SignatureHandler', () => {
     ['jpeg', [0xff, 0xd8, 0xff, 0xe0], 'image/jpeg'],
     ['gif', ascii('GIF89a'), 'image/gif'],
     ['webp', [...ascii('RIFF'), 0, 0, 0, 0, ...ascii('WEBP')], 'image/webp'],
+    ['wav', [...ascii('RIFF'), 0, 0, 0, 0, ...ascii('WAVE')], 'audio/wav'],
   ])('recognizes %s by its bytes', (_name, signature, mime) => {
     expect(new SignatureHandler().handle(bytes(...signature), pass)).toBe(mime);
   });
@@ -84,10 +85,10 @@ describe('SignatureHandler', () => {
     expect(new SignatureHandler().handle(bytes(), pass)).toBe(PASSED);
   });
 
-  it('does not take RIFF without WEBP for an image', () => {
-    const wave = bytes(...ascii('RIFF'), 0, 0, 0, 0, ...ascii('WAVE'));
+  it('does not take RIFF without WEBP or WAVE for an image or audio', () => {
+    const avi = bytes(...ascii('RIFF'), 0, 0, 0, 0, ...ascii('AVI '));
 
-    expect(new SignatureHandler().handle(wave, pass)).toBe(PASSED);
+    expect(new SignatureHandler().handle(avi, pass)).toBe(PASSED);
   });
 });
 

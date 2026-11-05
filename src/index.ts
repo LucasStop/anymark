@@ -2,6 +2,8 @@ export { Anymark, createAnymark } from './Anymark.js';
 export { BackendChain } from './backends/BackendChain.js';
 export { TesseractBackend } from './backends/TesseractBackend.js';
 export type { TesseractOptions } from './backends/TesseractBackend.js';
+export { WhisperBackend } from './backends/WhisperBackend.js';
+export type { WhisperOptions } from './backends/WhisperBackend.js';
 export { ConverterRegistry } from './core/ConverterRegistry.js';
 export { MarkdownBuilder } from './core/MarkdownBuilder.js';
 export type { ListItem } from './core/MarkdownBuilder.js';

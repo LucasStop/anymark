@@ -18,6 +18,9 @@ const SIGNATURES: readonly { readonly mime: string; readonly bytes: readonly num
   { mime: 'image/png', bytes: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a] },
   { mime: 'image/jpeg', bytes: [0xff, 0xd8, 0xff] },
   { mime: 'image/gif', bytes: ascii('GIF8') },
+  { mime: 'audio/flac', bytes: ascii('fLaC') },
+  { mime: 'audio/ogg', bytes: ascii('OggS') },
+  { mime: 'audio/mpeg', bytes: ascii('ID3') },
 ];
 
 /** Magic bytes. Wins over the extension: a PDF renamed to .docx is still a PDF. */
@@ -25,9 +28,15 @@ export class SignatureHandler implements FormatHandler {
   handle(input: DetectionInput, next: () => string | undefined): string | undefined {
     const known = SIGNATURES.find((signature) => startsWith(input.data, signature.bytes));
     if (known !== undefined) return known.mime;
-    const isWebp =
-      startsWith(input.data, ascii('RIFF')) && startsWith(input.data, ascii('WEBP'), 8);
-    return isWebp ? 'image/webp' : next();
+    if (startsWith(input.data, ascii('RIFF'))) {
+      if (startsWith(input.data, ascii('WEBP'), 8)) return 'image/webp';
+      if (startsWith(input.data, ascii('WAVE'), 8)) return 'audio/wav';
+    }
+    // MPEG frame sync: 11 set bits. Weak on its own, so a bare match only counts for audio-sized input.
+    const [a, b] = input.data;
+    if (a === 0xff && b !== undefined && (b & 0xe0) === 0xe0 && (b & 0x06) !== 0)
+      return 'audio/mpeg';
+    return next();
   }
 }
 

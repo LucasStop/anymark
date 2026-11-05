@@ -57,6 +57,12 @@ export const builtInEntries: readonly ConverterEntry[] = [
     load: async () => new (await import('./ImageConverter.js')).ImageConverter(),
   },
   {
+    name: 'audio',
+    mimes: ['audio/wav', 'audio/mpeg', 'audio/flac', 'audio/ogg'],
+    extensions: ['.wav', '.mp3', '.flac', '.ogg'],
+    load: async () => new (await import('./AudioConverter.js')).AudioConverter(),
+  },
+  {
     name: 'pptx',
     mimes: ['application/vnd.openxmlformats-officedocument.presentationml.presentation'],
     extensions: ['.pptx'],
