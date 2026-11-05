@@ -4,5 +4,6 @@
   "out": "api-docs",
   "readme": "none",
   "name": "anymark",
-  "excludePrivate": true
+  "excludePrivate": true,
+  "favicon": "design/brand/logo/favicon.svg"
 }

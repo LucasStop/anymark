@@ -1,5 +1,5 @@
 // Brand applications outside the UI (issue #114): README banner, social preview, thumbnail and
-// video vignette, all on the dark tokens of docs/DESIGN.md. Text is outlined with Inter so no file
+// video vignette, 16:9 slide template and lower thirds, all on the dark tokens of docs/DESIGN.md. Text is outlined with Inter so no file
 // depends on an installed font. Needs rsvg-convert on PATH for the PNGs.
 // Run: node scripts/export-brand-applications.mjs
 import { execFileSync } from 'node:child_process';
@@ -33,7 +33,7 @@ function text(str, { x, y, size, weight, fill, anchor = 'start' }) {
     (sum, ch) => sum + (font.charToGlyph(ch).advanceWidth * size) / font.unitsPerEm,
     0,
   );
-  let pen = anchor === 'middle' ? x - width / 2 : x;
+  let pen = anchor === 'middle' ? x - width / 2 : anchor === 'end' ? x - width : x;
   let d = '';
   for (const ch of str) {
     const g = font.charToGlyph(ch);
@@ -54,8 +54,8 @@ function wordmark(x, y, size) {
   return { svg: w.svg + cursor, width: w.width + size * 0.05 + size * 0.47 };
 }
 
-const svg = (w, h, body, title) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="${title}"><rect width="${w}" height="${h}" fill="${C.bg}"/>${body}</svg>\n`;
+const svg = (w, h, body, title, background = true) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="${title}">${background ? `<rect width="${w}" height="${h}" fill="${C.bg}"/>` : ''}${body}</svg>\n`;
 
 // Faint rows of Markdown markers behind the lockup: the output the library produces.
 const markers = (w, h) =>
@@ -145,12 +145,100 @@ files.thumbnail = lockup(1280, 720, {
   extra: `${q1.svg}${q2.svg}`,
 });
 
+// 16:9 slide template, 1920x1080: margins of 120, title baseline at 220, content area below.
+const W = 1920;
+const H = 1080;
+const M = 120;
+const t = (str, o) => text(str, o).svg;
+const header = (title) =>
+  `${symbol(M, 80, 56)}${t(title, { x: M + 56 + 24, y: 124, size: 56, weight: 700, fill: C.ink })}<rect x="${M}" y="168" width="${W - 2 * M}" height="2" fill="${C.line}"/>`;
+const footer = `${t('anymark', { x: M, y: H - 56, size: 24, weight: 500, fill: C.muted })}${t('Design Patterns, PUCPR 2026/2', { x: W - M, y: H - 56, size: 24, weight: 500, fill: C.muted, anchor: 'end' })}`;
+const panel = (x, y, w, h) =>
+  `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="16" fill="${C.paper}" stroke="${C.line}" stroke-width="2"/>`;
+
+files['slide-cover'] = lockup(W, H, {
+  symbolSize: 180,
+  wordSize: 180,
+  tagSize: 44,
+  tagline: 'Qualquer arquivo, em Markdown.',
+});
+files['slide-title'] = svg(
+  W,
+  H,
+  `${header('Título do slide')}${[
+    'Um ponto por linha, até quatro.',
+    'Frase curta, sem rodapé de texto.',
+    'O padrão e o problema que ele resolve.',
+  ]
+    .map(
+      (line, i) =>
+        `<rect x="${M}" y="${300 + i * 130 - 14}" width="12" height="12" rx="3" fill="${C.accent}"/>${t(line, { x: M + 40, y: 300 + i * 130, size: 48, weight: 500, fill: C.ink })}`,
+    )
+    .join('')}${footer}`,
+  'slide-title',
+);
+files['slide-code'] = svg(
+  W,
+  H,
+  `${header('Trecho de código')}${panel(M, 220, W - 2 * M, 640)}${[
+    'class BackendChain {',
+    '  async run(input, ctx) {',
+    '    // cada handler decide: trato ou passo adiante',
+    '  }',
+    '}',
+  ]
+    .map((line, i) =>
+      t(line, {
+        x: M + 48,
+        y: 310 + i * 96,
+        size: 44,
+        weight: 500,
+        fill: i === 2 ? C.muted : C.ink,
+      }),
+    )
+    .join('')}${footer}`,
+  'slide-code',
+);
+const box = (x, label) =>
+  `${panel(x, 380, 420, 220)}${t(label, { x: x + 210, y: 505, size: 44, weight: 700, fill: C.ink, anchor: 'middle' })}`;
+const arrow = (x) =>
+  `<path d="M${x} 490h100m-24-24 24 24-24 24" stroke="${C.accent}" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+files['slide-diagram'] = svg(
+  W,
+  H,
+  `${header('Diagrama')}${box(M, 'Entrada')}${arrow(M + 420 + 55)}${box(M + 630, 'Converter')}${arrow(M + 630 + 420 + 55)}${box(M + 1260, 'Markdown')}${t('Cada caixa é um ponto do fluxo; a seta é o contrato entre eles.', { x: M, y: 760, size: 36, weight: 500, fill: C.muted })}${footer}`,
+  'slide-diagram',
+);
+files['slide-closing'] = lockup(W, H, {
+  symbolSize: 150,
+  wordSize: 150,
+  tagSize: 44,
+  tagline: 'Obrigado. github.com/LucasStop/anymark',
+});
+
+// Lower thirds, 1920x1080 with an alpha channel: drop on the video, bottom left.
+const lowerThird = (name, role) =>
+  svg(
+    W,
+    H,
+    `${panel(M, 840, 820, 130)}<rect x="${M}" y="840" width="12" height="130" rx="6" fill="${C.accent}"/>${t(name, { x: M + 48, y: 898, size: 44, weight: 700, fill: C.ink })}${t(role, { x: M + 48, y: 944, size: 30, weight: 500, fill: C.muted })}`,
+    `lower-third ${name}`,
+    false,
+  );
+files['lower-third-stopinski'] = lowerThird('Lucas Stopinski', 'Adapter e Chain of Responsibility');
+files['lower-third-bruno'] = lowerThird('Lucas Bruno', 'Strategy, Registry e Builder');
+
 mkdirSync(OUT, { recursive: true });
 const sizes = {
   banner: [1280, 320],
   'social-preview': [1280, 640],
   thumbnail: [1280, 720],
   vignette: [1920, 1080],
+  ...Object.fromEntries(
+    Object.keys(files)
+      .filter((name) => name.startsWith('slide-') || name.startsWith('lower-third'))
+      .map((name) => [name, [W, H]]),
+  ),
 };
 for (const [name, body] of Object.entries(files)) {
   writeFileSync(join(OUT, `${name}.svg`), body);
