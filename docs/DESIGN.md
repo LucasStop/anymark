@@ -85,7 +85,41 @@ Estados da tela: vazio, arrastando, lendo, resultado com avisos, resultado limpo
 
 ## Nome e marca
 
-Wordmark em texto: `anymark` em minúsculas, Inter 700, com um cursor/underscore em `--accent` depois da palavra (`anymark_`), referência ao Markdown sendo escrito. O símbolo é um bloco arredondado (o cursor do Markdown) com um `a` minúsculo recortado, em `--accent` e `--accent-on`. Arquivos em `design/brand/logo/` (`logo.svg`, `logo-mono.svg`, `symbol.svg`, `favicon.svg`/`.ico`, PNGs), gerados por `scripts/export-brand.mjs`; o capítulo completo da marca fecha na issue #116. As aplicações fora da UI (banner do README 1280x320, social preview 1280x640, thumbnail 1280x720 e vinheta 1920x1080) saem de `scripts/export-brand-applications.mjs` para `design/brand/applications/`, sobre os tokens escuros; o texto também vai em contornos de Inter. Enviar o social preview em Settings do GitHub é ação do dono do repositório. O wordmark dos arquivos usa contornos de Inter Bold (OFL-1.1, rsms.me/inter).
+### Conceito
+
+`anymark` junta "any" (qualquer arquivo) e "mark" (Markdown). O símbolo é um bloco arredondado, o cursor do editor onde o Markdown é escrito, com um `a` minúsculo de um andar recortado dentro dele. O wordmark repete a ideia: `anymark` seguido de um sublinhado em `--accent` (`anymark_`), o cursor esperando a próxima linha. Um destaque só, o mesmo `--accent` da interface.
+
+### Construção
+
+O símbolo vive numa grade de 48 unidades: bloco de 42 por 42 a 3 unidades da borda, raio de canto 11; o `a` é um círculo de raio 8,75 em (24, 24) e uma haste vertical em x = 32,75, os dois com traço de 4,5, recortados do bloco (cor de `--accent-on` no logo colorido, vazado no monocromático). O wordmark é Inter 700 em contornos (licença OFL-1.1), sem dependência de fonte instalada, com o sublinhado de 17 por 5 unidades logo depois do `k`. A geometria está em `scripts/export-brand.mjs` e é a fonte única: nunca redesenhar à mão.
+
+### Área de respiro e tamanho mínimo
+
+- Área de respiro: um quarto do lado do símbolo (12 unidades na grade de 48) livre em todos os lados do logo horizontal. Nada entra nessa moldura, nem texto nem borda de card.
+- Tamanho mínimo: símbolo sozinho a 16 px (o favicon é gerado em 16, 32 e 48); logo horizontal a 24 px de altura. Abaixo disso usar só o símbolo.
+
+### Variantes
+
+| Arquivo | Uso |
+|---|---|
+| `logo.svg` | padrão; troca para o tema escuro pelo `prefers-color-scheme` |
+| `logo-mono.svg` | uma cor (`currentColor`), com o `a` vazado: carimbo, impressão, fundo de foto |
+| `symbol.svg`, `favicon.svg` | avatar, favicon, onde o wordmark não cabe |
+| `symbol-bleed.svg` | ícone iOS, quadrado cheio: o sistema aplica a máscara |
+| `png/` | ícones de 180, 192 e 512 px, para manifesto e touch icon |
+
+### Fazer e não fazer
+
+- Fazer: usar os arquivos de `design/brand/logo/`; manter o sublinhado em `--accent`; aplicar sobre `--bg`, `--paper` ou foto escurecida com contraste de pelo menos 4,5:1.
+- Não fazer: girar, esticar ou dar sombra; trocar o sublinhado de cor ou tirá-lo; escrever "AnyMark" ou "Anymark" no lugar de `anymark`; colocar o símbolo sobre `--accent` sem usar a variante monocromática; recriar o wordmark com outra fonte.
+
+### Aplicações
+
+Geradas por `scripts/export-brand-applications.mjs` em `design/brand/applications/`, sobre os tokens escuros, com texto em contornos de Inter: banner do README (1280x320), social preview (1280x640), thumbnail do vídeo (1280x720) e vinheta de abertura e fechamento (1920x1080). A frase de apoio é "Qualquer arquivo, em Markdown."; na miniatura do vídeo, a contagem de padrões é a do código (oito). Enviar o social preview em Settings do GitHub é ação do dono do repositório. Ainda sem arquivo: template de slides, lower thirds e logo do npm/typedoc (#114).
+
+### Inventário
+
+`design/brand/logo/` (logo, símbolo, favicon, PNGs), `design/brand/icons/` (ícones de formato e de ação), `design/brand/illustrations/` (estados vazio, leitura, resultado, erro e convergência) e `design/brand/applications/`. Cada pasta tem um `index.html` de conferência.
 
 ## Mapeamento para o shadcn
 
