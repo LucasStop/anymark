@@ -11,7 +11,7 @@ Estado mostrado: `anymark@0.1.1` no npm, `main` verde, 10 formatos de texto, dad
 | 3 | Adapter e Chain of Responsibility, com fallback de backend | Stopinski | 3 min |
 | 4 | Extensão `.srt` sem tocar a lib | Bruno | 2 min |
 | 5 | Strategy, Registry/Plugin e Builder | Bruno | 3 min |
-| 6 | Fechamento: estado, o que falta até 12/11 | os dois | 1 min |
+| 6 | Fechamento: estado, o que falta até 18/11 | os dois | 1 min |
 
 ## 1. O que é a lib (Stopinski, 1 min)
 
@@ -59,7 +59,7 @@ Na demo: enviar um `.srt` no example (o plugin já vem registrado em `examples/n
 
 ## 6. Fechamento (os dois, 1 min)
 
-Pacote público no npm, publicado por tag com proveniência. Até 12/11: áudio, vídeo, URL e YouTube; Decorator e Observer; README final e vídeo de defesa. Citar Decorator e Observer só como planejados.
+Pacote público no npm, publicado por tag com proveniência. Até 18/11: áudio, vídeo, URL e YouTube; Decorator e Observer; README final e vídeo de defesa. Citar Decorator e Observer só como planejados.
 
 ## Ensaio
 

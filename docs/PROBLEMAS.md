@@ -78,4 +78,4 @@ Lição: quando o resultado é vazio, ver primeiro se o dado chega ao OCR antes 
 ## 6. Em aberto
 
 - OCR de slide que é só diagrama devolve texto lixo; o OCR não tem timeout próprio.
-- Link do vídeo no README ainda é placeholder; vídeo só na entrega final (12/11).
+- Link do vídeo no README ainda é placeholder; vídeo só na entrega final (18/11).

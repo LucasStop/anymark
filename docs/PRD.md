@@ -38,7 +38,7 @@ Biblioteca TypeScript `anymark`: `convert(input)` devolve Markdown e metadados p
 - Metadados com `schemaVersion` e `sourceId` igual ao hash do conteúdo. Nada de caminho absoluto, chave ou dado do usuário em metadata ou log.
 - Conteúdo de documento e saída de CLI ou modelo são dado não confiável: nunca vão para shell nem viram instrução.
 - Contratos ficam congelados cedo e só mudam com aval dos dois.
-- MVP de 29/10: txt, md, csv, json, xml, html, docx, pptx, xlsx, pdf e imagem (OCR, já pronto). Até 12/11: áudio (transcrição), vídeo, URL e YouTube.
+- MVP de 29/10: txt, md, csv, json, xml, html, docx, pptx, xlsx, pdf e imagem (OCR, já pronto). Até 18/11: áudio (transcrição), vídeo, URL e YouTube.
 - Distribuição: ESM-only, Node >=22, TypeScript `~6.0`, licença MIT. Publicado no npm em 26/10/2026 (0.1.0 manual, 0.1.1 por tag `v*`).
 
 ## Decisões de teste
@@ -68,6 +68,6 @@ Teste primeiro (casos definidos por uma pessoa): parsing, detecção de formato,
 
 ## Notas
 
-- Prazos: escopo do MVP congelado em 28/10, parcial apresentado em 29/10 (30% da nota), entrega em 12/11 às 23:59 BRT, alvo interno 20h.
+- Prazos: escopo do MVP congelado em 28/10, parcial apresentado em 29/10 (30% da nota), entrega em 18/11 às 23:59 BRT, alvo interno 20h.
 - Padrões defendidos (4 de dupla, proporcional ao mínimo de 8 por grupo de 4): Adapter e Chain (Stopinski), Strategy/Registry e Builder (Bruno). Decorator e Observer são planejados (#23, #24) e ainda sem código; valem como reserva.
 - Pendências abertas que afetam este PRD: significado de "vincular" no RAG.

@@ -6,7 +6,7 @@ Estado combinado em 14/10/2026 e conferido contra o código em 26/10/2026. Decis
 
 Biblioteca TypeScript (`anymark`) que converte arquivos em Markdown, com registry plugável de converters e backends de IA (OCR e transcrição) com fallback. A nota depende da justificativa da arquitetura, não do número de formatos. Dupla: Lucas Stopinski e Lucas Bruno.
 
-Prazos: 28/10 congela o escopo do MVP. 29/10 é a apresentação do parcial (30% da nota). 12/11, 23:59 (Brasília), é a entrega final, com alvo interno de 20h.
+Prazos: 28/10 congela o escopo do MVP. 29/10 é a apresentação do parcial (30% da nota). 18/11, 23:59 (Brasília), é a entrega final, com alvo interno de 20h.
 
 ## Decisões fechadas
 
@@ -16,7 +16,7 @@ Prazos: 28/10 congela o escopo do MVP. 29/10 é a apresentação do parcial (30%
 | Equipe | Dono do repositório: `LucasStop`. Colaborador: `Luc-Bruno`. |
 | Método | PRD, SDD, TDD, issues, GitHub Project, CI/CD. `docs/SDD.md` e `specs/` por feature, ligadas às issues. Red, green, refactor, commits por fase. |
 | Git | GitHub Flow com merge commit (sem rebase nem squash), para a `main` mostrar cada issue como uma branch separada; o merge commit mantém esse grafo mesmo com a branch apagada. Depois do merge o GitHub apaga a branch remota (`delete branch on merge`) e quem fez o PR apaga a local: `git switch main && git pull --ff-only && git branch -d <branch> && git fetch --prune`. Branch criada pela issue (`<issue>-slug`), um PR por issue com review cruzado, `main` protegida com CI verde. |
-| MVP (29/10) | txt, md, csv, json, xml, html, docx, pptx, xlsx, pdf e imagem (OCR, já pronto). Áudio, vídeo e URL ou YouTube até 12/11. |
+| MVP (29/10) | txt, md, csv, json, xml, html, docx, pptx, xlsx, pdf e imagem (OCR, já pronto). Áudio, vídeo e URL ou YouTube até 18/11. |
 | IA | Interface `Backend` com cadeia e fallback. Dois modos plugáveis: CLI já logado (`claude -p`, `codex exec`, `agy -p`) e chave de API (Gemini, OpenAI). Locais: whisper.cpp e tesseract.js. Nunca ler token ou keychain, nunca fazer OAuth próprio. |
 | Distribuição | Repositório público. Pacote no npm público, publicado em 26/10/2026 (0.1.0 manual, 0.1.1 por tag `v*` no CI, com trusted publishing). TypeDoc no GitHub Pages. |
 | Demo | `examples/nextjs` no mesmo repositório, roda local: upload, preview e uma extensão registrada sem tocar a lib. Sem deploy. |
@@ -108,7 +108,7 @@ Reconferir com `npm view` ao instalar. Versões conferidas em 14/10/2026: read-e
 | Marco | 29/10 | Apresentação parcial: caso padrão, extensão `.srt` sem tocar a lib, fallback de backend, padrões no código. |
 | 4 | 29/10 a 06/11 | Áudio (02/11 é feriado; imagem por OCR já está pronta). Decorators (front matter, chunking). Observer (`addSink`). RAG opcional se sobrar. |
 | 5 | 06 a 09/11 | Vídeo (ffmpeg para áudio), URL e YouTube. Gravar o vídeo depois de congelar. |
-| 6 | 09 a 12/11 | Polimento, `docs/PATTERNS.md`, "Uso de IA", tag v1.0.0, vídeo de defesa. Entrega até cerca de 20h do dia 12. |
+| 6 | 09 a 18/11 | Polimento, `docs/PATTERNS.md`, "Uso de IA", tag v1.0.0, vídeo de defesa. Entrega até cerca de 20h do dia 18. |
 
 ## Esboço de issues
 
@@ -156,7 +156,7 @@ README e vídeo de defesa não se cortam.
 
 1. ~~Convite ao `Luc-Bruno`~~ aceito (permissão `write`).
 2. Disponibilidade semanal de cada um.
-3. ~~Duração máxima do vídeo~~: sem teto fixo na conversão (lotes, ver Decisões). Vídeo de defesa: duração ainda a definir, define 4 ou 6 padrões defendidos (default: 4, citando as reservas).
+3. ~~Duração máxima do vídeo~~: 10 minutos no total (Canvas, 05/11/2026). Sem teto fixo na conversão (lotes, ver Decisões). Com 10 minutos, a dupla defende 4 padrões (2 por aluno), citando as reservas.
 4. ~~O professor aceita Chain, Registry e Facade?~~ Aceita (confirmado por Lucas Stopinski em 14/10/2026). Mínimo de padrões para dupla: 4 (decidido em 16/10/2026), os já distribuídos.
 5. Node 22 na máquina de cada um (`nvm install 22`).
 6. ~~Publicar no npm?~~ Decidido em 14/10/2026 e revisto em 26/10/2026: `0.1.0` sai antes do parcial de 29/10 (o Lucas recuperou a conta), `0.x.y` a cada issue concluída, verificada e estável na `main` (minor para feature, patch para correção) e `1.0.0` na entrega final. O primeiro publish (0.1.0) foi manual, com `npm publish` do tarball e a chave de segurança do Lucas (o yarn clássico não autentica por chave). As seguintes saem por tag `v*` no `release.yml`, com trusted publishing e aprovação do Lucas no ambiente `npm`.

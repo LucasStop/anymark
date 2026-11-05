@@ -98,7 +98,7 @@ Cerca de 95% das palavras impressas certas (94,7%, intervalo de 92 a 96%) e 85 a
 
 Verdade conferida no GitHub em 27/10/2026: dos 71 PRs mergeados, 69 foram abertos por Lucas Stopinski e 2 pelo Dependabot; nenhum foi aberto nem revisado pelo Bruno. As reviews registradas (58) são do `copilot-pull-request-reviewer`; a revisão independente foi feita por agente de IA e o merge passou pelas checagens obrigatórias do CI. Nos commits, 58 de 268 na `main` são do Bruno (cerca de 22%), dentro de PRs abertos pelo Stopinski. Dizer isso como está: a divisão de commits existe, mas a revisão humana cruzada foi pouca. Não afirmar "todo PR teve review do outro".
 
-Ações até 12/11: o Bruno comenta o aval do `src/core/types.ts` na #101; os PRs dele (a partir da #24) são abertos por ele e revisados pelo Stopinski, e vice-versa; antes de 29/10 ele revisa PRs já mergeados dos padrões que defende (Strategy, Registry/Plugin, Builder) e deixa comentário.
+Ações até 18/11: o Bruno comenta o aval do `src/core/types.ts` na #101; os PRs dele (a partir da #24) são abertos por ele e revisados pelo Stopinski, e vice-versa; antes de 29/10 ele revisa PRs já mergeados dos padrões que defende (Strategy, Registry/Plugin, Builder) e deixa comentário.
 
 ### Segurança
 

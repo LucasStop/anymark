@@ -15,12 +15,12 @@ Este arquivo é o contexto de qualquer agente (Claude Code, Codex, Gemini) que t
 |---|---|
 | 28/10/2026 | escopo do MVP congelado |
 | 29/10/2026 | apresentação do estado parcial (vale 30% da nota) |
-| 12/11/2026, 23:59 (Brasília) | entrega final: link do repositório. Alvo interno: 20h |
+| 18/11/2026, 23:59 (Brasília) | entrega final: link do repositório. Alvo interno: 20h |
 
 ## Escopo
 
 - MVP (29/10): txt, md, csv, json, xml, html, docx, pptx, xlsx, pdf e imagem (OCR).
-- Até 12/11: áudio (transcrição), vídeo, URL e YouTube.
+- Até 18/11: áudio (transcrição), vídeo, URL e YouTube.
 - Saída pensada para três usos: contexto de LLM/RAG, Obsidian e leitura humana.
 - Fora do core: RAG para vincular os `.md` de um repositório. Componente opcional, segunda entrega.
 - A entrega é só a lib. O exemplo em `examples/nextjs` é um consumidor de demonstração: não é backend e não tem deploy.
@@ -88,7 +88,7 @@ O projeto é desenvolvido com apoio de agentes de IA (Claude Code). O README fin
 - [docs/PLAN.md](docs/PLAN.md): decisões, arquitetura, cronograma, riscos e pendências.
 - [docs/ENUNCIADO.md](docs/ENUNCIADO.md): exigências do trabalho e checklist do vídeo.
 - `docs/PRD.md`, `docs/SDD.md`, `docs/adr/`, `specs/`: criados na Fase 1.
-- [docs/PATTERNS.md](docs/PATTERNS.md), [docs/EXTENDING.md](docs/EXTENDING.md), [docs/TESTING.md](docs/TESTING.md): crescem durante o desenvolvimento e fecham até 12/11.
+- [docs/PATTERNS.md](docs/PATTERNS.md), [docs/EXTENDING.md](docs/EXTENDING.md), [docs/TESTING.md](docs/TESTING.md): crescem durante o desenvolvimento e fecham até 18/11.
 - [docs/DEMO.md](docs/DEMO.md): roteiro, tempos e ensaio da apresentação do parcial (29/10).
 - [docs/DEFESA.md](docs/DEFESA.md): perguntas que o professor pode fazer, com a resposta combinada e o código que a prova.
 - [docs/DESIGN.md](docs/DESIGN.md): identidade visual, tokens e como estender a interface da demo.
