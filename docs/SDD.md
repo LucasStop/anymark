@@ -8,7 +8,7 @@ Vocabulário: módulo profundo = muito comportamento atrás de interface pequena
 
 | Módulo | Interface (o que o chamador precisa saber) | Esconde | Padrão |
 |---|---|---|---|
-| `Anymark` | `convert(input, options)`, `use(plugin)`, `registry`. Criado por `createAnymark()`. `addSink` e decorators: planejados (#23, #24) | detecção, resolução do converter, backends, hash do conteúdo | Facade |
+| `Anymark` | `convert(input, options)`, `use(plugin)`, `registry`. Criado por `createAnymark()`. `decorate(wrap)` (#23); `addSink`: planejado (#24) | detecção, resolução do converter, backends, hash do conteúdo | Facade |
 | `ConverterRegistry` | `register(entry)`, `resolve(format)` | carga lazy (`load()`), conflito de mime, ordem de registro | Registry/Plugin |
 | `Converter` | `convert(input, ctx)` devolve `ConversionResult`; declara nome e mimes | parser e dependência do formato | Strategy |
 | `FormatDetectorChain` | `detect({ data, name?, mime? })` devolve o mime ou `undefined` | dica, assinatura, ZIP/OOXML, extensão, texto estruturado, texto puro | Chain |
@@ -25,7 +25,7 @@ Vocabulário: módulo profundo = muito comportamento atrás de interface pequena
 - `BackendChain`: sem ele, a lógica de fallback e opt-in vaza para cada converter de imagem e áudio. Ganha o lugar.
 - `MarkdownBuilder`: sem ele, o escape de pipe se repete em csv, xlsx, pptx, json, xml, pdf e imagem (docx e html passam por mammoth e turndown, sem o builder). Ganha o lugar.
 - `ConverterRegistry`: pouco código, mas é o ponto de extensão (OCP). Ganha o lugar pelo seam, não pelo tamanho.
-- Decorators (front matter, chunking, retry, timeout; planejados, #23, nenhum existe ainda): envolvem `Converter` pela mesma interface, então não criam módulo novo. Cada um vale só se uma regra real justificar.
+- Decorators (`FrontMatterDecorator` e `ChunkingDecorator` existem; retry e timeout não): envolvem `Converter` pela mesma interface, então não criam módulo novo. Cada um vale só se uma regra real justificar.
 
 ## Seams
 
@@ -39,7 +39,7 @@ Vocabulário: módulo profundo = muito comportamento atrás de interface pequena
 
 ## Fluxo
 
-`convert(input)` entra em `Anymark`. O hash do conteúdo vira `sourceId`. O `FormatDetectorChain` devolve o formato. O `ConverterRegistry` resolve e carrega o `Converter`, (decorators planejados, #23). Imagem e áudio chamam a `BackendChain`, que chama `Backend` (hoje só o `TesseractBackend`; um backend de CLI passaria por `runCli`). O resultado vai para os `ResultSink` quando existirem (#24). Falha de backend vira warning no resultado, sem chave nem caminho.
+`convert(input)` entra em `Anymark`. O hash do conteúdo vira `sourceId`. O `FormatDetectorChain` devolve o formato. O `ConverterRegistry` resolve e carrega o `Converter`, (com os decorators registrados em `decorate()`). Imagem e áudio chamam a `BackendChain`, que chama `Backend` (hoje só o `TesseractBackend`; um backend de CLI passaria por `runCli`). O resultado vai para os `ResultSink` quando existirem (#24). Falha de backend vira warning no resultado, sem chave nem caminho.
 
 ## Contratos congelados cedo
 
@@ -65,5 +65,5 @@ Seams de teste confirmados em 14/10: `convert()` ponta a ponta, kit de contrato 
 
 ## Aberto
 
-- Quantos decorators entram de fato. Meta: front matter e chunking no mínimo.
+- Quantos decorators entram de fato: front matter e chunking entraram (#23); retry e timeout ficam de fora.
 - Segundo adapter de `ResultSink` para sustentar o Observer.

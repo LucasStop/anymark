@@ -68,8 +68,17 @@ export interface Metadata {
   readonly title?: string;
 }
 
+/** A slice of the Markdown for indexing. `headingPath` is the chain of headings above it. */
+export interface Chunk {
+  readonly index: number;
+  readonly headingPath: readonly string[];
+  readonly text: string;
+}
+
 export interface ConversionResult {
   readonly markdown: string;
+  /** Only set by the `ChunkingDecorator`. */
+  readonly chunks?: readonly Chunk[];
   readonly metadata: Metadata;
   readonly warnings: readonly ConversionWarning[];
 }

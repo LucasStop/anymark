@@ -9,9 +9,10 @@ Cada padrão abaixo traz o problema que resolve, onde está no código, um trech
 | Strategy | Lucas Bruno | `src/core/types.ts`, `src/converters/` |
 | Registry/Plugin | Lucas Bruno | `src/core/ConverterRegistry.ts`, `examples/plugins/srt/index.ts` |
 | Builder | Lucas Bruno | `src/core/MarkdownBuilder.ts` |
+| Decorator | Lucas Stopinski | `src/decorators/FrontMatterDecorator.ts`, `src/decorators/ChunkingDecorator.ts` |
 | Facade | dupla | `src/Anymark.ts` |
 
-`Converter` (Strategy) e `Backend` (Adapter) são interfaces distintas, de propósito: ver [ADR 0002](adr/0002-converter-e-backend-separados.md). Decorator (front matter, chunking) e Observer (`ResultSink`) estão planejados para a segunda entrega (issues #23 e #24) e ainda não têm código, então não são defendidos aqui.
+`Converter` (Strategy) e `Backend` (Adapter) são interfaces distintas, de propósito: ver [ADR 0002](adr/0002-converter-e-backend-separados.md). O Observer (`ResultSink`) está planejado (issue #24) e ainda não tem código, então não é defendido aqui.
 
 ## Adapter (Lucas Stopinski)
 
@@ -125,7 +126,7 @@ export class PdfConverter implements Converter {
 
 ```ts
 // src/Anymark.ts
-const converter = mime === undefined ? undefined : await this.registry.resolve(mime);
+const resolved = mime === undefined ? undefined : await this.registry.resolve(mime);
 const result = await converter.convert(source, { sourceId, options, backends });
 ```
 
@@ -200,6 +201,36 @@ const cell = (text: string): string =>
 
 **Por que Builder.** Constrói um documento por etapas com interface fluente e um único ponto de escape.
 
+## Decorator (Lucas Stopinski)
+
+**Problema.** Front matter para o Obsidian e chunking para RAG valem para qualquer formato. Pôr um `if` em cada um dos dez converters, ou uma subclasse por combinação, duplica a regra e obriga a editar a lib para cada recurso novo.
+
+**Onde.** `FrontMatterDecorator` e `ChunkingDecorator` em `src/decorators/`, ligados por `Anymark.decorate()` em `src/Anymark.ts`. Os dois implementam `Converter`, delegam ao converter de dentro e acrescentam algo ao resultado. Nenhum dos dez converters sabe que eles existem.
+
+```ts
+// src/decorators/FrontMatterDecorator.ts
+export class FrontMatterDecorator implements Converter {
+  readonly name: string;
+  readonly mimes: readonly string[];
+  readonly #inner: Converter;
+```
+
+```ts
+// src/decorators/ChunkingDecorator.ts
+const result = await this.#inner.convert(source, ctx);
+```
+
+```ts
+// src/Anymark.ts
+const converter = this.#decorators.reduceRight((inner, wrap) => wrap(inner), resolved);
+```
+
+Uso: `createAnymark().decorate((c) => new ChunkingDecorator(c)).decorate((c) => new FrontMatterDecorator(c))`. O primeiro registrado fica por fora. O Markdown, a metadata e os warnings do converter de dentro passam intactos (testado); o `FrontMatterDecorator` só antepõe o bloco YAML e o `ChunkingDecorator` só acrescenta `chunks`.
+
+**Alternativa descartada.** Flags em `ConvertOptions` lidas por cada converter (`frontMatter: true`, `chunk: {...}`). É simples, mas cada formato novo, inclusive plugin, teria de implementar os dois, e o núcleo cresceria a cada recurso. Subclasses por combinação (`PdfWithFrontMatterConverter`) explodem em número.
+
+**Por que Decorator.** Acrescenta responsabilidade a um objeto sem alterá-lo e sem mudar a interface, e as camadas se empilham em qualquer ordem. É o princípio aberto/fechado aplicado a recursos transversais.
+
 ## Facade (dupla)
 
 **Problema.** Quem usa a lib não deve montar detector, registry, backends e converter.
@@ -213,7 +244,7 @@ async convert(input: Input, options: ConvertOptions = {}): Promise<ConversionRes
 
 ```ts
 // src/Anymark.ts
-const converter = mime === undefined ? undefined : await this.registry.resolve(mime);
+const resolved = mime === undefined ? undefined : await this.registry.resolve(mime);
 ```
 
 ```ts

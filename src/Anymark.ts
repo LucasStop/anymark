@@ -10,6 +10,7 @@ import type {
   Backend,
   ConversionResult,
   ConvertOptions,
+  Converter,
   Input,
   Plugin,
   Source,
@@ -28,6 +29,7 @@ export class Anymark {
   readonly registry: ConverterRegistry;
   readonly #detector: FormatDetectorChain;
   readonly #backends: readonly Backend[];
+  readonly #decorators: ((converter: Converter) => Converter)[] = [];
 
   constructor(
     registry: ConverterRegistry = new ConverterRegistry(),
@@ -45,14 +47,21 @@ export class Anymark {
     return this;
   }
 
+  /** Wraps every converter this instance resolves. The first decorator added ends up outermost. */
+  decorate(wrap: (converter: Converter) => Converter): this {
+    this.#decorators.push(wrap);
+    return this;
+  }
+
   async convert(input: Input, options: ConvertOptions = {}): Promise<ConversionResult> {
     options.signal?.throwIfAborted();
     const { data, ...hints } = toSource(input);
     // A directory in the name would leak a local path into every output.
     const name = baseName(hints.name);
     const mime = this.#detector.detect({ data, ...hints, ...(name === undefined ? {} : { name }) });
-    const converter = mime === undefined ? undefined : await this.registry.resolve(mime);
-    if (mime === undefined || converter === undefined) throw new UnsupportedFormatError();
+    const resolved = mime === undefined ? undefined : await this.registry.resolve(mime);
+    if (mime === undefined || resolved === undefined) throw new UnsupportedFormatError();
+    const converter = this.#decorators.reduceRight((inner, wrap) => wrap(inner), resolved);
 
     const sourceId = createHash('sha256').update(data).digest('hex');
     const source: Source = name === undefined ? { data, mime } : { data, mime, name };
