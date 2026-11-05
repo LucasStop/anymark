@@ -9,14 +9,21 @@ import { UnsupportedFormatError } from './core/errors.js';
 import type {
   Backend,
   ConversionResult,
+  ConversionWarning,
   ConvertOptions,
   Converter,
   Input,
   Plugin,
+  ResultSink,
   Source,
 } from './core/types.js';
 import { createDefaultDetector } from './detection/index.js';
 import type { FormatDetectorChain } from './detection/FormatDetectorChain.js';
+
+const SINK_FAILED: ConversionWarning = {
+  code: 'SINK_FAILED',
+  message: 'A result sink threw and was skipped.',
+};
 
 const toSource = (input: Input): Source => (input instanceof Uint8Array ? { data: input } : input);
 
@@ -30,6 +37,7 @@ export class Anymark {
   readonly #detector: FormatDetectorChain;
   readonly #backends: readonly Backend[];
   readonly #decorators: ((converter: Converter) => Converter)[] = [];
+  readonly #sinks: ResultSink[] = [];
 
   constructor(
     registry: ConverterRegistry = new ConverterRegistry(),
@@ -53,6 +61,12 @@ export class Anymark {
     return this;
   }
 
+  /** Tells `sink` about every conversion on this instance. Returns the instance so calls can chain. */
+  addSink(sink: ResultSink): this {
+    this.#sinks.push(sink);
+    return this;
+  }
+
   async convert(input: Input, options: ConvertOptions = {}): Promise<ConversionResult> {
     options.signal?.throwIfAborted();
     const { data, ...hints } = toSource(input);
@@ -68,14 +82,29 @@ export class Anymark {
     options.signal?.throwIfAborted();
     // One chain per call: it carries this call's opt-in flags, signal and absorbed failures.
     const backends = new BackendChain(options.backends ?? this.#backends, options);
+    let sinkFailed = false;
+    // A sink never stops a conversion or another sink; the failure only shows up as one generic warning.
+    const notify = async (call: (sink: ResultSink) => void | Promise<void> | undefined) => {
+      for (const sink of this.#sinks) {
+        try {
+          await call(sink);
+        } catch {
+          sinkFailed = true;
+        }
+      }
+    };
+    await notify((sink) => sink.onProgress?.({ stage: 'convert', current: 0, total: 1 }));
     const result = await converter.convert(source, { sourceId, options, backends });
+    await notify((sink) => sink.onProgress?.({ stage: 'convert', current: 1, total: 1 }));
     // The facade owns identity: a plugin cannot spoof the hash or smuggle a path in the name.
     const { name: _ignored, ...metadata } = result.metadata;
-    return {
+    const final: ConversionResult = {
       ...result,
       warnings: [...result.warnings, ...backends.warnings],
       metadata: name === undefined ? { ...metadata, sourceId } : { ...metadata, sourceId, name },
     };
+    await notify((sink) => sink.onResult?.(final));
+    return sinkFailed ? { ...final, warnings: [...final.warnings, SINK_FAILED] } : final;
   }
 }
 

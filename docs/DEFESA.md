@@ -72,10 +72,10 @@ Resposta pronta: "formato sem assinatura depende do nome ou do mime passado como
 - **Builder:** `MarkdownBuilder` monta o Markdown por etapas (`heading`, `paragraph`, `list`, `table`, `code`) e é o único ponto de escape. Docx e html não passam por ele: `mammoth` (docx para HTML) e `turndown` (HTML para Markdown) já entregam Markdown.
 - **Facade:** `Anymark.convert()` esconde detecção, registry, backends e `sourceId` atrás de uma chamada. Não concatena nem divide nada: só esconde as etapas.
 
-### Decorator (no código, #23) e Observer (planejado, #24)
+### Decorator (#23) e Observer (#24)
 
-O Decorator existe em `src/decorators/` e `Anymark.decorate()`; o Observer ainda não: dizer "planejado". Nenhum dos dois é pré-requisito do caso padrão.
-- **Observer (`ResultSink`, #24):** avisa de fora, por exemplo o progresso da conversão (#121 depende dele).
+Os dois estão no código: `src/decorators/` com `Anymark.decorate()`, e `Anymark.addSink()` com `ResultSink`. Nenhum dos dois é pré-requisito do caso padrão.
+- **Observer (`ResultSink`, #24):** avisa de fora, por exemplo o progresso da conversão (#121 depende dele). Sink que lança é pulado e vira o warning `SINK_FAILED`, sem derrubar a conversão nem os outros sinks.
 - **Decorator (#23, `FrontMatterDecorator` e `ChunkingDecorator`):** embrulha o `Converter`, não o arquivo. Tem a mesma interface, delega ao converter de dentro e acrescenta algo antes ou depois. Serve para recursos que valem para qualquer formato (front matter YAML para Obsidian, chunking para RAG, retry, timeout) sem editar os dez converters e sem ligá-los por padrão. O usuário empilha o que quiser por instância: `createAnymark().decorate((c) => new ChunkingDecorator(c))`. Alternativa descartada: um `if` por recurso dentro de cada converter, ou uma subclasse por combinação.
 
 ### Quantos padrões

@@ -23,7 +23,7 @@ Prazos: 28/10 congela o escopo do MVP. 29/10 é a apresentação do parcial (30%
 | Saída | Markdown para contexto de LLM/RAG (GFM limpo, headings estáveis, chunking), para Obsidian (front matter opcional, nomes seguros, imagens em `assets/`) e para leitura humana. |
 | Template | Repositório `LucasStop/project-template`, extraído do anymark no fim (stretch). |
 | Idioma | PT-BR em README, docs e vídeo. Identificadores, commits e PRs em inglês. |
-| Padrões | Stopinski: Adapter e Chain of Responsibility. Bruno: Strategy/Registry e Builder. Facade no código; Decorator e Observer planejados (#23, #24), ainda sem código. |
+| Padrões | Stopinski: Adapter e Chain of Responsibility. Bruno: Strategy/Registry e Builder. Facade no código; Decorator e Observer no código (#23, #24), ainda sem código. |
 | RAG | Opcional, fora do core, segunda entrega: vincular em lote os `.md` dos repositórios que usam a lib. |
 | Mídia longa | Sem duração máxima fixa para áudio e vídeo. Acima de um limiar configurável (10, 20 ou 30 min) a mídia é dividida em lotes e cada lote é convertido separadamente (decidido em 16/10/2026; vale para #20 e #25). |
 | OCR padrão | `createAnymark()` traz `TesseractBackend` na cadeia, com traineddata local e download só por opt-in (decidido em 16/10/2026, issue #46). |
@@ -53,7 +53,7 @@ Prazos: 28/10 congela o escopo do MVP. 29/10 é a apresentação do parcial (30%
 | Registry/Plugin | Bruno | `ConverterRegistry.register`, `load()` lazy, `createAnymark().use(plugin)` | formato novo sem editar a lib; dependência pesada só sob demanda | PoEAA (bibliografia); não visto em aula | registry estático global |
 | Builder | Bruno | `MarkdownBuilder` (escape de pipes, listas, tabelas, headings) | escape duplicado e frágil | Aula 4: `ColumnsBuilder` e `TableBuilder` | concatenação de string espalhada |
 
-Facade (`Anymark.convert()`, sem defesa) existe no código. Planejados, ainda sem código (#23, #24): Decorator (`FrontMatterDecorator`, `ChunkingDecorator`, retry, timeout; visto como atividade em `PagedTableData`), Observer (`ResultSink`; atividade em `ObservableTableData`) e as reservas abaixo.
+Facade (`Anymark.convert()`, sem defesa) existe no código. No código (#23, #24): Decorator (`FrontMatterDecorator`, `ChunkingDecorator`, retry, timeout; visto como atividade em `PagedTableData`), Observer (`ResultSink`; atividade em `ObservableTableData`) e as reservas abaixo.
 
 Regras: `Converter` (Strategy) e `Backend` (Adapter) ficam em interfaces distintas. Sem Template Method, sem Singleton, sem Factory defendida (o `load()` lazy do registry cobre). Nomes de classe revelam o padrão só nos pontos de padrão (`ConverterRegistry`, `BackendChain`, `FormatDetectorChain`, `MarkdownBuilder`, `ResultSink`); converters concretos ficam `PdfConverter`, sem `Impl`. Todo padrão citado no README precisa de trecho que o prove; `test/docs-references.test.ts` confere que cada caminho em crase de README, PATTERNS e EXTENDING existe e que cada linha dos trechos de PATTERNS está no arquivo citado (não confere ordem nem se o trecho prova o padrão).
 

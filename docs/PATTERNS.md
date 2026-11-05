@@ -10,9 +10,10 @@ Cada padrão abaixo traz o problema que resolve, onde está no código, um trech
 | Registry/Plugin | Lucas Bruno | `src/core/ConverterRegistry.ts`, `examples/plugins/srt/index.ts` |
 | Builder | Lucas Bruno | `src/core/MarkdownBuilder.ts` |
 | Decorator | Lucas Stopinski | `src/decorators/FrontMatterDecorator.ts`, `src/decorators/ChunkingDecorator.ts` |
+| Observer | Lucas Bruno | `src/core/types.ts`, `src/Anymark.ts`, `examples/sinks/index.ts` |
 | Facade | dupla | `src/Anymark.ts` |
 
-`Converter` (Strategy) e `Backend` (Adapter) são interfaces distintas, de propósito: ver [ADR 0002](adr/0002-converter-e-backend-separados.md). O Observer (`ResultSink`) está planejado (issue #24) e ainda não tem código, então não é defendido aqui.
+`Converter` (Strategy) e `Backend` (Adapter) são interfaces distintas, de propósito: ver [ADR 0002](adr/0002-converter-e-backend-separados.md). `Converter` e `ResultSink` também são interfaces pequenas de propósito: cada uma tem um motivo para mudar.
 
 ## Adapter (Lucas Stopinski)
 
@@ -230,6 +231,40 @@ Uso: `createAnymark().decorate((c) => new ChunkingDecorator(c)).decorate((c) => 
 **Alternativa descartada.** Flags em `ConvertOptions` lidas por cada converter (`frontMatter: true`, `chunk: {...}`). É simples, mas cada formato novo, inclusive plugin, teria de implementar os dois, e o núcleo cresceria a cada recurso. Subclasses por combinação (`PdfWithFrontMatterConverter`) explodem em número.
 
 **Por que Decorator.** Acrescenta responsabilidade a um objeto sem alterá-lo e sem mudar a interface, e as camadas se empilham em qualquer ordem. É o princípio aberto/fechado aplicado a recursos transversais.
+
+## Observer (Lucas Bruno)
+
+**Problema.** Quem usa a lib quer saber de fora o que aconteceu numa conversão (log, métrica, barra de progresso) sem que o converter conheça esse consumidor. Um callback fixo no `convert()` serve a um só; um `console.log` dentro da lib vaza dado e não é configurável.
+
+**Onde.** `ResultSink` em `src/core/types.ts`, registrado por `Anymark.addSink()` em `src/Anymark.ts`. A fachada avisa todos os sinks do progresso (`onProgress`) e do resultado final (`onResult`). Os sinks de exemplo ficam em `examples/sinks/index.ts` (`logSink` e `metricsSink`) e usam só a interface pública.
+
+```ts
+// src/core/types.ts
+export interface ResultSink {
+  onProgress?(event: ProgressEvent): void | Promise<void>;
+  onResult?(result: ConversionResult): void | Promise<void>;
+}
+```
+
+```ts
+// src/Anymark.ts
+addSink(sink: ResultSink): this {
+  this.#sinks.push(sink);
+  return this;
+}
+```
+
+```ts
+// src/Anymark.ts
+await notify((sink) => sink.onProgress?.({ stage: 'convert', current: 0, total: 1 }));
+await notify((sink) => sink.onResult?.(final));
+```
+
+Os dois ganchos são opcionais. Um sink que lança ou rejeita é pulado: a conversão segue, os outros sinks são avisados e o resultado ganha o warning genérico `SINK_FAILED`, sem a mensagem do erro (que poderia carregar caminho ou chave).
+
+**Alternativa descartada.** Um callback único em `ConvertOptions` (`onProgress`). É menos código, mas aceita um só observador por chamada, não separa progresso de resultado e obriga cada chamador a repetir a ligação. Eventos do `EventEmitter` do Node também servem, mas perdem a tipagem dos eventos e o tratamento uniforme de sink com falha.
+
+**Por que Observer.** O sujeito (a fachada) não conhece os observadores, só a interface `ResultSink`; adicionar um sink novo não edita a lib, e a mesma conversão alimenta vários consumidores.
 
 ## Facade (dupla)
 

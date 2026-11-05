@@ -31,6 +31,8 @@ export type {
   Metadata,
   Plugin,
   PluginHost,
+  ProgressEvent,
+  ResultSink,
   Source,
 } from './core/types.js';
 export { FormatDetectorChain } from './detection/FormatDetectorChain.js';

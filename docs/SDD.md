@@ -8,7 +8,7 @@ Vocabulário: módulo profundo = muito comportamento atrás de interface pequena
 
 | Módulo | Interface (o que o chamador precisa saber) | Esconde | Padrão |
 |---|---|---|---|
-| `Anymark` | `convert(input, options)`, `use(plugin)`, `registry`. Criado por `createAnymark()`. `decorate(wrap)` (#23); `addSink`: planejado (#24) | detecção, resolução do converter, backends, hash do conteúdo | Facade |
+| `Anymark` | `convert(input, options)`, `use(plugin)`, `registry`. Criado por `createAnymark()`. `decorate(wrap)` (#23); `addSink(sink)` (#24) | detecção, resolução do converter, backends, hash do conteúdo | Facade |
 | `ConverterRegistry` | `register(entry)`, `resolve(format)` | carga lazy (`load()`), conflito de mime, ordem de registro | Registry/Plugin |
 | `Converter` | `convert(input, ctx)` devolve `ConversionResult`; declara nome e mimes | parser e dependência do formato | Strategy |
 | `FormatDetectorChain` | `detect({ data, name?, mime? })` devolve o mime ou `undefined` | dica, assinatura, ZIP/OOXML, extensão, texto estruturado, texto puro | Chain |
@@ -16,7 +16,7 @@ Vocabulário: módulo profundo = muito comportamento atrás de interface pequena
 | `Backend<In, Out>` | `capability`, `locality`, `isAvailable()`, `run(input, ctx)` | CLI, API ou WASM por trás | Adapter |
 | `BackendChain` | `new BackendChain(backends, options)`, `run(capability, input)` | ordem, pulo de indisponível, opt-in, fallback, `NoBackendError` | Chain |
 | `spawn` | `runCli(request, options)` (ainda sem adapter de CLI que o use) | `execFile`, diretório temporário, timeout, `signal`, `maxBuffer`, allowlist de env, limpeza | nenhum |
-| `ResultSink` (planejado, #24) | `onResult(result)`, `onProgress(event)` | quem consome | Observer |
+| `ResultSink` | `onResult(result)`, `onProgress(event)` | quem consome | Observer |
 
 ## Teste de deleção
 
@@ -34,12 +34,12 @@ Vocabulário: módulo profundo = muito comportamento atrás de interface pequena
 | `Converter` | 11 entradas de fábrica (10 formatos mais imagem) e `.srt` por plugin | real |
 | `Backend` | tesseract.js, whisper-cli, Gemini, OpenAI, `claude -p`, `codex exec`, `agy -p` | real |
 | Handler do `FormatDetectorChain` | dica, assinatura, ZIP/OOXML, extensão, texto estruturado, texto puro (ordem de `createDefaultDetector`) | real |
-| `ResultSink` (planejado, #24) | log do exemplo e progresso da UI | hipotético até existir o segundo. Se só houver um, Observer cai para reserva |
+| `ResultSink` | `logSink` e `metricsSink` em `examples/sinks/`; a UI do exemplo vem com o #121 | real: dois sinks diferentes recebem eventos reais |
 | `spawn` | um, de propósito | não é seam de extensão, é ponto único de segurança. Teste usa CLI falso em `fixtures/bin/` |
 
 ## Fluxo
 
-`convert(input)` entra em `Anymark`. O hash do conteúdo vira `sourceId`. O `FormatDetectorChain` devolve o formato. O `ConverterRegistry` resolve e carrega o `Converter`, (com os decorators registrados em `decorate()`). Imagem e áudio chamam a `BackendChain`, que chama `Backend` (hoje só o `TesseractBackend`; um backend de CLI passaria por `runCli`). O resultado vai para os `ResultSink` quando existirem (#24). Falha de backend vira warning no resultado, sem chave nem caminho.
+`convert(input)` entra em `Anymark`. O hash do conteúdo vira `sourceId`. O `FormatDetectorChain` devolve o formato. O `ConverterRegistry` resolve e carrega o `Converter`, (com os decorators registrados em `decorate()`). Imagem e áudio chamam a `BackendChain`, que chama `Backend` (hoje só o `TesseractBackend`; um backend de CLI passaria por `runCli`). O progresso e o resultado vão para os `ResultSink` registrados em `addSink()`. Falha de backend vira warning no resultado, sem chave nem caminho.
 
 ## Contratos congelados cedo
 
@@ -66,4 +66,4 @@ Seams de teste confirmados em 14/10: `convert()` ponta a ponta, kit de contrato 
 ## Aberto
 
 - Quantos decorators entram de fato: front matter e chunking entraram (#23); retry e timeout ficam de fora.
-- Segundo adapter de `ResultSink` para sustentar o Observer.
+- Sink de progresso da UI do exemplo, que depende do #121.

@@ -36,7 +36,7 @@ Este arquivo é o contexto de qualquer agente (Claude Code, Codex, Gemini) que t
 | Strategy e Registry/Plugin | Lucas Bruno | `Converter` por mime, `ConverterRegistry` |
 | Builder | Lucas Bruno | `MarkdownBuilder` |
 
-Facade (`Anymark.convert()`) está no código. Decorator (Stopinski, #23) está no código; Observer (Bruno, #24) é planejado e ainda sem código. Problema resolvido, alternativa descartada e evidência de cada padrão: seção "Padrões e defesa" de [docs/PLAN.md](docs/PLAN.md).
+Facade (`Anymark.convert()`) está no código. Decorator (Stopinski, #23) e Observer (Bruno, #24) estão no código. Problema resolvido, alternativa descartada e evidência de cada padrão: seção "Padrões e defesa" de [docs/PLAN.md](docs/PLAN.md).
 
 Regras de design:
 
@@ -54,7 +54,7 @@ Formato novo é um `Converter` dentro de um `Plugin` (`createAnymark().use(plugi
 
 ## Fluxo
 
-`convert(input)` entra em `Anymark` (Facade) e passa pelo `FormatDetectorChain`. O `ConverterRegistry` devolve o `Converter`, carregado sob demanda (Decorators de `Anymark.decorate()`). Imagem e áudio passam pela `BackendChain`. `ResultSink` (Observer) é planejado, #24. Os contratos ficam em `src/core/types.ts`, congelados cedo e alterados só com aval dos dois.
+`convert(input)` entra em `Anymark` (Facade) e passa pelo `FormatDetectorChain`. O `ConverterRegistry` devolve o `Converter`, carregado sob demanda (Decorators de `Anymark.decorate()`). Imagem e áudio passam pela `BackendChain`. `ResultSink` (Observer, `addSink`) recebe progresso e resultado. Os contratos ficam em `src/core/types.ts`, congelados cedo e alterados só com aval dos dois.
 
 ## Convenções
 

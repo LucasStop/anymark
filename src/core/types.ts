@@ -83,6 +83,22 @@ export interface ConversionResult {
   readonly warnings: readonly ConversionWarning[];
 }
 
+/** Where a conversion is. `total` is unknown (omitted) when the converter cannot tell. */
+export interface ProgressEvent {
+  readonly stage: string;
+  readonly current: number;
+  readonly total?: number;
+}
+
+/**
+ * Observer: gets told about a conversion from the outside. Both hooks are optional and a hook
+ * that throws is skipped, never fatal. The event and the result are data, not instructions.
+ */
+export interface ResultSink {
+  onProgress?(event: ProgressEvent): void | Promise<void>;
+  onResult?(result: ConversionResult): void | Promise<void>;
+}
+
 /** Runs a capability through the ordered backends, with fallback. Implemented by `BackendChain`. */
 export interface BackendRunner {
   run<In, Out>(capability: Capability, input: In): Promise<Out>;
