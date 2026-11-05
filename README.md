@@ -1,5 +1,7 @@
 # anymark
 
+![anymark: qualquer arquivo, em Markdown](design/brand/applications/banner.png)
+
 Biblioteca TypeScript que converte qualquer arquivo em Markdown. Cobre texto, dados, Office e PDF; imagem (OCR local por padrão), áudio, vídeo e YouTube passam por backends plugáveis com fallback, e uma página da web entra por `convertUrl`. A saída serve a três usos: contexto para LLM/RAG, Obsidian e leitura humana.
 
 Trabalho final de Design Patterns (PUCPR, 2026/2), feito em dupla por **Lucas Stopinski da Silva** e **Lucas Bruno e Silva**.
