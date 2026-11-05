@@ -32,6 +32,8 @@ export class SignatureHandler implements FormatHandler {
       if (startsWith(input.data, ascii('WEBP'), 8)) return 'image/webp';
       if (startsWith(input.data, ascii('WAVE'), 8)) return 'audio/wav';
     }
+    if (startsWith(input.data, ascii('ftyp'), 4)) return 'video/mp4';
+    if (startsWith(input.data, [0x1a, 0x45, 0xdf, 0xa3])) return 'video/x-matroska';
     // MPEG frame sync: 11 set bits. Weak on its own, so a bare match only counts for audio-sized input.
     const [a, b] = input.data;
     if (a === 0xff && b !== undefined && (b & 0xe0) === 0xe0 && (b & 0x06) !== 0)
