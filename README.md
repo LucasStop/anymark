@@ -6,7 +6,7 @@ Biblioteca TypeScript que converte qualquer arquivo em Markdown. Cobre texto, da
 
 Trabalho final de Design Patterns (PUCPR, 2026/2), feito em dupla por **Lucas Stopinski da Silva** e **Lucas Bruno e Silva**.
 
-> Entrega final de 18/11/2026. Vídeo de apresentação: _link a ser inserido depois da gravação_.
+> Entrega final de 18/11/2026. Vídeo de apresentação: [YouTube](https://youtu.be/GDApzPPliDI) (8m09s, 1080p).
 
 ## Formatos
 

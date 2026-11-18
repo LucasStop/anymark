@@ -93,4 +93,4 @@ Marcar cada item só depois de rodar de fato.
 - [ ] `yarn test test/BackendChain.test.ts` ao vivo, saída legível.
 - [ ] Cada um responde em voz alta "problema, onde está no código, alternativa descartada" dos seus padrões, sem consultar.
 - [ ] Plano B se o Next falhar: terminal com `node scripts/manual-run.mjs` ou o plano B por código, e o PATTERNS aberto.
-- [ ] Publicar no YouTube como não listado e colocar o link no README.
+- [x] Publicar no YouTube como não listado e colocar o link no README: https://youtu.be/GDApzPPliDI.
